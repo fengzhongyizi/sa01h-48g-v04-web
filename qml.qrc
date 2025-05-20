@@ -1,0 +1,564 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>StatusPage.qml</file>
+        <file>fonts/BebasKai-Regular.otf</file>
+        <file>fonts/MyriadPro-Cond.ttf</file>
+        <file>VideoGenerator.qml</file>
+        <file>VideoTest.qml</file>
+        <file>AudioGenerator.qml</file>
+        <file>AudioTests.qml</file>
+        <file>Edid_eARC_CDS.qml</file>
+        <file>SystemSetup.qml</file>
+        <file>icons/bg.png</file>
+        <file>img/FPGA/image01.png</file>
+        <file>img/FPGA/image02.png</file>
+        <file>img/FPGA/image03.png</file>
+        <file>img/FPGA/image04.png</file>
+        <file>img/FPGA/image05.png</file>
+        <file>img/FPGA/image06.png</file>
+        <file>img/FPGA/image07.png</file>
+        <file>img/FPGA/image08.png</file>
+        <file>img/FPGA/image09.png</file>
+        <file>img/FPGA/image10.png</file>
+        <file>img/FPGA/image11.png</file>
+        <file>img/FPGA/image12.png</file>
+        <file>img/FPGA/image13.png</file>
+        <file>img/FPGA/image14.png</file>
+        <file>img/FPGA/image15.png</file>
+        <file>img/FPGA/image16.png</file>
+        <file>img/FPGA/image17.png</file>
+        <file>img/FPGA/image18.png</file>
+        <file>img/FPGA/image19.png</file>
+        <file>img/FPGA/image20.png</file>
+        <file>img/FPGA/image21.png</file>
+        <file>img/FPGA/image22.png</file>
+        <file>img/FPGA/image23.png</file>
+        <file>img/FPGA/image24.png</file>
+        <file>img/FPGA/image25.png</file>
+        <file>img/FPGA/image26.png</file>
+        <file>img/FPGA/image27.png</file>
+        <file>img/FPGA/image28.png</file>
+        <file>img/FPGA/image29.png</file>
+        <file>img/FPGA/image30.png</file>
+        <file>img/FPGA/image31.png</file>
+        <file>img/FPGA/image32.png</file>
+        <file>img/FPGA/image33.png</file>
+        <file>img/FPGA/image34.png</file>
+        <file>img/FPGA/image35.png</file>
+        <file>img/FPGA/image36.png</file>
+        <file>img/ISF/image01.png</file>
+        <file>img/ISF/image02.png</file>
+        <file>img/ISF/image03.png</file>
+        <file>img/ISF/image04.png</file>
+        <file>img/ISF/image05.png</file>
+        <file>img/ISF/image06.png</file>
+        <file>img/ISF/image07.png</file>
+        <file>img/ISF/image08.png</file>
+        <file>img/ISF/image09.png</file>
+        <file>img/ISF/image10.png</file>
+        <file>img/ISF/image11.png</file>
+        <file>img/ISF/image12.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image01.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image02.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image03.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image04.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image05.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image06.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image07.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image08.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image09.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image10.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image11.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image12.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image13.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image14.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image15.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image16.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image17.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image18.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image19.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image20.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image21.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image22.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image23.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image24.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image25.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image26.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image27.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image28.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image29.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image30.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image31.png</file>
+        <file>img/DVS/HDR10_CLIPPING/image32.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image01.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image02.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image03.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image04.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image05.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image06.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image07.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image08.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image09.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image10.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image11.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image12.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image13.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image14.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image15.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image16.png</file>
+        <file>img/DVS/HDR10_EVALUATION/image17.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image01.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image02.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image03.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image04.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image05.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image06.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image07.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image08.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image09.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image10.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image11.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image12.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image13.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image14.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image15.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image16.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image17.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image18.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image19.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image20.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image21.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image22.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image23.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image24.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image25.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image26.png</file>
+        <file>img/DVS/HDR10_GEOMETRY/image27.png</file>
+        <file>img/DVS/HDR10_RAMPS/image01.png</file>
+        <file>img/DVS/HDR10_RAMPS/image02.png</file>
+        <file>img/DVS/HDR10_RAMPS/image03.png</file>
+        <file>img/DVS/HDR10_RAMPS/image04.png</file>
+        <file>img/DVS/HDR10_RAMPS/image05.png</file>
+        <file>img/DVS/HDR10_RAMPS/image06.png</file>
+        <file>img/DVS/HDR10_RAMPS/image07.png</file>
+        <file>img/DVS/HDR10_RAMPS/image08.png</file>
+        <file>img/DVS/HDR10_RAMPS/image09.png</file>
+        <file>img/DVS/HDR10_RAMPS/image10.png</file>
+        <file>img/DVS/HDR10_RAMPS/image11.png</file>
+        <file>img/DVS/HDR10_RAMPS/image12.png</file>
+        <file>img/DVS/HDR10_RAMPS/image13.png</file>
+        <file>img/DVS/HDR10_RAMPS/image14.png</file>
+        <file>img/DVS/HDR10_RAMPS/image15.png</file>
+        <file>img/DVS/HDR10_RAMPS/image16.png</file>
+        <file>img/DVS/HDR10_RAMPS/image17.png</file>
+        <file>img/DVS/HDR10_RAMPS/image18.png</file>
+        <file>img/DVS/HDR10_RAMPS/image19.png</file>
+        <file>img/DVS/HDR10_RAMPS/image20.png</file>
+        <file>img/DVS/HDR10_RAMPS/image21.png</file>
+        <file>img/DVS/HDR10_RAMPS/image22.png</file>
+        <file>img/DVS/HDR10_RAMPS/image23.png</file>
+        <file>img/DVS/HDR10_RAMPS/image24.png</file>
+        <file>img/DVS/HDR10_RAMPS/image25.png</file>
+        <file>img/DVS/HDR10_RAMPS/image26.png</file>
+        <file>img/DVS/HDR10_RAMPS/image27.png</file>
+        <file>img/DVS/HDR10_RAMPS/image28.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image01.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image02.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image03.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image04.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image05.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image06.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image07.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image08.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image09.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image10.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image11.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image12.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image13.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image14.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image15.png</file>
+        <file>img/DVS/HDR10_RESOLUTION/image16.png</file>
+        <file>img/DVS/DV_CLIPPING/image03.png</file>
+        <file>img/DVS/DV_CLIPPING/image04.png</file>
+        <file>img/DVS/DV_CLIPPING/image05.png</file>
+        <file>img/DVS/DV_CLIPPING/image06.png</file>
+        <file>img/DVS/HLG_CLIPPING/image03.png</file>
+        <file>img/DVS/HLG_CLIPPING/image04.png</file>
+        <file>img/DVS/HLG_CLIPPING/image05.png</file>
+        <file>img/UHD/CLIPPING/image01.png</file>
+        <file>img/UHD/CLIPPING/image02.png</file>
+        <file>img/UHD/CLIPPING/image03.png</file>
+        <file>img/UHD/CLIPPING/image04.png</file>
+        <file>img/UHD/CLIPPING/image05.png</file>
+        <file>img/UHD/CLIPPING/image06.png</file>
+        <file>img/UHD/CLIPPING/image07.png</file>
+        <file>img/UHD/CLIPPING/image08.png</file>
+        <file>img/UHD/CLIPPING/image09.png</file>
+        <file>img/UHD/CLIPPING/image10.png</file>
+        <file>img/UHD/CLIPPING/image11.png</file>
+        <file>img/UHD/CLIPPING/image12.png</file>
+        <file>img/UHD/CLIPPING/image13.png</file>
+        <file>img/UHD/CLIPPING/image14.png</file>
+        <file>img/UHD/CLIPPING/image15.png</file>
+        <file>img/UHD/CLIPPING/image16.png</file>
+        <file>img/UHD/CLIPPING/image17.png</file>
+        <file>img/UHD/CLIPPING/image18.png</file>
+        <file>img/UHD/CLIPPING/image19.png</file>
+        <file>img/UHD/CLIPPING/image20.png</file>
+        <file>img/UHD/CLIPPING/image21.png</file>
+        <file>img/UHD/CLIPPING/image22.png</file>
+        <file>img/UHD/CLIPPING/image23.png</file>
+        <file>img/UHD/CLIPPING/image24.png</file>
+        <file>img/UHD/CLIPPING/image25.png</file>
+        <file>img/UHD/CLIPPING/image26.png</file>
+        <file>img/UHD/CLIPPING/image27.png</file>
+        <file>img/UHD/CLIPPING/image28.png</file>
+        <file>img/UHD/CLIPPING/image29.png</file>
+        <file>img/UHD/CLIPPING/image30.png</file>
+        <file>img/UHD/CLIPPING/image31.png</file>
+        <file>img/UHD/CLIPPING/image32.png</file>
+        <file>img/UHD/CLIPPING/image33.png</file>
+        <file>img/UHD/CLIPPING/image34.png</file>
+        <file>img/UHD/CLIPPING/image35.png</file>
+        <file>img/UHD/CLIPPING/image36.png</file>
+        <file>img/UHD/CLIPPING/image37.png</file>
+        <file>img/UHD/CLIPPING/image38.png</file>
+        <file>img/UHD/CLIPPING/image39.png</file>
+        <file>img/UHD/CLIPPING/image40.png</file>
+        <file>img/UHD/COLOR BARS/image01.png</file>
+        <file>img/UHD/COLOR BARS/image02.png</file>
+        <file>img/UHD/COLOR BARS/image03.png</file>
+        <file>img/UHD/COLOR BARS/image04.png</file>
+        <file>img/UHD/COLOR BARS/image05.png</file>
+        <file>img/UHD/COLOR BARS/image06.png</file>
+        <file>img/UHD/COLOR BARS/image07.png</file>
+        <file>img/UHD/COLOR BARS/image08.png</file>
+        <file>img/UHD/COLOR BARS/image09.png</file>
+        <file>img/UHD/COLOR BARS/image10.png</file>
+        <file>img/UHD/COLOR BARS/image11.png</file>
+        <file>img/UHD/COLOR BARS/image12.png</file>
+        <file>img/UHD/COLOR BARS/image13.png</file>
+        <file>img/UHD/COLOR BARS/image14.png</file>
+        <file>img/UHD/COLOR BARS/image15.png</file>
+        <file>img/UHD/COLOR BARS/image16.png</file>
+        <file>img/UHD/COLOR BARS/image17.png</file>
+        <file>img/UHD/COLOR BARS/image18.png</file>
+        <file>img/UHD/COLOR BARS/image19.png</file>
+        <file>img/UHD/COLOR BARS/image20.png</file>
+        <file>img/UHD/COLOR BARS/image21.png</file>
+        <file>img/UHD/COLOR CHECKER/image01.png</file>
+        <file>img/UHD/COLOR CHECKER/image02.png</file>
+        <file>img/UHD/COLOR CHECKER/image03.png</file>
+        <file>img/UHD/COLOR CHECKER/image04.png</file>
+        <file>img/UHD/COLOR CHECKER/image05.png</file>
+        <file>img/UHD/COLOR CHECKER/image06.png</file>
+        <file>img/UHD/COLOR CHECKER/image07.png</file>
+        <file>img/UHD/COLOR CHECKER/image08.png</file>
+        <file>img/UHD/COLOR CHECKER/image09.png</file>
+        <file>img/UHD/COLOR CHECKER/image10.png</file>
+        <file>img/UHD/COLOR CHECKER/image11.png</file>
+        <file>img/UHD/COLOR CHECKER/image12.png</file>
+        <file>img/UHD/COLOR CHECKER/image13.png</file>
+        <file>img/UHD/COLOR CHECKER/image14.png</file>
+        <file>img/UHD/COLOR CHECKER/image15.png</file>
+        <file>img/UHD/COLOR CHECKER/image16.png</file>
+        <file>img/UHD/COLOR CHECKER/image17.png</file>
+        <file>img/UHD/COLOR CHECKER/image18.png</file>
+        <file>img/UHD/COLOR CHECKER/image19.png</file>
+        <file>img/UHD/COLOR CHECKER/image20.png</file>
+        <file>img/UHD/COLOR CHECKER/image21.png</file>
+        <file>img/UHD/COLOR CHECKER/image22.png</file>
+        <file>img/UHD/COLOR CHECKER/image23.png</file>
+        <file>img/UHD/COLOR CHECKER/image24.png</file>
+        <file>img/UHD/COLOR CHECKER/image25.png</file>
+        <file>img/UHD/COLOR CHECKER/image26.png</file>
+        <file>img/UHD/COLOR CHECKER/image27.png</file>
+        <file>img/UHD/COLOR CHECKER/image28.png</file>
+        <file>img/UHD/COLOR CHECKER/image29.png</file>
+        <file>img/UHD/COLOR CHECKER/image30.png</file>
+        <file>img/UHD/COLOR CHECKER/image31.png</file>
+        <file>img/UHD/COLOR CHECKER/image32.png</file>
+        <file>img/UHD/COLOR CHECKER/image33.png</file>
+        <file>img/UHD/COLOR CHECKER/image34.png</file>
+        <file>img/UHD/COLOR CHECKER/image35.png</file>
+        <file>img/UHD/COLOR CHECKER/image36.png</file>
+        <file>img/UHD/GEOMETRY/image01.png</file>
+        <file>img/UHD/GEOMETRY/image02.png</file>
+        <file>img/UHD/GEOMETRY/image03.png</file>
+        <file>img/UHD/GEOMETRY/image04.png</file>
+        <file>img/UHD/GEOMETRY/image05.png</file>
+        <file>img/UHD/GEOMETRY/image06.png</file>
+        <file>img/UHD/GEOMETRY/image07.png</file>
+        <file>img/UHD/GEOMETRY/image08.png</file>
+        <file>img/UHD/GEOMETRY/image09.png</file>
+        <file>img/UHD/GEOMETRY/image10.png</file>
+        <file>img/UHD/GEOMETRY/image11.png</file>
+        <file>img/UHD/GEOMETRY/image12.png</file>
+        <file>img/UHD/GEOMETRY/image13.png</file>
+        <file>img/UHD/GEOMETRY/image14.png</file>
+        <file>img/UHD/GEOMETRY/image15.png</file>
+        <file>img/UHD/GEOMETRY/image16.png</file>
+        <file>img/UHD/GEOMETRY/image17.png</file>
+        <file>img/UHD/GEOMETRY/image18.png</file>
+        <file>img/UHD/GEOMETRY/image19.png</file>
+        <file>img/UHD/GEOMETRY/image20.png</file>
+        <file>img/UHD/GEOMETRY/image21.png</file>
+        <file>img/UHD/GEOMETRY/image22.png</file>
+        <file>img/UHD/GEOMETRY/image23.png</file>
+        <file>img/UHD/GEOMETRY/image24.png</file>
+        <file>img/UHD/GEOMETRY/image25.png</file>
+        <file>img/UHD/GEOMETRY/image26.png</file>
+        <file>img/UHD/GEOMETRY/image27.png</file>
+        <file>img/UHD/GEOMETRY/image28.png</file>
+        <file>img/UHD/GEOMETRY/image29.png</file>
+        <file>img/UHD/GEOMETRY/image30.png</file>
+        <file>img/UHD/GEOMETRY/image31.png</file>
+        <file>img/UHD/GEOMETRY/image32.png</file>
+        <file>img/UHD/GEOMETRY/image33.png</file>
+        <file>img/UHD/GEOMETRY/image34.png</file>
+        <file>img/UHD/GEOMETRY/image35.png</file>
+        <file>img/UHD/GEOMETRY/image36.png</file>
+        <file>img/UHD/GEOMETRY/image37.png</file>
+        <file>img/UHD/GEOMETRY/image38.png</file>
+        <file>img/UHD/GEOMETRY/image39.png</file>
+        <file>img/UHD/GEOMETRY/image40.png</file>
+        <file>img/UHD/RAMPS/image01.png</file>
+        <file>img/UHD/RAMPS/image02.png</file>
+        <file>img/UHD/RAMPS/image03.png</file>
+        <file>img/UHD/RAMPS/image04.png</file>
+        <file>img/UHD/RAMPS/image05.png</file>
+        <file>img/UHD/RAMPS/image06.png</file>
+        <file>img/UHD/RAMPS/image07.png</file>
+        <file>img/UHD/RAMPS/image08.png</file>
+        <file>img/UHD/RAMPS/image09.png</file>
+        <file>img/UHD/RAMPS/image10.png</file>
+        <file>img/UHD/RAMPS/image11.png</file>
+        <file>img/UHD/RAMPS/image12.png</file>
+        <file>img/UHD/RAMPS/image13.png</file>
+        <file>img/UHD/RAMPS/image14.png</file>
+        <file>img/UHD/RAMPS/image15.png</file>
+        <file>img/UHD/RAMPS/image16.png</file>
+        <file>img/UHD/RAMPS/image17.png</file>
+        <file>img/UHD/RAMPS/image18.png</file>
+        <file>img/UHD/RAMPS/image19.png</file>
+        <file>img/UHD/RAMPS/image20.png</file>
+        <file>img/UHD/RAMPS/image21.png</file>
+        <file>img/UHD/RAMPS/image22.png</file>
+        <file>img/UHD/RAMPS/image23.png</file>
+        <file>img/UHD/RAMPS/image24.png</file>
+        <file>img/UHD/RAMPS/image25.png</file>
+        <file>img/UHD/RAMPS/image26.png</file>
+        <file>img/UHD/RAMPS/image27.png</file>
+        <file>img/UHD/RAMPS/image28.png</file>
+        <file>img/UHD/RAMPS/image29.png</file>
+        <file>img/UHD/RAMPS/image30.png</file>
+        <file>img/UHD/RAMPS/image31.png</file>
+        <file>img/UHD/RAMPS/image32.png</file>
+        <file>img/UHD/RAMPS/image33.png</file>
+        <file>img/UHD/RAMPS/image34.png</file>
+        <file>img/UHD/RAMPS/image35.png</file>
+        <file>img/UHD/RAMPS/image36.png</file>
+        <file>img/UHD/RAMPS/image37.png</file>
+        <file>img/UHD/RAMPS/image38.png</file>
+        <file>img/UHD/RAMPS/image39.png</file>
+        <file>img/UHD/RAMPS/image40.png</file>
+        <file>img/UHD/RAMPS/image41.png</file>
+        <file>img/UHD/RAMPS/image42.png</file>
+        <file>img/UHD/RAMPS/image43.png</file>
+        <file>img/Dolby/image01.png</file>
+        <file>img/Dolby/image02.png</file>
+        <file>img/Dolby/image03.png</file>
+        <file>img/Dolby/image04.png</file>
+        <file>img/Dolby/image05.png</file>
+        <file>img/Dolby/image06.png</file>
+        <file>img/Dolby/image07.png</file>
+        <file>img/Dolby/image08.png</file>
+        <file>img/Dolby/image09.png</file>
+        <file>img/Dolby/image10.png</file>
+        <file>img/HD/image01.png</file>
+        <file>img/HD/image02.png</file>
+        <file>img/HD/image03.png</file>
+        <file>img/HD/image04.png</file>
+        <file>img/HD/image05.png</file>
+        <file>img/HD/image06.png</file>
+        <file>img/HD/image07.png</file>
+        <file>img/HD/image08.png</file>
+        <file>img/HD/image09.png</file>
+        <file>img/HD/image10.png</file>
+        <file>img/HD/image11.png</file>
+        <file>img/HD/image12.png</file>
+        <file>img/HD/image13.png</file>
+        <file>img/HD/image14.png</file>
+        <file>img/HD/image15.png</file>
+        <file>img/HD/image16.png</file>
+        <file>img/HD/image17.png</file>
+        <file>img/HD/image18.png</file>
+        <file>img/HD/image19.png</file>
+        <file>img/HD/image20.png</file>
+        <file>img/HD/image21.png</file>
+        <file>img/HD/image22.png</file>
+        <file>img/HD/image23.png</file>
+        <file>img/HD/image24.png</file>
+        <file>img/HD/image25.png</file>
+        <file>img/HD/image26.png</file>
+        <file>img/HD/image27.png</file>
+        <file>img/HD/image28.png</file>
+        <file>img/HD/image29.png</file>
+        <file>img/HD/image30.png</file>
+        <file>img/HD/image31.png</file>
+        <file>img/HD/image32.png</file>
+        <file>img/HD/image33.png</file>
+        <file>img/HD/image34.png</file>
+        <file>img/HD/image35.png</file>
+        <file>img/HD/image36.png</file>
+        <file>img/HD/image37.png</file>
+        <file>img/HD/image38.png</file>
+        <file>img/HD/image39.png</file>
+        <file>img/HD/image40.png</file>
+        <file>img/HD/image41.png</file>
+        <file>img/HD/image42.png</file>
+        <file>img/HD/image43.png</file>
+        <file>img/HD/image44.png</file>
+        <file>img/HD/image45.png</file>
+        <file>img/HD/image46.png</file>
+        <file>img/HD/image47.png</file>
+        <file>img/HD/image48.png</file>
+        <file>img/PVA/image01.png</file>
+        <file>img/PVA/image02.png</file>
+        <file>img/PVA/image03.png</file>
+        <file>img/PVA/image04.png</file>
+        <file>img/PVA/image05.png</file>
+        <file>img/PVA/image06.png</file>
+        <file>img/PVA/image07.png</file>
+        <file>img/PVA/image08.png</file>
+        <file>img/PVA/image09.png</file>
+        <file>img/SPE/image01.png</file>
+        <file>img/SPE/image02.png</file>
+        <file>img/SPE/image03.png</file>
+        <file>img/SPEARS/image01.png</file>
+        <file>img/SPEARS/image02.png</file>
+        <file>img/SPEARS/image03.png</file>
+        <file>img/SPEARS/image04.png</file>
+        <file>img/SPEARS/image05.png</file>
+        <file>img/SPEARS/image06.png</file>
+        <file>img/SPEARS/image07.png</file>
+        <file>img/SPEARS/image08.png</file>
+        <file>img/SPEARS/image09.png</file>
+        <file>img/SPEARS/image10.png</file>
+        <file>img/SPEARS/image11.png</file>
+        <file>img/SPEARS/image12.png</file>
+        <file>img/SPEARS/image13.png</file>
+        <file>img/SPEARS/image14.png</file>
+        <file>img/SPEARS/image15.png</file>
+        <file>img/DVS/DV_CLIPPING/image01.png</file>
+        <file>img/DVS/DV_CLIPPING/image02.png</file>
+        <file>img/DVS/DV_CLIPPING/image07.png</file>
+        <file>img/DVS/DV_CLIPPING/image08.png</file>
+        <file>img/DVS/DV_CLIPPING/image09.png</file>
+        <file>img/DVS/DV_CLIPPING/image10.png</file>
+        <file>img/DVS/DV_CLIPPING/image11.png</file>
+        <file>img/DVS/DV_CLIPPING/image12.png</file>
+        <file>img/DVS/DV_CLIPPING/image13.png</file>
+        <file>img/DVS/HLG_CLIPPING/image01.png</file>
+        <file>img/DVS/HLG_CLIPPING/image02.png</file>
+        <file>img/DVS/HLG_CLIPPING/image06.png</file>
+        <file>img/DVS/HLG_CLIPPING/image07.png</file>
+        <file>img/DVS/HLG_CLIPPING/image08.png</file>
+        <file>img/DVS/HLG_CLIPPING/image09.png</file>
+        <file>img/DVS/HLG_CLIPPING/image10.png</file>
+        <file>img/DVS/HLG_CLIPPING/image11.png</file>
+        <file>img/DVS/HLG_CLIPPING/image12.png</file>
+        <file>img/DVS/HLG_CLIPPING/image13.png</file>
+        <file>img/DVS/HLG_CLIPPING/image14.png</file>
+        <file>img/DVS/HLG_CLIPPING/image15.png</file>
+        <file>img/DVS/HLG_CLIPPING/image16.png</file>
+        <file>img/DVS/HLG_CLIPPING/image17.png</file>
+        <file>img/DVS/HLG_CLIPPING/image18.png</file>
+        <file>img/DVS/HLG_CLIPPING/image19.png</file>
+        <file>img/DVS/HLG_CLIPPING/image20.png</file>
+        <file>img/DVS/HLG_CLIPPING/image21.png</file>
+        <file>img/DVS/HLG_CLIPPING/image22.png</file>
+        <file>img/DVS/HLG_CLIPPING/image23.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image01.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image02.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image03.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image04.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image05.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image06.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image07.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image08.png</file>
+        <file>img/DVS/HLG_RESOLUTION/image09.png</file>
+        <file>img/DVS/HLG_RAMPS/image01.png</file>
+        <file>img/DVS/HLG_RAMPS/image02.png</file>
+        <file>img/DVS/HLG_RAMPS/image03.png</file>
+        <file>img/DVS/HLG_RAMPS/image04.png</file>
+        <file>img/DVS/HLG_RAMPS/image05.png</file>
+        <file>img/DVS/HLG_RAMPS/image06.png</file>
+        <file>img/DVS/HLG_RAMPS/image07.png</file>
+        <file>img/DVS/HLG_RAMPS/image08.png</file>
+        <file>img/DVS/HLG_RAMPS/image09.png</file>
+        <file>img/DVS/HLG_RAMPS/image10.png</file>
+        <file>img/DVS/HLG_RAMPS/image11.png</file>
+        <file>img/DVS/HLG_RAMPS/image12.png</file>
+        <file>img/DVS/HLG_RAMPS/image13.png</file>
+        <file>img/DVS/HLG_RAMPS/image14.png</file>
+        <file>img/DVS/HLG_RAMPS/image15.png</file>
+        <file>img/DVS/HLG_RAMPS/image16.png</file>
+        <file>img/DVS/HLG_RAMPS/image17.png</file>
+        <file>img/DVS/HLG_RAMPS/image18.png</file>
+        <file>img/DVS/HLG_RAMPS/image19.png</file>
+        <file>img/DVS/HLG_RAMPS/image20.png</file>
+        <file>img/DVS/HLG_RAMPS/image21.png</file>
+        <file>img/DVS/HLG_RAMPS/image22.png</file>
+        <file>img/DVS/HLG_RAMPS/image23.png</file>
+        <file>img/DVS/HLG_RAMPS/image24.png</file>
+        <file>img/DVS/HLG_RAMPS/image25.png</file>
+        <file>img/DVS/HLG_RAMPS/image26.png</file>
+        <file>img/DVS/HLG_RAMPS/image27.png</file>
+        <file>img/DVS/HLG_RAMPS/image28.png</file>
+        <file>img/DVS/HLG_EVALUATION/image01.png</file>
+        <file>img/DVS/HLG_EVALUATION/image02.png</file>
+        <file>img/DVS/HLG_EVALUATION/image03.png</file>
+        <file>img/DVS/HLG_EVALUATION/image04.png</file>
+        <file>img/DVS/HLG_EVALUATION/image05.png</file>
+        <file>img/DVS/HLG_EVALUATION/image06.png</file>
+        <file>img/DVS/HLG_EVALUATION/image07.png</file>
+        <file>img/DVS/HLG_EVALUATION/image08.png</file>
+        <file>img/DVS/DV_RAMPS/image01.png</file>
+        <file>img/DVS/DV_RAMPS/image02.png</file>
+        <file>img/DVS/DV_RAMPS/image03.png</file>
+        <file>img/DVS/DV_RAMPS/image04.png</file>
+        <file>img/DVS/DV_RAMPS/image05.png</file>
+        <file>img/DVS/DV_RAMPS/image06.png</file>
+        <file>img/DVS/DV_RAMPS/image07.png</file>
+        <file>img/DVS/DV_RAMPS/image08.png</file>
+        <file>img/DVS/DV_RAMPS/image09.png</file>
+        <file>img/DVS/DV_RAMPS/image10.png</file>
+        <file>img/DVS/DV_EVALUATION/image01.png</file>
+        <file>img/DVS/DV_EVALUATION/image02.png</file>
+        <file>img/DVS/DV_EVALUATION/image03.png</file>
+        <file>img/DVS/DV_EVALUATION/image04.png</file>
+        <file>img/DVS/DV_EVALUATION/image05.png</file>
+        <file>img/DVS/DV_EVALUATION/image06.png</file>
+        <file>img/DVS/DV_EVALUATION/image07.png</file>
+        <file>img/DVS/DV_EVALUATION/image08.png</file>
+        <file>img/DVS/DV_RESOLUTION/image01.png</file>
+        <file>img/DVS/DV_RESOLUTION/image02.png</file>
+        <file>img/DVS/DV_RESOLUTION/image03.png</file>
+        <file>img/DVS/DV_RESOLUTION/image04.png</file>
+        <file>img/DVS/DV_RESOLUTION/image05.png</file>
+        <file>img/DVS/DV_RESOLUTION/image06.png</file>
+        <file>img/DVS/DV_RESOLUTION/image07.png</file>
+        <file>img/DVS/DV_RESOLUTION/image08.png</file>
+        <file>VirtualKeyboard.qml</file>
+        <file>img/TIMD/bitmap1.bmp</file>
+        <file>img/TIMD/bmp00001.bmp</file>
+        <file>CustomButton.qml</file>
+        <file>BatteryIndicator.qml</file>
+        <file>img/TIMD/icon1.ico</file>
+        <file>img/TIMD/icon_plu.ico</file>
+        <file>SignalAnalyzer.qml</file>
+        <file>NumericKeypad.qml</file>
+    </qresource>
+</RCC>

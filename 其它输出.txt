@@ -1,0 +1,20 @@
+	Locals		
+		__arg1	<optimized out>	
+		__arg2	<optimized out>	
+		__arg3	<optimized out>	
+		__value	<optimized out>	
+		_a1	<optimized out>	
+		_a2	<optimized out>	
+		_a3	<optimized out>	
+		buf	0x7fffe000ea58	void*
+		fd	17	int
+		nbytes	138	size_t
+		resultvar	<optimized out>	
+		sc_cancel_oldtype	0	int
+		sc_ret	-32	long int
+		sc_ret@1	<optimized out>	
+		sc_ret@2	<optimized out>	
+	Inspector		
+	Expressions		
+	Return Value		
+	Tooltip		
