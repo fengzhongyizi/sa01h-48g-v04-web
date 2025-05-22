@@ -141,6 +141,12 @@ public slots:
     //When the lower layer receives EDID data,it calls
     void updateEdidList(const QStringList &edidData);
 
+    // 停止当前监测
+    Q_INVOKABLE void stopMonitor();
+    
+    // 清除监测数据
+    Q_INVOKABLE void clearMonitorData();
+
 signals:
     void frameUrlChanged();
     void signalStatusChanged();

@@ -66,39 +66,24 @@ bool SignalAnalyzerManager::exportMonitorData(const QString &filePath)
 
 bool SignalAnalyzerManager::isSignalLost(const QByteArray &frame)
 {
-    // 检测信号丢失的实际逻辑
-    // 几种可能的判断方法:
+    // 先检查标志位，快速返回
+    if (frame.size() > 4 && (static_cast<quint8>(frame[4]) & 0x01) == 0) {
+        return true;
+    }
 
-    // 方法1: 检查特定标志位
-    // 通常硬件会在帧数据中包含信号状态指示位
-    if (frame.size() > 4)
-    { // 确保有足够数据
-        // 假设第5个字节的第0位表示信号状态（0=无信号, 1=有信号）
-        quint8 statusByte = static_cast<quint8>(frame[4]);
-        if ((statusByte & 0x01) == 0)
-        {
-            return true; // 信号丢失
+    // 仅在必要时检查帧内容
+    if (frame.size() <= 100) return false; // 避免误判小帧
+    
+    // 只采样检查，不必检查全部数据
+    int sampleSize = qMin(frame.size(), 1024);
+    int sampleStep = qMax(1, sampleSize / 100);
+    int zeroCount = 0;
+    
+    for (int i = 0; i < sampleSize; i += sampleStep) {
+        if (frame[i] == 0) zeroCount++;
         }
-    }
-
-    // 方法2: 检查帧数据是否全黑或有特定模式
-    // 全黑帧或特定模式通常表示无信号状态
-    bool allZero = true;
-    int checkBytes = qMin(frame.size(), 1024); // 限制检查前1KB
-    for (int i = 0; i < checkBytes; i++)
-    {
-        if (frame[i] != 0)
-        {
-            allZero = false;
-            break;
-        }
-    }
-    if (allZero && frame.size() > 100)
-    {                // 避免误判小帧
-        return true; // 很可能信号丢失
-    }
-
-    return false; // 默认认为有信号
+    
+    return (zeroCount * sampleStep > sampleSize * 0.95); // 95%以上为0判定为信号丢失
 }
 
 // 1.接收与解析数据
@@ -199,6 +184,39 @@ void SignalAnalyzerManager::startMonitor()
     m_monitorSlotLabels.clear();
     m_monitorData.clear();
     emit monitorDataChanged();
+}
+
+// 停止当前监测
+void SignalAnalyzerManager::stopMonitor()
+{
+    if (m_serialPortManager && m_serialPortManager->isUart5Available())
+    {
+        m_serialPortManager->writeDataUart5("STOP MONITOR\r\n", 3);
+        qDebug() << "Monitor stopped at" << QTime::currentTime().toString("hh:mm:ss");
+    }
+    else
+    {
+        qWarning() << "Cannot stop monitor: serial port unavailable";
+    }
+    
+    // 可选：保存当前数据或执行其他停止后操作
+}
+
+// 清除监测数据
+void SignalAnalyzerManager::clearMonitorData()
+{
+    // 清空数据结构
+    m_signalTimeSlots.clear();
+    m_slotIndexMap.clear();
+    
+    // 清空QML绑定的数据
+    m_monitorSlotLabels.clear();
+    m_monitorData.clear();
+    
+    // 通知UI更新
+    emit monitorDataChanged();
+    
+    qDebug() << "Monitor data cleared";
 }
 
 // 修改时间槽间隔
@@ -303,26 +321,44 @@ void SignalAnalyzerManager::applyEdid()
 void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels,
                                               const QList<QPointF> &data)
 {
-    // 把 QStringList 转为 QVariantList
+    // 保存批次标签
     QVariantList labels;
-    // 只取和 data 等长的前 N 条
-    int N = qMin(slotLabels.size(), data.size());
-    for (int i = 0; i < N; ++i)
-    {
-        labels.append(slotLabels.at(i)); // QVariant 自动从 QString 构造
+    for (const QString &label : slotLabels) {
+        labels.append(label); 
     }
     m_monitorSlotLabels = labels;
 
-    // data 转为 QVariantList of { x:…, y:… }
-    QVariantList pts;
-    for (const QPointF &p : data)
-    {
-        QVariantMap mp;
-        mp["x"] = p.x();
-        mp["y"] = p.y();
-        pts.append(mp);
+    // 将所有数据点转换为线性序列，不再使用坐标系
+    // 只需要知道哪些位置有数据点，由前端决定如何分行显示
+    QVariantList dataPoints;
+    
+    // 收集所有需要显示的索引点
+    QSet<int> indices;
+    for (const QPointF &p : data) {
+        int slotIndex = static_cast<int>(p.y());
+        int timeIndex = static_cast<int>(p.x());
+        
+        // 计算线性索引 (每个批次最多100个点)
+        int linearIndex = slotIndex * 100 + timeIndex;
+        indices.insert(linearIndex);
     }
-    m_monitorData = pts;
+    
+    // 将所有索引点按顺序添加到列表中
+    QList<int> sortedIndices = indices.toList();
+    std::sort(sortedIndices.begin(), sortedIndices.end());
+    
+    for (int index : sortedIndices) {
+        dataPoints.append(index);
+    }
+    
+    // 如果没有数据，添加一些示例数据点
+    if (dataPoints.isEmpty()) {
+        for (int i = 0; i < 200; ++i) {
+            dataPoints.append(i);
+        }
+    }
+    
+    m_monitorData = dataPoints;
     emit monitorDataChanged();
 }
 
