@@ -58,3 +58,9 @@ HEADERS += \
     websocketserver.h \          # WebSocket服务器头文件
     tcpserver.h \                # TCP服务器头文件
     signalanalyzermanager.h      # 信号分析器管理器头文件
+
+
+
+# 在SA01H-48G-V04.pro中添加
+QMAKE_LFLAGS += -Wl,--allow-shlib-undefined
+QMAKE_LFLAGS += -Wl,--no-as-needed

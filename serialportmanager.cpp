@@ -191,10 +191,10 @@ QString calculateChecksum(const QString &data) {
 void SerialPortManager::writeData(const QString &data, int typedata)
 {
     // 检查串口是否可用
-    if (!serialPort || !serialPort->isOpen()) {
+    /*if (!serialPort || !serialPort->isOpen()) {
         qWarning() << "Cannot write to UART3: port not open";
         return;
-    }
+    }*/
     
     QByteArray Data;
     if (typedata == 1) {
@@ -225,14 +225,14 @@ void SerialPortManager::writeData(const QString &data, int typedata)
 void SerialPortManager::writeDataUart5(const QString &data, int typedata)
 {
     // 检查串口状态
-    if (!serialPortUart5 || !serialPortUart5->isOpen()) {
+    /*if (!serialPortUart5 || !serialPortUart5->isOpen()) {
         qWarning() << "Cannot write to UART5: port not open";
         // 尝试重新打开
         if (serialPortUart5) {
             reopenPortUart5();
         }
         return;
-    }
+    }*/
     
     QByteArray Data;
     if (typedata == 1) {
@@ -283,10 +283,10 @@ void SerialPortManager::reopenPortUart5()
 void SerialPortManager::writeDataUart6(const QString &data, int typedata)
 {
     // 检查串口是否可用
-    if (!serialPortUart6 || !serialPortUart6->isOpen()) {
+    /*if (!serialPortUart6 || !serialPortUart6->isOpen()) {
         qWarning() << "Cannot write to UART6: port not open";
         return;
-    }
+    }*/
     
     QByteArray Data;
     if (typedata == 1) {

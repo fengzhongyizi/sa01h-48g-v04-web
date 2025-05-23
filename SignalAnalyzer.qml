@@ -1580,7 +1580,7 @@ Rectangle {
                                     
                                     // 只绘制数字"1"
                                     ctx.fillStyle = "black";
-                                    ctx.font = "12px Arial";
+                                    ctx.font = "12px sans-serif";
                                     ctx.textAlign = "center";
                                     ctx.textBaseline = "middle";
                                     ctx.fillText("1",

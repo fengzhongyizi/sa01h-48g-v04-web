@@ -5,7 +5,7 @@ import QtQuick.Controls.Material 2.3  // Material风格的控件
 import QtQuick.Controls 2.3     // 提供Button等控件
 import QtQuick.Layouts 1.3      // 提供布局管理器如RowLayout
 import QtGraphicalEffects 1.12  // 提供图形特效
-import SerialPort 1.0           // 自定义C++模块，处理串口通信
+//import SerialPort 1.0           // 自定义C++模块，处理串口通信
 import NetManager 1.0           // 自定义C++模块，处理网络通信
 import TerminalManager 1.0      // 自定义C++模块，处理终端命令
 import FileManager 1.0          // 自定义C++模块，处理文件操作
