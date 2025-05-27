@@ -87,13 +87,18 @@ void SerialPortManager::openPortUart5()
     serialPortUart5->setStopBits(QSerialPort::OneStop);      // 设置1个停止位
     serialPortUart5->setFlowControl(QSerialPort::NoFlowControl); // 设置无流控制
 
+    qDebug() << "Attempting to open UART5 on" << serialPortUart5->portName();
+    
     // 尝试以读写模式打开串口
     if (!serialPortUart5->open(QIODevice::ReadWrite)) {
         emit errorOccurred(serialPortUart5->errorString());  // 发送错误信号
-        qDebug() << "Error opening port:" << serialPortUart5->errorString();
+        qDebug() << "Error opening port UART5:" << serialPortUart5->errorString();
     } else {
-        qDebug() << "open port uart5!";
+        qDebug() << "Successfully opened UART5, port status: " << 
+            (serialPortUart5->isOpen() ? "Open" : "Closed");
+            
         // 打开端口后发送EDID数据请求命令，连续发送三次以确保可靠性
+        qDebug() << "Sending initial EDID request commands";
         writeDataUart5("GET IN1 EDID1 DATA\r\n", 1);
         writeDataUart5("GET IN1 EDID1 DATA\r\n", 1);
         writeDataUart5("GET IN1 EDID1 DATA\r\n", 1);
@@ -224,23 +229,18 @@ void SerialPortManager::writeData(const QString &data, int typedata)
 // typedata: 数据类型标志(0=需要计算校验和的十六进制数据, 1=直接发送的ASCII数据)
 void SerialPortManager::writeDataUart5(const QString &data, int typedata)
 {
-    // 检查串口状态
-    /*if (!serialPortUart5 || !serialPortUart5->isOpen()) {
-        qWarning() << "Cannot write to UART5: port not open";
-        // 尝试重新打开
-        if (serialPortUart5) {
-            reopenPortUart5();
-        }
-        return;
-    }*/
+    // 添加串口状态检查日志
+    qDebug() << "UART5 status: " << (serialPortUart5->isOpen() ? "Open" : "Closed")
+             << ", Port name: " << serialPortUart5->portName()
+             << ", Baud rate: " << serialPortUart5->baudRate();
     
     QByteArray Data;
     if (typedata == 1) {
         // ASCII模式：直接转换字符串为Latin1编码
         Data = data.toLatin1();
-        qDebug() << "write uart5:" << Data;
+        qDebug() << "Write UART5 (ASCII):" << Data << ", Bytes:" << Data.toHex(' ').toUpper();
     } else {
-        // 十六进制模式：计算校验和，添加到命令末尾，然后转换为二进制
+        // 十六进制模式计算
         QString checksum = calculateChecksum(data);
         if (checksum.isEmpty()) {
             qDebug() << "Error: Failed to calculate checksum.";
@@ -248,18 +248,22 @@ void SerialPortManager::writeDataUart5(const QString &data, int typedata)
         }
         QString finalData = data.trimmed() + " " + checksum.trimmed();
         Data = QByteArray::fromHex(finalData.toLatin1());
-        qDebug() << "write uart5:" << finalData;
+        qDebug() << "Write UART5 (HEX):" << finalData << ", Raw bytes:" << Data.toHex(' ').toUpper();
     }
 
     // 写入时捕获并处理错误
     if (serialPortUart5->isOpen()) {
         qint64 bytesWritten = serialPortUart5->write(Data);
+        qDebug() << "UART5 write result: " << bytesWritten << " bytes written";
+        
         if (bytesWritten == -1) {
             qWarning() << "Error writing to UART5:" << serialPortUart5->errorString();
         } else if (!serialPortUart5->waitForBytesWritten(1000)) {
             // 等待数据写入，最多1秒超时
             qWarning() << "Timeout writing to UART5:" << serialPortUart5->errorString();
         }
+    } else {
+        qWarning() << "Cannot write to UART5: port not open";
     }
 }
 
@@ -381,7 +385,9 @@ void SerialPortManager::onReadyRead()
 void SerialPortManager::onReadyReadUart5()
 {
     QByteArray data = serialPortUart5->readAll();  // 读取所有可用数据
-//    qDebug() << "Data received from uart5:" << data;  // 已注释调试输出
+    qDebug() << "Raw data received from UART5:" << data;
+    qDebug() << "Hex data received from UART5:" << data.toHex(' ').toUpper();
+    
     static QByteArray buffer;  // 静态缓冲区，保存跨多次调用的数据
     buffer.append(data);  // 添加新数据到缓冲区
 
@@ -394,17 +400,22 @@ void SerialPortManager::onReadyReadUart5()
 
         QByteArray packet = buffer.left(endPos + 2);  // 提取完整行，包括\r\n
         QString packetStr = QString::fromUtf8(packet);  // 转换为Unicode字符串
-        qDebug() << "Data received from uart5:" << packet;
+        qDebug() << "Complete packet from UART5:" << packet;
         
         // 处理信号监控数据
         if (packetStr.startsWith("SIGNAL_SLOT")) {
             // 发送信号监控专用信号
+            qDebug() << "Emitting signalMonitorDataReceived with data:" << packet;
             emit signalMonitorDataReceived(packet);
+        } else if (packetStr.startsWith("EDID")) {
+            qDebug() << "EDID data received:" << packetStr;
+            emit dataReceivedASCALL(packetStr);
         } else {
             // 其他常规数据处理
+            qDebug() << "Emitting dataReceivedASCALL with data:" << packetStr;
             emit dataReceivedASCALL(packetStr);
         }
-        //emit dataReceivedASCALL(packetStr);  // 已注释的重复调用
+        
         buffer.remove(0, endPos + 2);  // 从缓冲区移除已处理的行
     }
 

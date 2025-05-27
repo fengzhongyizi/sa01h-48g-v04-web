@@ -54,6 +54,9 @@ int main(int argc, char *argv[])
     // Fusion是一种跨平台的现代风格，在不同OS上保持一致的外观
     QApplication::setStyle("fusion");
 
+    TcpServer server;
+    server.startServer(80);
+
     // 使用try-catch块捕获初始化过程中可能出现的异常
     try
     {

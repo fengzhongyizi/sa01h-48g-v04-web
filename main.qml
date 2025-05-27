@@ -103,7 +103,7 @@ Window {
     // WebSocket服务器 - 用于远程通信
     WebSocketServer {
         id: webSocketServer
-        port: 80                        // WebSocket端口
+        port: 8081                        // WebSocket端口
 
         // WebSocket事件处理
         onRunningChanged: console.log("Server running:", isRunning)
@@ -115,71 +115,6 @@ Window {
     // 网络管理器 - 处理网络通信
     NetManager {
         id: netManager
-    }
-
-    // 串口管理器 - 处理硬件通信
-    SerialPortManager {
-        id: serialPortManager
-        
-        // 串口数据接收处理
-        onDataReceived: {
-            // 解析接收的数据
-            var str = data.toString();
-            var getdata = str.split(" ")         // 按空格分割数据
-            var lengthlow = getdata[3];          // 数据长度低位
-            var lengthheight = getdata[4];       // 数据长度高位
-            var length = parseInt(getdata[4] + getdata[3], 16);  // 计算总长度
-            strcode = getdata[7] + getdata[8];   // 提取状态码
-            var num = getdata.slice(9, length+4); // 提取数据部分
-            
-            // 处理电池状态相关数据，组件会根据SerialPortManager接收的数据自动更新，数据处理方式如下
-            if(strcode == "9880"){
-                // 电池电量处理
-                var value = parseInt(getdata[9]+getdata[10], 16);
-                // 转换为百分比 - 使用特定公式
-                // 公式：(value-1.75)*200
-                // 这里假设value是电压值，1.75可能是最低电压阈值，当value = 1.75时，电量为0%
-                // 200是比例因子，用于将电压范围映射到0-100%
-                // 当value = 2.25时，电量为100% [(2.25-1.75)200 = 100]，电压每增加0.005单位，电量增加1%
-                batteryIndicator.batteryLevel = (value-1.75)*200;
-            } else if(strcode == "9980"){
-                // 电池充电状态处理
-                // 从数据包的第9字节获取设备连接状态
-                var batteryconnet = parseInt(getdata[9], 16);
-                // 从数据包的第10字节获取充电状态
-                var batterystatus = parseInt(getdata[10], 16);
-                // 只有当设备连接(batteryconnet=1)时才更新充电状态
-                if(batteryconnet===1){
-                    batteryIndicator.isCharging = (batterystatus === 1) ? true : false;
-                }
-            }
-            
-            // 将数据转发给当前显示的SignalAnalyzer实例
-            // 根据当前选中的标签，只传递给对应的分析器
-            if (customTabBar.currentIndex === 0) {
-                monitorAnalyzer.processReceiveData(strcode, getdata);
-            } else if (customTabBar.currentIndex === 1) {
-                signalInfoAnalyzer.processReceiveData(strcode, getdata);
-            } else if (customTabBar.currentIndex === 2) {
-                edidAnalyzer.processReceiveData(strcode, getdata);
-            } else if (customTabBar.currentIndex === 3) {
-                errorRateAnalyzer.processReceiveData(strcode, getdata);
-            }
-        }
-
-        // ASCII数据接收处理
-        onDataReceivedASCALL:{
-            // 与二进制数据类似，根据当前选中标签转发数据
-            if (customTabBar.currentIndex === 0) {
-                monitorAnalyzer.processReceiveAsciiData(data);
-            } else if (customTabBar.currentIndex === 1) {
-                signalInfoAnalyzer.processReceiveAsciiData(data);
-            } else if (customTabBar.currentIndex === 2) {
-                edidAnalyzer.processReceiveAsciiData(data);
-            } else if (customTabBar.currentIndex === 3) {
-                errorRateAnalyzer.processReceiveAsciiData(data);
-            }
-        }
     }
 
     // 字体加载器 - 加载自定义字体
@@ -280,8 +215,12 @@ Window {
                         }
                     }
 
+                    // 当切换到Signal Info页(index=1)时请求信号信息
+                    if (customTabBar.currentIndex === 1) {
+                        signalAnalyzerManager.refreshSignalInfo();
+                    }
                     // 当切换到EDID页(index=2)时请求数据
-                    if (customTabBar.currentIndex === 2) {
+                    else if (customTabBar.currentIndex === 2) {
                         serialPortManager.writeDataUart5("GET IN1 EDID1 DATA\r\n", 1);
                     }
                     
@@ -350,6 +289,60 @@ Window {
                     anchors.fill: parent
                     pageFlag: 4   // 设置为Error Rate页面模式
                 }
+            }
+        }
+    }
+
+    // 连接C++导出的serialPortManager信号
+    Connections {
+        target: serialPortManager
+        
+        function onDataReceived(data) {
+            // 解析接收的数据
+            var str = data.toString();
+            var getdata = str.split(" ")         // 按空格分割数据
+            var lengthlow = getdata[3];          // 数据长度低位
+            var lengthheight = getdata[4];       // 数据长度高位
+            var length = parseInt(getdata[4] + getdata[3], 16);  // 计算总长度
+            strcode = getdata[7] + getdata[8];   // 提取状态码
+            var num = getdata.slice(9, length+4); // 提取数据部分
+            
+            // 处理电池状态相关数据，组件会根据SerialPortManager接收的数据自动更新
+            if(strcode == "9880"){
+                // 电池电量处理
+                var value = parseInt(getdata[9]+getdata[10], 16);
+                batteryIndicator.batteryLevel = (value-1.75)*200;
+            } else if(strcode == "9980"){
+                // 电池充电状态处理
+                var batteryconnet = parseInt(getdata[9], 16);
+                var batterystatus = parseInt(getdata[10], 16);
+                if(batteryconnet===1){
+                    batteryIndicator.isCharging = (batterystatus === 1) ? true : false;
+                }
+            }
+            
+            // 将数据转发给当前显示的SignalAnalyzer实例
+            if (customTabBar.currentIndex === 0) {
+                monitorAnalyzer.processReceiveData(strcode, getdata);
+            } else if (customTabBar.currentIndex === 1) {
+                signalInfoAnalyzer.processReceiveData(strcode, getdata);
+            } else if (customTabBar.currentIndex === 2) {
+                edidAnalyzer.processReceiveData(strcode, getdata);
+            } else if (customTabBar.currentIndex === 3) {
+                errorRateAnalyzer.processReceiveData(strcode, getdata);
+            }
+        }
+        
+        function onDataReceivedASCALL(data){
+            // 与二进制数据类似，根据当前选中标签转发数据
+            if (customTabBar.currentIndex === 0) {
+                monitorAnalyzer.processReceiveAsciiData(data);
+            } else if (customTabBar.currentIndex === 1) {
+                signalInfoAnalyzer.processReceiveAsciiData(data);
+            } else if (customTabBar.currentIndex === 2) {
+                edidAnalyzer.processReceiveAsciiData(data);
+            } else if (customTabBar.currentIndex === 3) {
+                errorRateAnalyzer.processReceiveAsciiData(data);
             }
         }
     }

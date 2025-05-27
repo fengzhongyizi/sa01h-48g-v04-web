@@ -103,6 +103,9 @@ public:
     //Subsequent implementation of PCIe/FPGA frame capture
     Q_INVOKABLE void startFpgaVideo();
 
+    // Signal Info - 从MCU获取信号信息
+    Q_INVOKABLE void refreshSignalInfo();
+
     // Monitor control interface
     Q_INVOKABLE void startMonitor();
     Q_INVOKABLE void setTimeSlotInterval(int secs);

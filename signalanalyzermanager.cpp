@@ -4,6 +4,7 @@
 #include <QDir>
 #include <QDateTime>
 #include <QVariantMap>
+#include <QThread>
 #include "serialportmanager.h"
 #include <QDebug>
 #include <QPainter>
@@ -173,7 +174,7 @@ void SignalAnalyzerManager::startMonitor()
 
     if (m_serialPortManager && m_serialPortManager->isUart5Available())
     {
-        m_serialPortManager->writeDataUart5("START MONITOR\r\n", 3);
+        m_serialPortManager->writeDataUart5("START MONITOR\r\n", 1);
     }
     else
     {
@@ -191,7 +192,7 @@ void SignalAnalyzerManager::stopMonitor()
 {
     if (m_serialPortManager && m_serialPortManager->isUart5Available())
     {
-        m_serialPortManager->writeDataUart5("STOP MONITOR\r\n", 3);
+        m_serialPortManager->writeDataUart5("STOP MONITOR\r\n", 1);
         qDebug() << "Monitor stopped at" << QTime::currentTime().toString("hh:mm:ss");
     }
     else
@@ -230,7 +231,7 @@ void SignalAnalyzerManager::setTimeSlotInterval(int secs)
         if (m_serialPortManager)
         {
             m_serialPortManager->writeDataUart5(
-                QString("SET MONITOR SLOT %1\r\n").arg(secs), 3);
+                QString("SET MONITOR SLOT %1\r\n").arg(secs), 1);
         }
     }
 }
@@ -247,7 +248,7 @@ void SignalAnalyzerManager::setTimeSlotUnit(bool inSeconds)
                           : "SET MONITOR UNIT M\r\n";
         if (m_serialPortManager)
         {
-            m_serialPortManager->writeDataUart5(cmd, 3);
+            m_serialPortManager->writeDataUart5(cmd, 1);
         }
     }
 }
@@ -265,7 +266,7 @@ void SignalAnalyzerManager::setTriggerMode(int mode)
                           : "SET MONITOR MODE LOSS\r\n";
         if (m_serialPortManager)
         {
-            m_serialPortManager->writeDataUart5(cmd, 3);
+            m_serialPortManager->writeDataUart5(cmd, 1);
         }
     }
 }
@@ -364,11 +365,11 @@ void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels,
 
 void SignalAnalyzerManager::startFpgaVideo()
 {
-    // 向设备发送命令以获取新的帧数据
-    if (m_serialPortManager && m_serialPortManager->isUart5Available()) {
-        // 发送刷新帧命令
-        m_serialPortManager->writeDataUart5("REFRESH_FRAME\r\n", 3);
-        qDebug() << "Sent REFRESH_FRAME command";
+    // 向FPGA发送命令以获取新的帧数据 - 应该使用UART3连接FPGA，而不是UART5
+    if (m_serialPortManager && m_serialPortManager->isUart3Available()) {
+        // 发送刷新帧命令到FPGA (通过UART3)
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 B1 00 01", 0);
+        qDebug() << "Sent FPGA video refresh command via UART3";
 
         // 更新状态信息
         m_signalStatus = "Active";
@@ -400,6 +401,42 @@ void SignalAnalyzerManager::startFpgaVideo()
         updateFrame(testImage);
     } else {
         qDebug() << "Cannot refresh frame: serial port unavailable";
+    }
+}
+
+// Signal Info - 从MCU获取信号信息
+void SignalAnalyzerManager::refreshSignalInfo()
+{
+    if (m_serialPortManager && m_serialPortManager->isUart5Available()) {
+        // 从MCU (通过UART5) 获取各种信号信息
+        qDebug() << "Requesting signal info from MCU via UART5";
+        
+        // 请求视频格式信息
+        m_serialPortManager->writeDataUart5("GET SIGNAL VIDEO_FORMAT\r\n", 1);
+        QThread::msleep(50);  // 小延迟避免命令冲突
+        
+        // 请求色彩空间信息
+        m_serialPortManager->writeDataUart5("GET SIGNAL COLOR_SPACE\r\n", 1);
+        QThread::msleep(50);
+        
+        // 请求色彩深度信息
+        m_serialPortManager->writeDataUart5("GET SIGNAL COLOR_DEPTH\r\n", 1);
+        QThread::msleep(50);
+        
+        // 请求HDR格式信息
+        m_serialPortManager->writeDataUart5("GET SIGNAL HDR_FORMAT\r\n", 1);
+        QThread::msleep(50);
+        
+        // 请求HDMI/DVI信息
+        m_serialPortManager->writeDataUart5("GET SIGNAL HDMI_DVI\r\n", 1);
+        QThread::msleep(50);
+        
+        // 请求音频信息
+        m_serialPortManager->writeDataUart5("GET SIGNAL AUDIO_INFO\r\n", 1);
+        
+        qDebug() << "Signal info requests sent to MCU";
+    } else {
+        qWarning() << "Cannot refresh signal info: MCU serial port unavailable";
     }
 }
 
