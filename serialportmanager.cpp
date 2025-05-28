@@ -1,8 +1,10 @@
 // 包含必要的头文件
 #include "serialportmanager.h"    // 类定义头文件
+#include "pcievideoreciver.h"     // PCIe视频接收器头文件
 #include <QByteArray>             // 提供字节数组处理功能
 #include <QDebug>                 // 提供调试输出功能
 #include <QThread>                // 提供线程相关功能，用于延时等操作
+#include <QBuffer>
 
 // 构造函数：初始化串口管理器并打开串口连接
 // parent: 父对象指针，用于Qt对象树管理
@@ -10,7 +12,9 @@ SerialPortManager::SerialPortManager(QObject *parent) :
     QObject(parent),
     serialPort(new QSerialPort(this)),       // 初始化uart3，连接FPGA
     serialPortUart5(new QSerialPort(this)),  // 初始化uart5，连接MCU
-    serialPortUart6(new QSerialPort(this))   // 初始化uart6，连接51单片机
+    serialPortUart6(new QSerialPort(this)),  // 初始化uart6，连接51单片机
+    m_pcieVideoReceiver(nullptr),            // 初始化PCIe视频接收器为空
+    m_pcieVideoEnabled(false)                // 默认禁用PCIe视频功能
 {
     // 连接各串口的readyRead信号到相应的处理槽函数
     connect(serialPort, &QSerialPort::readyRead, this, &SerialPortManager::onReadyRead);
@@ -23,6 +27,11 @@ SerialPortManager::SerialPortManager(QObject *parent) :
     openPort();      // 打开UART3
     openPortUart5(); // 打开UART5
     openPortUart6(); // 打开UART6
+    
+    // 初始化PCIe视频接收功能
+    initializePcieVideo();
+    
+    qDebug() << "SerialPortManager initialized with PCIe video support";
 }
 
 // 析构函数：确保在对象销毁时关闭串口
@@ -32,6 +41,9 @@ SerialPortManager::~SerialPortManager()
         serialPort->close();  // 关闭UART3
     }
     // 注意：没有显式关闭UART5和UART6，它们将在QSerialPort对象销毁时自动关闭
+    
+    // 清理PCIe视频接收器
+    cleanupPcieVideo();
 }
 
 // 获取系统上所有可用的串口列表
@@ -44,6 +56,198 @@ QStringList SerialPortManager::availablePorts() const {
     }
     return portNames;
 }
+
+// ==================== PCIe视频接收功能实现 ====================
+
+void SerialPortManager::initializePcieVideo()
+{
+    if (m_pcieVideoReceiver) return;  // 如果已初始化则返回
+    
+    m_pcieVideoReceiver = new PCIeVideoReceiver(this);
+    
+    // 连接PCIe视频接收器的信号
+    connect(m_pcieVideoReceiver, &PCIeVideoReceiver::frameReceived,
+            this, &SerialPortManager::onPcieFrameReceived);
+    connect(m_pcieVideoReceiver, &PCIeVideoReceiver::errorChanged,
+            this, [this]() {
+                // errorChanged信号没有参数，我们需要从对象获取错误信息
+                QString error = m_pcieVideoReceiver->lastError();
+                onPcieVideoError(error);
+            });
+    connect(m_pcieVideoReceiver, &PCIeVideoReceiver::connectionStatusChanged,
+            this, &SerialPortManager::onPcieVideoStatusChanged);
+    connect(m_pcieVideoReceiver, &PCIeVideoReceiver::streamingStatusChanged,
+            this, &SerialPortManager::onPcieVideoStatusChanged);
+    
+    qDebug() << "PCIe video receiver initialized";
+}
+
+void SerialPortManager::cleanupPcieVideo()
+{
+    if (m_pcieVideoReceiver) {
+        m_pcieVideoReceiver->disconnectDevice();
+        m_pcieVideoReceiver->deleteLater();
+        m_pcieVideoReceiver = nullptr;
+    }
+    m_pcieVideoEnabled = false;
+    emit pcieVideoEnabledChanged();
+}
+
+void SerialPortManager::enablePcieVideo(bool enable)
+{
+    if (m_pcieVideoEnabled == enable) return;
+    
+    m_pcieVideoEnabled = enable;
+    
+    if (enable) {
+        if (!m_pcieVideoReceiver) {
+            initializePcieVideo();
+        }
+        qDebug() << "PCIe video enabled";
+    } else {
+        if (m_pcieVideoReceiver) {
+            m_pcieVideoReceiver->stopVideoStream();
+            m_pcieVideoReceiver->disconnectDevice();
+        }
+        qDebug() << "PCIe video disabled";
+    }
+    
+    emit pcieVideoEnabledChanged();
+}
+
+bool SerialPortManager::connectPcieVideoDevice(const QString &devicePath)
+{
+    if (!m_pcieVideoEnabled || !m_pcieVideoReceiver) {
+        qWarning() << "PCIe video not enabled";
+        return false;
+    }
+    
+    QString actualDevicePath = devicePath;
+    if (actualDevicePath.isEmpty()) {
+        // 如果没有指定设备路径，尝试使用第一个可用设备
+        QStringList devices = m_pcieVideoReceiver->getAvailableDevices();
+        if (!devices.isEmpty()) {
+            actualDevicePath = devices.first();
+        } else {
+            actualDevicePath = "/dev/pcie_video0";  // 默认设备
+        }
+    }
+    
+    bool success = m_pcieVideoReceiver->connectDevice(actualDevicePath);
+    if (success) {
+        qDebug() << "PCIe video device connected:" << actualDevicePath;
+    } else {
+        qWarning() << "Failed to connect PCIe video device:" << actualDevicePath;
+    }
+    
+    return success;
+}
+
+void SerialPortManager::disconnectPcieVideoDevice()
+{
+    if (m_pcieVideoReceiver) {
+        m_pcieVideoReceiver->disconnectDevice();
+        qDebug() << "PCIe video device disconnected";
+    }
+}
+
+bool SerialPortManager::setPcieVideoFormat(int width, int height, int fps, const QString &colorFormat)
+{
+    if (!m_pcieVideoReceiver) return false;
+    
+    return m_pcieVideoReceiver->setVideoFormat(width, height, fps, colorFormat);
+}
+
+void SerialPortManager::startPcieVideoStream()
+{
+    if (m_pcieVideoReceiver && m_pcieVideoEnabled) {
+        m_pcieVideoReceiver->startVideoStream();
+        qDebug() << "PCIe video stream started";
+    } else {
+        qWarning() << "Cannot start PCIe video stream: receiver not available or disabled";
+    }
+}
+
+void SerialPortManager::stopPcieVideoStream()
+{
+    if (m_pcieVideoReceiver) {
+        m_pcieVideoReceiver->stopVideoStream();
+        qDebug() << "PCIe video stream stopped";
+    }
+}
+
+void SerialPortManager::capturePcieFrame()
+{
+    if (m_pcieVideoReceiver && m_pcieVideoEnabled) {
+        m_pcieVideoReceiver->captureFrame();
+    }
+}
+
+QVariantMap SerialPortManager::getPcieDeviceInfo()
+{
+    if (m_pcieVideoReceiver) {
+        return m_pcieVideoReceiver->getDeviceInfo();
+    }
+    return QVariantMap();
+}
+
+QStringList SerialPortManager::getAvailablePcieDevices()
+{
+    if (m_pcieVideoReceiver) {
+        return m_pcieVideoReceiver->getAvailableDevices();
+    }
+    return QStringList();
+}
+
+// PCIe视频属性访问器
+bool SerialPortManager::pcieVideoEnabled() const
+{
+    return m_pcieVideoEnabled;
+}
+
+bool SerialPortManager::pcieVideoConnected() const
+{
+    return m_pcieVideoReceiver ? m_pcieVideoReceiver->isConnected() : false;
+}
+
+bool SerialPortManager::pcieVideoStreaming() const
+{
+    return m_pcieVideoReceiver ? m_pcieVideoReceiver->isStreaming() : false;
+}
+
+QString SerialPortManager::pcieVideoStatus() const
+{
+    return m_pcieVideoReceiver ? m_pcieVideoReceiver->deviceStatus() : "Disabled";
+}
+
+// PCIe视频槽函数
+void SerialPortManager::onPcieFrameReceived(const QImage &frame)
+{
+    // 将PCIe接收的帧转发给UI层
+    emit pcieFrameReceived(frame);
+    
+    // 同时也通过imageDataReceived信号发送（保持兼容性）
+    QByteArray frameData;
+    QBuffer buffer(&frameData);
+    buffer.open(QIODevice::WriteOnly);
+    frame.save(&buffer, "PNG");  // 转换为PNG格式的字节数组
+    emit imageDataReceived(frameData);
+}
+
+void SerialPortManager::onPcieVideoError(const QString &error)
+{
+    emit pcieVideoError(error);
+    qWarning() << "PCIe video error:" << error;
+}
+
+void SerialPortManager::onPcieVideoStatusChanged()
+{
+    emit pcieVideoStatusChanged();
+    qDebug() << "PCIe video status changed - Connected:" << pcieVideoConnected() 
+             << "Streaming:" << pcieVideoStreaming() << "Status:" << pcieVideoStatus();
+}
+
+// ==================== 原有串口功能保持不变 ====================
 
 // 打开并配置UART3串口(连接到FPGA)
 void SerialPortManager::openPort()
@@ -450,8 +654,8 @@ void SerialPortManager::onReadyRead()
                 qDebug() << "Image packet length:" << imageLength << "bytes";
                 
                 // 如果是完整的图像包
-                if (buffer.size() >= 8 + imageLength) {
-                    QByteArray imagePacket = buffer.left(8 + imageLength);
+                if (static_cast<quint32>(buffer.size()) >= 8 + imageLength) {
+                    QByteArray imagePacket = buffer.left(static_cast<int>(8 + imageLength));
                     qDebug() << "Complete image packet received, total size:" << imagePacket.size();
                     
                     // 提取图像数据部分

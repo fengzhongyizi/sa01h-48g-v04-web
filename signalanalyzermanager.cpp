@@ -360,14 +360,51 @@ void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels,
 
 void SignalAnalyzerManager::startFpgaVideo()
 {
-    // 向FPGA发送命令以获取新的帧数据 - 应该使用UART3连接FPGA，而不是UART5
+    // 首先尝试使用PCIe视频接收（优先选择）
+    if (m_serialPortManager && m_serialPortManager->pcieVideoEnabled()) {
+        qDebug() << "Using PCIe video capture mode";
+        
+        // 确保PCIe设备已连接
+        if (!m_serialPortManager->pcieVideoConnected()) {
+            bool connected = m_serialPortManager->connectPcieVideoDevice();
+            if (!connected) {
+                qWarning() << "Failed to connect PCIe video device, falling back to UART3";
+                // 如果PCIe连接失败，降级使用串口方式
+                startFpgaVideoViaUart();
+                return;
+            }
+        }
+        
+        // 设置适当的视频格式
+        m_serialPortManager->setPcieVideoFormat(1920, 1080, 60, "RGB24");
+        
+        // 开始PCIe视频流
+        m_serialPortManager->startPcieVideoStream();
+        
+        // 更新状态信息
+        m_signalStatus = "PCIe Active";
+        emit signalStatusChanged();
+        
+        qDebug() << "PCIe video stream started successfully";
+    }
+    else {
+        // 如果PCIe未启用，使用原有的串口方式
+        qDebug() << "PCIe video not enabled, using UART3 mode";
+        startFpgaVideoViaUart();
+    }
+}
+
+// 新增方法：通过串口方式获取FPGA视频数据
+void SignalAnalyzerManager::startFpgaVideoViaUart()
+{
+    // 向FPGA发送命令以获取新的帧数据 - 使用UART3连接FPGA
     if (m_serialPortManager && m_serialPortManager->isUart3Available()) {
         // 发送刷新帧命令到FPGA (通过UART3)
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 B1 00 01", 0);
         qDebug() << "Sent FPGA video refresh command via UART3";
 
         // 更新状态信息
-        m_signalStatus = "Active";
+        m_signalStatus = "UART3 Active";
         emit signalStatusChanged();
         
         // 由于刚发送了命令，设备可能需要时间响应
@@ -395,7 +432,9 @@ void SignalAnalyzerManager::startFpgaVideo()
         // 更新显示的图像
         updateFrame(testImage);
     } else {
-        qDebug() << "Cannot refresh frame: serial port unavailable";
+        qDebug() << "Cannot refresh frame: UART3 serial port unavailable";
+        m_signalStatus = "Disconnected";
+        emit signalStatusChanged();
     }
 }
 
@@ -497,9 +536,23 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager *spMgr,
                                              QObject *parent)
     : QObject(parent), m_serialPortManager(spMgr) // ← 初始化串口管理器指针
 {
-    // 在构造函数中添加
+    // 连接串口管理器的信号监控数据接收信号
     connect(m_serialPortManager, &SerialPortManager::signalMonitorDataReceived,
             this, &SignalAnalyzerManager::processMonitorCommand);
+            
+    // 连接PCIe视频相关信号
+    connect(m_serialPortManager, &SerialPortManager::pcieFrameReceived,
+            this, &SignalAnalyzerManager::updateFrame);
+    connect(m_serialPortManager, &SerialPortManager::pcieVideoError,
+            [this](const QString &error) {
+                qWarning() << "PCIe Video Error in SignalAnalyzerManager:" << error;
+                // 如果PCIe出错，可以尝试切换到串口模式
+                if (m_serialPortManager->pcieVideoStreaming()) {
+                    qDebug() << "PCIe error detected, attempting fallback to UART3";
+                    startFpgaVideoViaUart();
+                }
+            });
+    
     // … 原有信号/槽连接和初始化无需改动 …
     // 测试用静态数据，页面打开就能看到复选框
     qDebug() << "SerialPortManager pointer:" << (m_serialPortManager ? "valid" : "nullptr");

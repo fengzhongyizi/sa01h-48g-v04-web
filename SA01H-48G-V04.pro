@@ -22,6 +22,7 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \               # 主程序入口
     serialportmanager.cpp \      # 串口管理器实现
+    pcievideoreciver.cpp \       # PCIe视频接收器实现
     netmanager.cpp \             # 网络管理器实现
     terminalmanager.cpp \        # 终端管理器实现
     filemanager.cpp \            # 文件管理器实现
@@ -52,6 +53,7 @@ DISTFILES +=
 # 项目头文件列表
 HEADERS += \
     serialportmanager.h \        # 串口管理器头文件
+    pcievideoreciver.h \         # PCIe视频接收器头文件
     netmanager.h \               # 网络管理器头文件
     terminalmanager.h \          # 终端管理器头文件
     filemanager.h \              # 文件管理器头文件

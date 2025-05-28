@@ -31,8 +31,6 @@ class SignalAnalyzerManager : public QObject {
 
     // Video Info
     Q_PROPERTY(QString videoFormat  READ videoFormat  NOTIFY videoFormatChanged)
-    Q_PROPERTY(QString colorSpace    READ colorSpace    NOTIFY colorSpaceChanged)
-    Q_PROPERTY(QString colorDepth    READ colorDepth    NOTIFY colorDepthChanged)
     Q_PROPERTY(QString hdrFormat     READ hdrFormat     NOTIFY hdrFormatChanged)
     Q_PROPERTY(QString hdmiDvi       READ hdmiDvi       NOTIFY hdmiDviChanged)
     Q_PROPERTY(QString frlRate       READ frlRate       NOTIFY frlRateChanged)
@@ -102,6 +100,9 @@ public:
 
     //Subsequent implementation of PCIe/FPGA frame capture
     Q_INVOKABLE void startFpgaVideo();
+    
+    // 新增：通过串口方式获取FPGA视频数据
+    Q_INVOKABLE void startFpgaVideoViaUart();
 
     // Signal Info - 从MCU获取信号信息
     Q_INVOKABLE void refreshSignalInfo();

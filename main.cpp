@@ -92,6 +92,14 @@ int main(int argc, char *argv[])
         qmlRegisterType<WebSocketServer>("WebSocketServer", 1, 0, "WebSocketServer"); // WebSocket服务器
         // 注册串口管理器类型，允许在QML中直接创建实例
         qmlRegisterType<SerialPortManager>("SerialPort", 1, 0, "SerialPortManager");
+        
+        // 连接SerialPortManager的PCIe视频信号到SignalAnalyzerManager
+        QObject::connect(spMgr, &SerialPortManager::pcieFrameReceived, 
+                        saMgr, &SignalAnalyzerManager::updateFrame);
+        QObject::connect(spMgr, &SerialPortManager::pcieVideoError,
+                        [](const QString &error) {
+                            qWarning() << "PCIe Video Error:" << error;
+                        });
 
         // 加载主QML文件
         // 这是UI的入口点
