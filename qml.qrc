@@ -560,5 +560,6 @@
         <file>img/TIMD/icon_plu.ico</file>
         <file>SignalAnalyzer.qml</file>
         <file>NumericKeypad.qml</file>
+        <file>SystemSetupPanel.qml</file>
     </qresource>
 </RCC>

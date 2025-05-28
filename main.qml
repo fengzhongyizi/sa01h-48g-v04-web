@@ -145,9 +145,9 @@ Window {
 
             // 使用重复器创建标签按钮
             Repeater {
-                model: ["Monitor", "Signal Info", "EDID", "Error Rate"]  // 标签名称
+                model: ["Monitor", "Signal Info", "EDID", "Error Rate", "System Setup"]  // 添加第5个标签
                 delegate: Rectangle {
-                    width: customTabBar.width / 4   // 均分宽度
+                    width: customTabBar.width / 5   // 改为5等分宽度
                     height: customTabBar.height
                     // 当前选中项为蓝色，其他为深灰色
                     color: customTabBar.currentIndex === index ? "#336699" : "#444444"
@@ -167,7 +167,7 @@ Window {
                         anchors.centerIn: parent
                         text: modelData
                         font.family: myriadPro.name
-                        font.pixelSize: 40
+                        font.pixelSize: 32  // 稍微减小字体以适应5个标签
                         color: "white"
                         font.bold: customTabBar.currentIndex === index  // 选中项加粗
                     }
@@ -242,6 +242,11 @@ Window {
                         console.log("切换回Error Rate页面，更新监测数据显示");
                         errorRateAnalyzer.updateMonitorDisplay();
                     }
+
+                    // 当切换到System Setup页(index=4)时的处理
+                    else if (customTabBar.currentIndex === 4) {
+                        console.log("Switched to System Setup page");
+                    }
                 }
             }
 
@@ -295,6 +300,18 @@ Window {
                     id: errorRateAnalyzer
                     anchors.fill: parent
                     pageFlag: 4   // 设置为Error Rate页面模式
+                }
+            }
+
+            // System Setup页面
+            Item {
+                id: systemSetupPage
+                anchors.fill: parent
+                visible: customTabBar.currentIndex === 4
+                
+                SystemSetupPanel {
+                    id: systemSetupPanel
+                    anchors.fill: parent
                 }
             }
         }
@@ -351,6 +368,93 @@ Window {
             } else if (customTabBar.currentIndex === 3) {
                 errorRateAnalyzer.processReceiveAsciiData(data);
             }
+        }
+    }
+
+    // SystemSetup confirmsignal信号处理连接
+    Connections {
+        target: systemSetupPanel
+
+        function onConfirmsignal(str, num) {
+            console.log("SystemSetup confirmsignal:", str, num)
+            hexString = num.toString(16);
+            
+            // 确保十六进制字符串为偶数长度
+            if (hexString.length % 2 !== 0) {
+                hexString = "0" + hexString;
+            }
+            
+            // 格式化十六进制字符串，每两位加空格
+            var formattedHexString = "";
+            for (var i = 0; i < hexString.length; i += 2) {
+                formattedHexString += hexString.substr(i, 2) + " ";
+            }
+            hexString = formattedHexString.trim();
+
+            // 默认命令参数
+            strcode = "61 00 ";
+            command_length = "06 00 "
+            
+            // 根据不同的设置类型处理
+            if (str === "DHCP") {
+                if (num === 1) {
+                    // 启用DHCP模式
+                    netManager.setIpAddress("192.168.1.223", "255.255.0.0", "192.168.1.2", "dhcp");
+                    fileManager.updateData("ipmode", "dhcp");
+                } else {
+                    // 启用静态IP模式
+                    netManager.setIpAddress(systemSetupPanel.host_ip.text, 
+                                          systemSetupPanel.ip_mask.text, 
+                                          systemSetupPanel.router_ip.text, "static");
+                    fileManager.updateData("ipmode", "static");
+                    fileManager.updateData("iphost", systemSetupPanel.host_ip.text);
+                    fileManager.updateData("ipmask", systemSetupPanel.ip_mask.text);
+                    fileManager.updateData("iprouter", systemSetupPanel.router_ip.text);
+                }
+            } else if (str === "ARC/eARC_OUT") {
+                strcode = "83 00 ";
+                command_length = "06 00 ";
+                fileManager.updateData("ARC/eARC_OUT", hexString);
+                serialPortManager.writeDataUart5("SET IN1 EARC" + num + "\r\n", 1);
+            } else if (str === "FanControl") {
+                strcode = "03 78 ";
+                command_length = "06 00 ";
+                fileManager.updateData("FanControl", hexString);
+                serialPortManager.writeDataUart5("SET FAN SPEED " + num + "\r\n", 1);
+                return  // 直接返回，不发送串口命令
+            } else if (str === "ResetDefault") {
+                // 执行重置默认设置操作
+                // reset();  // 如果有reset函数的话
+                console.log("Reset to default settings requested");
+            } else if (str === "Reboot") {
+                syscmd = "reboot";
+                terminalManager.executeCommand(syscmd);
+            } else if (str === "PowerOut") {
+                strcode = "AB 00 ";
+                command_length = "06 00 ";
+            } else if (str === "vitals") {
+                strcode = "F8 58 ";
+                command_length = "06 00 ";
+            } else if (str === "LinkTrainForce") {
+                strcode = "C0 00 ";
+                command_length = "07 00 ";
+                if (num === 0) {
+                    hexString = "00 00";
+                }
+            } else if (str === "LinkTrain") {
+                strcode = "C1 00 ";
+                command_length = "07 00 ";
+            } else if (str === "AudioInfoframeRead") {
+                strcode = "01 FE ";
+                command_length = "05 00 ";
+            } else if (str === "AudioInfoframeWrite") {
+                strcode = "01 7E ";
+                command_length = "07 00 ";
+            }
+
+            // 构建完整的串口命令并发送
+            var completeString = command_header + command_length + command_group_address + command_device_address + strcode + hexString;
+            serialPortManager.writeData(completeString, typecmd);
         }
     }
 

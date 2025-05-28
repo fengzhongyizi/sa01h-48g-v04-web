@@ -518,13 +518,17 @@ void SerialPortManager::onReadyReadUart5()
         QString packetStr = QString::fromUtf8(packet);  // 转换为Unicode字符串
         qDebug() << "Complete packet from UART5:" << packet;
         
-        // 处理信号监控数据
+        // 处理不同类型的数据
         if (packetStr.startsWith("SIGNAL_SLOT")) {
             // 发送信号监控专用信号
             qDebug() << "Emitting signalMonitorDataReceived with data:" << packet;
             emit signalMonitorDataReceived(packet);
         } else if (packetStr.startsWith("EDID")) {
             qDebug() << "EDID data received:" << packetStr;
+            emit dataReceivedASCALL(packetStr);
+        } else if (packetStr.startsWith("SIGNAL")) {
+            // 处理其他信号相关数据（如GET SIGNAL命令的响应）
+            qDebug() << "Signal info data received:" << packetStr;
             emit dataReceivedASCALL(packetStr);
         } else {
             // 其他常规数据处理
