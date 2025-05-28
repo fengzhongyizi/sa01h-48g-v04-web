@@ -43,13 +43,12 @@ Rectangle {
     
     // EDID页面属性
     property var edidList: [
-        { name: "FRL48G_8K_2CH_HDR_DSC", selected: true },
-        { name: "FRL48G_8K_2CH_HDR", selected: false },
-        { name: "FRL40G_8K_2CH_HDR", selected: false },
-        { name: "4K60HZ_2CH", selected: false },
-        { name: "4K60HZ(Y420)_2CH", selected: false },
-        { name: "4K30HZ_2CH", selected: false },
-        { name: "1080P_2CH", selected: false },
+        { name: "FRL10G_8K_2CH_HDR", selected: true },
+        { name: "4K60HZ_3D_2CH_HDR", selected: false },
+        { name: "4K60HZY420_3D_2CH", selected: false },
+        { name: "4K30HZ_3D_2CH", selected: false },
+        { name: "1080P_3D_2CH", selected: false },
+        { name: "1080_2CH", selected: false },
         { name: "USER1", selected: false },
         { name: "USER2", selected: false },
         { name: "USER3", selected: false },
@@ -369,7 +368,7 @@ Rectangle {
                             // 每行参数的布局
                             delegate: Item {
                                 width: parent.width
-                                height: 32  // 固定行高
+                                height: 40  // 增加行高以适应文本框
 
                                 RowLayout {
                                     anchors.fill: parent
@@ -381,14 +380,27 @@ Rectangle {
                                         font.pixelSize: 16
                                         color: "white"  // 改为白色
                                         Layout.preferredWidth: 150
+                                        verticalAlignment: Text.AlignVCenter
                                     }
                                     
-                                    // 参数值
-                                    Text {
-                                        text: modelData.value
-                                        font.pixelSize: 16
-                                        color: "white"  // 改为白色
+                                    // 参数值文本框
+                                    Rectangle {
                                         Layout.fillWidth: true
+                                        Layout.preferredHeight: 30
+                                        color: "white"  // 白色背景
+                                        border.color: "#888888"
+                                        border.width: 1
+                                        radius: 3
+                                        
+                                        Text {
+                                            anchors.fill: parent
+                                            anchors.margins: 5
+                                            text: modelData.value || "N/A"
+                                            font.pixelSize: 16
+                                            color: "black"  // 黑色文字
+                                            verticalAlignment: Text.AlignVCenter
+                                            horizontalAlignment: Text.AlignLeft
+                                        }
                                     }
                                 }
                             }
@@ -396,28 +408,7 @@ Rectangle {
                     }
                 }
 
-                // 刷新按钮区域
-                Rectangle {
-                    color: "transparent"
-                    width: parent.width - parent.padding * 2
-                    height: 60
-
-                    Button {
-                        text: qsTr("Refresh Signal Info")
-                        anchors.centerIn: parent
-                        width: 200
-                        height: 40
-
-                        onClicked: signalAnalyzerManager.refreshSignalInfo()
-
-                        background: Rectangle {
-                            color: parent.pressed ? "#C0C0C0" : "#E0E0E0"
-                            border.color: "#808080"
-                            border.width: 1
-                            radius: 4
-                        }
-                    }
-                }
+                
 
                 // 音频信息区域
                 Rectangle {
@@ -456,7 +447,7 @@ Rectangle {
                             // 每行参数的布局
                             delegate: Item {
                                 width: parent.width
-                                height: 32  // 固定行高
+                                height: 40  // 增加行高以适应文本框
 
                                 RowLayout {
                                     anchors.fill: parent
@@ -468,17 +459,53 @@ Rectangle {
                                         font.pixelSize: 16
                                         color: "white"  // 改为白色
                                         Layout.preferredWidth: 150
+                                        verticalAlignment: Text.AlignVCenter
                                     }
                                     
-                                    // 参数值
-                                    Text {
-                                        text: modelData.value
-                                        font.pixelSize: 16
-                                        color: "white"  // 改为白色
+                                    // 参数值文本框
+                                    Rectangle {
                                         Layout.fillWidth: true
+                                        Layout.preferredHeight: 30
+                                        color: "white"  // 白色背景
+                                        border.color: "#888888"
+                                        border.width: 1
+                                        radius: 3
+                                        
+                                        Text {
+                                            anchors.fill: parent
+                                            anchors.margins: 5
+                                            text: modelData.value || "N/A"
+                                            font.pixelSize: 16
+                                            color: "black"  // 黑色文字
+                                            verticalAlignment: Text.AlignVCenter
+                                            horizontalAlignment: Text.AlignLeft
+                                        }
                                     }
                                 }
                             }
+                        }
+                    }
+                }
+
+                // 刷新按钮区域
+                Rectangle {
+                    color: "transparent"
+                    width: parent.width - parent.padding * 2
+                    height: 60
+
+                    Button {
+                        text: qsTr("Refresh Signal Info")
+                        anchors.centerIn: parent
+                        width: 200
+                        height: 40
+
+                        onClicked: signalAnalyzerManager.refreshSignalInfo()
+
+                        background: Rectangle {
+                            color: parent.pressed ? "#C0C0C0" : "#E0E0E0"
+                            border.color: "#808080"
+                            border.width: 1
+                            radius: 4
                         }
                     }
                 }
@@ -505,13 +532,13 @@ Rectangle {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 20
-            spacing: 16
+            spacing: 24
 
             // 标题
             Text {
                 text: qsTr("EDID Selection")
                 font.bold: true
-                font.pixelSize: 28
+                font.pixelSize: 56
                 color: "white"  // 改为白色
             }
 
@@ -521,12 +548,11 @@ Rectangle {
                 Layout.fillHeight: true
                 clip: true
 
-
                 // 网格布局
                 GridLayout {
                     columns: 2
-                    rowSpacing: 20
-                    columnSpacing: 60
+                    rowSpacing: 40
+                    columnSpacing: 120
                     width: parent.width
 
                     // EDID选项列表
@@ -535,31 +561,31 @@ Rectangle {
 
                         // 每个EDID选项
                         delegate: RowLayout {
-                            spacing: 12
+                            spacing: 24
                             Layout.fillWidth: true
 
                             // 自定义方形单选框
                             Item {
-                                width: 32
-                                height: 32
+                                width: 64
+                                height: 64
                                 Layout.alignment: Qt.AlignVCenter
 
                                 // 外框
                                 Rectangle {
-                                    width: 28
-                                    height: 28
+                                    width: 56
+                                    height: 56
                                     anchors.centerIn: parent
-                                    radius: 2    // 轻微圆角方形
+                                    radius: 4
                                     border.color: "white"
-                                    border.width: 2
+                                    border.width: 4
                                     color: "transparent"
 
                                     // 内部选中标记
                                     Rectangle {
-                                        width: 18
-                                        height: 18
+                                        width: 36
+                                        height: 36
                                         anchors.centerIn: parent
-                                        radius: 1
+                                        radius: 2
                                         color: modelData.selected ? "white" : "transparent"
                                     }
                                 }
@@ -576,7 +602,7 @@ Rectangle {
                             // EDID名称
                             Text {
                                 text: modelData.name
-                                font.pixelSize: 22
+                                font.pixelSize: 44
                                 color: "white"  // 改为白色
                                 Layout.fillWidth: true
                             }
@@ -588,14 +614,14 @@ Rectangle {
             // 应用按钮
             RowLayout {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 20
+                spacing: 40
                 
                 // 应用按钮
                 Button {
                     text: qsTr("Apply")
-                    Layout.preferredWidth: 120
-                    Layout.preferredHeight: 50
-                    font.pixelSize: 20
+                    Layout.preferredWidth: 240
+                    Layout.preferredHeight: 100
+                    font.pixelSize: 40
                     onClicked: signalAnalyzerManager.applyEdid()
                 }
             }

@@ -487,13 +487,12 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager *spMgr,
     // 测试用静态数据，页面打开就能看到复选框
     qDebug() << "SerialPortManager pointer:" << (m_serialPortManager ? "valid" : "nullptr");
     QStringList presetEdidList = {
-        "FRL48G_8K_2CH_HDR_DSC",
-        "FRL48G_8K_2CH_HDR", 
-        "FRL40G_8K_2CH_HDR",
-        "4K60HZ_2CH",
-        "4K60HZ(Y420)_2CH",
-        "4K30HZ_2CH",
-        "1080P_2CH",
+        "FRL10G_8K_2CH_HDR",
+        "4K60HZ_3D_2CH_HDR", 
+        "4K60HZY420_3D_2CH",
+        "4K30HZ_3D_2CH",
+        "1080P_3D_2CH",
+        "1080_2CH",
         "USER1", "USER2", "USER3", "USER4", "USER5", 
         "USER6", "USER7", "USER8", "USER9", "USER10"
     };
