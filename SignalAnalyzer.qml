@@ -82,12 +82,226 @@ Rectangle {
         console.log("SignalAnalyzer received ASCII data:", data)
         // 处理ASCII格式数据
         if(data.indexOf("EDID") !== -1 && data.indexOf("DATA") !== -1) {
-            // 处理EDID数据
-            var linedata = data.split(" ");
-            // 根据需要更新UI元素
-            // 解析EDID数据格式并传递给C++处理层
-            signalAnalyzerManager.updateEdidList(parseEdidData(data));
+            // 解析EDID数据
+            console.log("EDID data received, parsing...")
+            var edidFormats = parseEdidData(data);
+            signalAnalyzerManager.updateEdidList(edidFormats);
         }
+    }
+    
+    // EDID数据解析函数
+    function parseEdidData(data) {
+        var edidFormats = [];
+        
+        try {
+            // 寻找标准EDID头部 "00 ff ff ff ff ff ff 00" 来确定正确的起始位置
+            var edidHeaderStart = data.indexOf("00 ff ff ff ff ff ff 00");
+            if (edidHeaderStart === -1) {
+                console.log("EDID standard header not found");
+                return [];
+            }
+            
+            // 从EDID标准头部开始提取数据到行尾
+            var hexEnd = data.indexOf("\r\n");
+            var hexData = data.substring(edidHeaderStart, hexEnd);
+            
+            // 移除空格，获取纯十六进制字符串
+            var cleanHex = hexData.replace(/\s+/g, '');
+            console.log("Clean hex data length:", cleanHex.length);
+            console.log("EDID starts with:", cleanHex.substr(0, 32));
+            
+            if (cleanHex.length < 256) {
+                console.log("EDID data too short");
+                return [];
+            }
+            
+            // 解析EDID标准时序描述符（从字节54开始，每18字节一个）
+            var formats = [];
+            
+            // 检查详细时序描述符
+            for (var i = 54*2; i < Math.min(cleanHex.length, 126*2); i += 18*2) {
+                var timing = parseDetailedTiming(cleanHex.substr(i, 36));
+                if (timing) {
+                    formats.push(timing);
+                }
+            }
+            
+            // 如果有扩展块，解析扩展块中的时序
+            if (cleanHex.length >= 256*2) {
+                // CEA-861扩展块解析
+                var extFormats = parseCEAExtension(cleanHex.substr(256*2));
+                formats = formats.concat(extFormats);
+            }
+            
+            // 不添加默认值，以MCU返回的数据为准
+            
+            // 添加音频支持信息
+            var audioFormats = parseAudioFormats(cleanHex);
+            if (audioFormats.length > 0) {
+                formats = formats.concat(audioFormats);
+            }
+            
+            console.log("Parsed EDID formats:", formats);
+            return formats;
+            
+        } catch (error) {
+            console.log("EDID parsing error:", error);
+            return [];
+        }
+    }
+
+    // 解析详细时序描述符
+    function parseDetailedTiming(hexTiming) {
+        if (hexTiming.length < 36) return null;
+        
+        try {
+            // 像素时钟 (前4字节，小端序)
+            var pixelClock = parseInt(hexTiming.substr(0, 2), 16) + 
+                            (parseInt(hexTiming.substr(2, 2), 16) << 8);
+            
+            if (pixelClock === 0) return null; // 无效时序
+            
+            // 水平活动像素 (字节2低4位 + 字节4高4位)
+            var hActive = parseInt(hexTiming.substr(4, 2), 16) + 
+                         ((parseInt(hexTiming.substr(8, 2), 16) & 0xF0) << 4);
+            
+            // 垂直活动像素 (字节5低4位 + 字节7高4位)  
+            var vActive = parseInt(hexTiming.substr(10, 2), 16) + 
+                         ((parseInt(hexTiming.substr(14, 2), 16) & 0xF0) << 4);
+            
+            if (hActive === 0 || vActive === 0) return null;
+            
+            // 计算刷新率(简化计算)
+            var refreshRate = Math.round(pixelClock * 10000 / (hActive * vActive * 1.1));
+            
+            // 格式化分辨率字符串
+            var resolution = hActive + "x" + vActive + "@" + refreshRate + "Hz";
+            
+            // 识别常见分辨率
+            if (hActive === 1920 && vActive === 1080) {
+                return "1080P@" + refreshRate + "Hz";
+            } else if (hActive === 1280 && vActive === 720) {
+                return "720P@" + refreshRate + "Hz";
+            } else if (hActive === 3840 && vActive === 2160) {
+                return "4K@" + refreshRate + "Hz";
+            } else if (hActive === 7680 && vActive === 4320) {
+                return "8K@" + refreshRate + "Hz";
+            }
+            
+            return resolution;
+            
+        } catch (error) {
+            console.log("Timing parsing error:", error);
+            return null;
+        }
+    }
+
+    // 解析CEA-861扩展块
+    function parseCEAExtension(extHex) {
+        var formats = [];
+        
+        if (extHex.length < 8) return formats;
+        
+        try {
+            // CEA扩展块标识
+            var ceaTag = parseInt(extHex.substr(0, 2), 16);
+            if (ceaTag !== 0x02) return formats; // 不是CEA扩展
+            
+            // 数据块收集区域的起始偏移
+            var dtdStart = parseInt(extHex.substr(4, 2), 16);
+            
+            // 解析数据块
+            for (var i = 8; i < dtdStart * 2; ) {
+                var blockHeader = parseInt(extHex.substr(i, 2), 16);
+                var blockTag = (blockHeader & 0xE0) >> 5;
+                var blockLength = blockHeader & 0x1F;
+                
+                if (blockTag === 2) { // Video数据块
+                    for (var j = 0; j < blockLength; j++) {
+                        var vic = parseInt(extHex.substr(i + 2 + j*2, 2), 16) & 0x7F;
+                        var format = getVICFormat(vic);
+                        if (format) {
+                            formats.push(format);
+                        }
+                    }
+                }
+                
+                i += 2 + blockLength * 2;
+                if (i >= dtdStart * 2) break;
+            }
+            
+        } catch (error) {
+            console.log("CEA extension parsing error:", error);
+        }
+        
+        return formats;
+    }
+
+    // VIC码转换为格式字符串
+    function getVICFormat(vic) {
+        var vicTable = {
+            1: "640x480@60Hz",
+            2: "720x480@60Hz", 
+            3: "720x480@60Hz",
+            4: "1280x720@60Hz",
+            5: "1920x1080i@60Hz",
+            16: "1920x1080@60Hz",
+            17: "720x576@50Hz",
+            18: "720x576@50Hz", 
+            19: "1280x720@50Hz",
+            20: "1920x1080i@50Hz",
+            31: "1920x1080@50Hz",
+            32: "1920x1080@24Hz",
+            33: "1920x1080@25Hz",
+            34: "1920x1080@30Hz",
+            93: "3840x2160@24Hz",
+            94: "3840x2160@25Hz", 
+            95: "3840x2160@30Hz",
+            96: "3840x2160@50Hz",
+            97: "3840x2160@60Hz"
+        };
+        
+        var format = vicTable[vic];
+        if (format) {
+            // 转换为更友好的格式
+            if (format.includes("1920x1080") && !format.includes("i")) {
+                return format.replace("1920x1080", "1080P");
+            } else if (format.includes("1280x720")) {
+                return format.replace("1280x720", "720P");
+            } else if (format.includes("3840x2160")) {
+                return format.replace("3840x2160", "4K");
+            }
+        }
+        
+        return format;
+    }
+
+    // 解析音频格式
+    function parseAudioFormats(hexData) {
+        var audioFormats = [];
+        
+        try {
+            // 简化的音频支持检测
+            if (hexData.includes("0103") || hexData.includes("0203")) {
+                audioFormats.push("2CH音频");
+            }
+            if (hexData.includes("0703") || hexData.includes("0803")) {
+                audioFormats.push("多声道音频");  
+            }
+            if (hexData.includes("1503")) {
+                audioFormats.push("杜比音频");
+            }
+            
+            if (audioFormats.length === 0) {
+                audioFormats.push("基础音频");
+            }
+            
+        } catch (error) {
+            console.log("Audio parsing error:", error);
+            audioFormats.push("音频支持");
+        }
+        
+        return audioFormats;
     }
     
     // 启动FPGA视频获取

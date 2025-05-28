@@ -111,6 +111,11 @@ signals:
     // 当接收到特定格式的信号监控数据时发出
     // data: 原始监控数据
     void signalMonitorDataReceived(const QByteArray &data);
+    
+    // FPGA图像数据接收信号
+    // 当接收到FPGA发送的图像数据时发出
+    // data: 原始图像数据
+    void imageDataReceived(const QByteArray &data);
 
 private slots:
     // UART3数据就绪时的处理槽函数

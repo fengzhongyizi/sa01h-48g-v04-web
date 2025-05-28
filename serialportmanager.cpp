@@ -355,27 +355,143 @@ QByteArray SerialPortManager::readDataUart6()
 void SerialPortManager::onReadyRead()
 {
     static QByteArray buffer;  // 静态缓冲区，保存跨多次调用的数据
+    static int dataPacketCount = 0;  // 数据包计数器
+    
     QByteArray data = serialPort->readAll();  // 读取所有可用数据
-//    qDebug() << "Data received from uart3:" << data;  // 已注释调试输出
+    
+    // ========== FPGA图像数据格式分析日志 START ==========
+    dataPacketCount++;
+    qDebug() << "=== FPGA Data Analysis === Packet #" << dataPacketCount;
+    qDebug() << "Raw data size:" << data.size() << "bytes";
+    qDebug() << "Raw data (HEX):" << data.toHex(' ').toUpper();
+    
+    // 显示前64个字节的详细信息以分析数据格式
+    if (data.size() > 0) {
+        QString hexStr = data.left(64).toHex(' ').toUpper();
+        qDebug() << "First 64 bytes:" << hexStr;
+        
+        // 检查可能的图像数据头部格式
+        if (data.size() >= 4) {
+            quint8 byte0 = static_cast<quint8>(data[0]);
+            quint8 byte1 = static_cast<quint8>(data[1]);
+            quint8 byte2 = static_cast<quint8>(data[2]);
+            quint8 byte3 = static_cast<quint8>(data[3]);
+            
+            qDebug() << "Header analysis:" 
+                     << "B0=" << QString("0x%1").arg(byte0, 2, 16, QChar('0')).toUpper()
+                     << "B1=" << QString("0x%1").arg(byte1, 2, 16, QChar('0')).toUpper()
+                     << "B2=" << QString("0x%1").arg(byte2, 2, 16, QChar('0')).toUpper()
+                     << "B3=" << QString("0x%1").arg(byte3, 2, 16, QChar('0')).toUpper();
+            
+            // 检查常见图像格式标识
+            if (data.startsWith("\xFF\xD8\xFF")) {
+                qDebug() << "*** JPEG image format detected ***";
+            } else if (data.startsWith("\x89PNG")) {
+                qDebug() << "*** PNG image format detected ***";
+            } else if (data.startsWith("\xAB\x00\x01")) {
+                qDebug() << "*** Custom image header AB 00 01 detected ***";
+            } else if (data.startsWith("\xAB\x00\x00")) {
+                qDebug() << "*** Command packet AB 00 00 detected ***";
+            } else {
+                qDebug() << "*** Unknown format, possibly raw image data ***";
+            }
+        }
+        
+        // 如果是大数据包，可能是图像数据
+        if (data.size() > 10000) {
+            qDebug() << "*** LARGE DATA PACKET - Possible image data ***";
+            qDebug() << "Size analysis:";
+            qDebug() << "  1920x1080 RGB24 =" << (1920*1080*3) << "bytes";
+            qDebug() << "  1280x720 RGB24  =" << (1280*720*3) << "bytes";
+            qDebug() << "  Current size    =" << data.size() << "bytes";
+            
+            // 显示数据开头和结尾
+            qDebug() << "Data head (32 bytes):" << data.left(32).toHex(' ').toUpper();
+            qDebug() << "Data tail (32 bytes):" << data.right(32).toHex(' ').toUpper();
+        }
+    }
+    qDebug() << "=== FPGA Data Analysis END ===";
+    // ========== FPGA图像数据格式分析日志 END ==========
+    
     buffer.append(data);  // 添加新数据到缓冲区
 
     // 处理缓冲区中的完整数据包
     while (buffer.size() >= 4) {
-        // 检查数据包头标识(AB 00 00)
+        qDebug() << "Processing buffer, current size:" << buffer.size();
+        qDebug() << "Buffer first 16 bytes:" << buffer.left(16).toHex(' ').toUpper();
+        
+        // 检查数据包头标识(AB 00 00) - 命令包
         if (buffer.startsWith("\xAB\x00\x00")) {
             quint8 length = static_cast<quint8>(buffer.at(3));  // 获取数据包长度字段
+            qDebug() << "Command packet detected, length field:" << length;
 
             // 如果缓冲区包含完整数据包
             if (buffer.size() >= 4 + length) {
-                QByteArray packet = buffer.left(5 + length);  // 提取完整数据包
-                qDebug() << "Data received from uart3:" << packet.toHex(' ').toUpper();
+                QByteArray packet = buffer.left(4 + length + 1);  // 提取完整数据包
+                qDebug() << "Complete command packet:" << packet.toHex(' ').toUpper();
                 emit dataReceived(packet.toHex(' ').toUpper());  // 发送数据接收信号
-                buffer = buffer.mid(4 + length);  // 从缓冲区移除已处理的数据包
+                buffer = buffer.mid(4 + length + 1);  // 从缓冲区移除已处理的数据包
             } else {
+                qDebug() << "Incomplete command packet, waiting for more data";
                 break;  // 数据包不完整，等待更多数据
             }
-        } else {
-            buffer.remove(0, 1);  // 移除一个字节，继续寻找包头
+        }
+        // 检查图像数据包头标识(AB 00 01) - 图像包
+        else if (buffer.startsWith("\xAB\x00\x01")) {
+            qDebug() << "*** IMAGE PACKET DETECTED ***";
+            
+            if (buffer.size() >= 8) {
+                // 假设图像包的长度字段在第4-7字节(32位长度)
+                quint32 imageLength = (static_cast<quint32>(buffer.at(7)) << 24) |
+                                     (static_cast<quint32>(buffer.at(6)) << 16) |
+                                     (static_cast<quint32>(buffer.at(5)) << 8) |
+                                     static_cast<quint32>(buffer.at(4));
+                
+                qDebug() << "Image packet length:" << imageLength << "bytes";
+                
+                // 如果是完整的图像包
+                if (buffer.size() >= 8 + imageLength) {
+                    QByteArray imagePacket = buffer.left(8 + imageLength);
+                    qDebug() << "Complete image packet received, total size:" << imagePacket.size();
+                    
+                    // 提取图像数据部分
+                    QByteArray imageData = imagePacket.mid(8);
+                    qDebug() << "Image data size:" << imageData.size();
+                    qDebug() << "Image data header:" << imageData.left(32).toHex(' ').toUpper();
+                    
+                    // 发送图像数据信号
+                    emit imageDataReceived(imageData);
+                    
+                    buffer = buffer.mid(8 + imageLength);  // 移除已处理的图像包
+                } else {
+                    qDebug() << "Incomplete image packet, need" << (8 + imageLength) << "bytes, have" << buffer.size();
+                    break;  // 等待更多数据
+                }
+            } else {
+                qDebug() << "Image packet header incomplete, waiting for more data";
+                break;
+            }
+        }
+        else {
+            // 检查是否可能是原始图像流数据
+            if (buffer.size() > 50000) {  // 大于50KB可能是原始图像
+                qDebug() << "*** LARGE BUFFER - Possible raw image stream ***";
+                qDebug() << "Buffer size:" << buffer.size();
+                qDebug() << "Raw data pattern analysis:";
+                qDebug() << "  First 32 bytes:" << buffer.left(32).toHex(' ').toUpper();
+                qDebug() << "  Bytes at 1000:" << buffer.mid(1000, 32).toHex(' ').toUpper();
+                qDebug() << "  Last 32 bytes:" << buffer.right(32).toHex(' ').toUpper();
+                
+                // 假设整个缓冲区是图像数据，直接处理
+                emit imageDataReceived(buffer);
+                buffer.clear();
+                break;
+            } else {
+                // 记录无法识别的数据
+                qDebug() << "Unrecognized data, removing byte:" 
+                         << QString("0x%1").arg(static_cast<unsigned char>(buffer.at(0)), 2, 16, QChar('0')).toUpper();
+                buffer.remove(0, 1);  // 移除一个字节，继续寻找包头
+            }
         }
     }
 }
