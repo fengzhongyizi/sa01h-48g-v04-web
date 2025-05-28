@@ -1411,56 +1411,6 @@ Rectangle {
                                     onCanceled: { stopButton.isPressed = false }
                                 }
                             }
-                            
-                            // "Clear Data" 按钮
-                            Button {
-                                id: clearDataButton
-                                text: qsTr("Clear Data")
-                                Layout.preferredHeight: 50
-                                Layout.preferredWidth: 150
-                                font.pixelSize: 16
-                                font.bold: true
-                                
-                                // 点击动画属性
-                                property bool isPressed: false
-                                
-                                // 蓝色按钮样式
-                                background: Rectangle {
-                                    color: clearDataButton.isPressed ? "#4A7FB0" : "#5B9BD5"  // 按下时颜色加深
-                                    radius: 4
-                                    border.color: clearDataButton.isPressed ? "#20416F" : "#2F528F"
-                                    border.width: clearDataButton.isPressed ? 2 : 1
-                                    
-                                    // 动画效果
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                    scale: clearDataButton.isPressed ? 0.95 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 100 } }
-                                }
-                                
-                                // 按钮文本
-                                contentItem: Text {
-                                    text: clearDataButton.text
-                                    font: clearDataButton.font
-                                    color: "white"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    
-                                    scale: clearDataButton.isPressed ? 0.95 : 1.0
-                                    Behavior on scale { NumberAnimation { duration: 100 } }
-                                }
-                                
-                                // 鼠标事件处理
-                                MouseArea {
-                                    anchors.fill: parent
-                                    onPressed: { clearDataButton.isPressed = true }
-                                    onReleased: { clearDataButton.isPressed = false }
-                                    onClicked: {
-                                        signalAnalyzerManager.clearMonitorData();
-                                        console.log("Clear data requested");
-                                    }
-                                    onCanceled: { clearDataButton.isPressed = false }
-                                }
-                            }
                         }
                     }
                 }
@@ -1664,45 +1614,18 @@ Rectangle {
                                 var cellWidth = parent.cellWidth;
                                 var rowHeight = 35;  // 固定行高
                                 
-                                // 确保至少有一些数据可显示
+                                // 清除画布
+                                ctx.clearRect(0, 0, width, height);
+                                
+                                // 检查是否有监控数据
                                 if (!signalData || signalData.length === 0) {
-                                    // 生成示例数据 - 采用批次号组织形式，确保数据正确跨行显示
-                                    signalData = [];
-                                    
-                                    // 第一批次数据 (0001) - 前150个槽位，确保跨越两行
-                                    // 索引0-149，其中0-99显示在第一行，100-149显示在第二行
-                                    for (var i = 0; i < 101; i++) {
-                                        if(i>70 && i<80)
-                                            signalData.push(i);
-                                    }
-                                    
-                                    // 第二批次数据 (0101) - 接下来80个槽位，从第三行开始
-                                    // 索引200-279，对应第三行的0-79
-                                    for (var j = 0; j < 80; j++) {
-                                        signalData.push(200 + j);
-                                    }
-                                    
-                                    // 第三批次数据 (0201) - 接下来120个槽位，从第四行开始
-                                    // 索引300-419，对应第四行的0-99和第五行的0-19
-                                    for (var k = 0; k < 120; k++) {
-                                        signalData.push(300 + k);
-                                    }
-                                    
-                                    // 第四批次数据 (0301) - 接下来50个槽位，从第六行开始
-                                    // 索引500-549，对应第六行的0-49
-                                    for (var l = 0; l < 50; l++) {
-                                        signalData.push(500 + l);
-                                    }
-                                    
-                                    // 第五批次数据 (0401) - 接下来30个槽位，从第七行开始
-                                    // 索引600-629，对应第七行的0-29
-                                    for (var m = 0; m < 30; m++) {
-                                        signalData.push(600 + m);
-                                    }
+                                    // 无数据时不显示任何内容
+                                    console.log("No error rate monitoring data to display");
+                                    return;
                                 }
                                 
                                 // 计算需要的行数
-                                var lastIndex = signalData.length > 0 ? signalData[signalData.length - 1] : 0;
+                                var lastIndex = signalData.length > 0 ? Math.max.apply(Math, signalData) : 0;
                                 
                                 // 检查是否超过最大槽位数
                                 if (lastIndex >= maxTotalSlots) {
@@ -1723,8 +1646,8 @@ Rectangle {
                                     }
                                 }
                                 
-                                // 绘制所有数据点，并确保批次与行对齐正确
-                                ctx.clearRect(0, 0, width, height);
+                                // 绘制监控数据点
+                                console.log("Drawing", signalData.length, "error data points");
                                 for (var i = 0; i < signalData.length; i++) {
                                     var index = signalData[i];
                                     
@@ -1734,15 +1657,17 @@ Rectangle {
                                     var col = index % totalCols;
                                     var row = Math.floor(index / totalCols);
                                     
-                                    // 只绘制数字"1"
-                                    ctx.fillStyle = "black";
-                                    ctx.font = "12px sans-serif";
+                                    // 绘制红色数字"1"表示异常
+                                    ctx.fillStyle = "#FF0000";  // 红色
+                                    ctx.font = "bold 12px sans-serif";
                                     ctx.textAlign = "center";
                                     ctx.textBaseline = "middle";
                                     ctx.fillText("1",
                                                  col * cellWidth + cellWidth/2,
                                                  row * rowHeight + rowHeight/2);
                                 }
+                                
+                                console.log("Data canvas painted with", signalData.length, "error points");
                             }
                             
                             // 显示最大槽位警告

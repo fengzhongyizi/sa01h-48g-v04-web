@@ -174,14 +174,22 @@ void SignalAnalyzerManager::startMonitor()
 
     if (m_serialPortManager && m_serialPortManager->isUart5Available())
     {
-        m_serialPortManager->writeDataUart5("START MONITOR\r\n", 1);
+        // 使用新的指令格式：START SIGNAL MONITOR <INTERVAL> <UNIT> <MODE>
+        QString unit = m_timeSlotInSeconds ? "SECONDS" : "MINUTES";
+        QString cmd = QString("START SIGNAL MONITOR %1 %2 %3\r\n")
+                          .arg(m_timeSlotInterval)
+                          .arg(unit)
+                          .arg(m_triggerMode);
+        
+        m_serialPortManager->writeDataUart5(cmd, 1);
+        qDebug() << "Starting monitor with command:" << cmd;
     }
     else
     {
         qWarning() << "Cannot start monitor: serial port unavailable";
     }
 
-    // 清掉已有曲线
+    // 清空已有数据
     m_monitorSlotLabels.clear();
     m_monitorData.clear();
     emit monitorDataChanged();
@@ -192,21 +200,25 @@ void SignalAnalyzerManager::stopMonitor()
 {
     if (m_serialPortManager && m_serialPortManager->isUart5Available())
     {
-        m_serialPortManager->writeDataUart5("STOP MONITOR\r\n", 1);
+        m_serialPortManager->writeDataUart5("STOP SIGNAL MONITOR\r\n", 1);
         qDebug() << "Monitor stopped at" << QTime::currentTime().toString("hh:mm:ss");
     }
     else
     {
         qWarning() << "Cannot stop monitor: serial port unavailable";
     }
-    
-    // 可选：保存当前数据或执行其他停止后操作
 }
 
 // 清除监测数据
 void SignalAnalyzerManager::clearMonitorData()
 {
-    // 清空数据结构
+    if (m_serialPortManager && m_serialPortManager->isUart5Available())
+    {
+        m_serialPortManager->writeDataUart5("CLEAR MONITOR DATA\r\n", 1);
+        qDebug() << "Clear monitor data command sent";
+    }
+    
+    // 清空本地数据结构
     m_signalTimeSlots.clear();
     m_slotIndexMap.clear();
     
@@ -227,12 +239,7 @@ void SignalAnalyzerManager::setTimeSlotInterval(int secs)
     {
         m_timeSlotInterval = secs;
         emit timeSlotIntervalChanged();
-        // 发送给硬件：SET MONITOR SLOT <secs>
-        if (m_serialPortManager)
-        {
-            m_serialPortManager->writeDataUart5(
-                QString("SET MONITOR SLOT %1\r\n").arg(secs), 1);
-        }
+        qDebug() << "Time slot interval changed to:" << secs;
     }
 }
 
@@ -243,13 +250,7 @@ void SignalAnalyzerManager::setTimeSlotUnit(bool inSeconds)
     {
         m_timeSlotInSeconds = inSeconds;
         emit timeSlotIntervalChanged();
-        QString cmd = inSeconds
-                          ? "SET MONITOR UNIT S\r\n"
-                          : "SET MONITOR UNIT M\r\n";
-        if (m_serialPortManager)
-        {
-            m_serialPortManager->writeDataUart5(cmd, 1);
-        }
+        qDebug() << "Time slot unit changed to:" << (inSeconds ? "seconds" : "minutes");
     }
 }
 
@@ -260,14 +261,7 @@ void SignalAnalyzerManager::setTriggerMode(int mode)
     {
         m_triggerMode = mode;
         emit triggerModeChanged();
-        // 0: 图像差分+掉帧, 1: 仅掉帧
-        QString cmd = (mode == 0)
-                          ? "SET MONITOR MODE DIFF\r\n"
-                          : "SET MONITOR MODE LOSS\r\n";
-        if (m_serialPortManager)
-        {
-            m_serialPortManager->writeDataUart5(cmd, 1);
-        }
+        qDebug() << "Trigger mode changed to:" << mode;
     }
 }
 
