@@ -412,30 +412,53 @@ void SignalAnalyzerManager::refreshSignalInfo()
         // 从MCU (通过UART5) 获取各种信号信息
         qDebug() << "Requesting signal info from MCU via UART5";
         
-        // 请求视频格式信息
+        // 请求视频信息
         m_serialPortManager->writeDataUart5("GET SIGNAL VIDEO_FORMAT\r\n", 1);
         QThread::msleep(50);  // 小延迟避免命令冲突
         
-        // 请求色彩空间信息
         m_serialPortManager->writeDataUart5("GET SIGNAL COLOR_SPACE\r\n", 1);
         QThread::msleep(50);
         
-        // 请求色彩深度信息
         m_serialPortManager->writeDataUart5("GET SIGNAL COLOR_DEPTH\r\n", 1);
         QThread::msleep(50);
         
-        // 请求HDR格式信息
         m_serialPortManager->writeDataUart5("GET SIGNAL HDR_FORMAT\r\n", 1);
         QThread::msleep(50);
         
-        // 请求HDMI/DVI信息
         m_serialPortManager->writeDataUart5("GET SIGNAL HDMI_DVI\r\n", 1);
         QThread::msleep(50);
         
-        // 请求音频信息
-        m_serialPortManager->writeDataUart5("GET SIGNAL AUDIO_INFO\r\n", 1);
+        m_serialPortManager->writeDataUart5("GET SIGNAL FRL_RATE\r\n", 1);
+        QThread::msleep(50);
         
-        qDebug() << "Signal info requests sent to MCU";
+        m_serialPortManager->writeDataUart5("GET SIGNAL DSC_MODE\r\n", 1);
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeDataUart5("GET SIGNAL HDCP_TYPE\r\n", 1);
+        QThread::msleep(50);
+        
+        // 请求音频信息
+        m_serialPortManager->writeDataUart5("GET SIGNAL SAMPLING_FREQ\r\n", 1);
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeDataUart5("GET SIGNAL SAMPLING_SIZE\r\n", 1);
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeDataUart5("GET SIGNAL CHANNEL_COUNT\r\n", 1);
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeDataUart5("GET SIGNAL CHANNEL_NUMBER\r\n", 1);
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeDataUart5("GET SIGNAL LEVEL_SHIFT\r\n", 1);
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeDataUart5("GET SIGNAL CBIT_SAMPLING_FREQ\r\n", 1);
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeDataUart5("GET SIGNAL CBIT_DATA_TYPE\r\n", 1);
+        
+        qDebug() << "All signal info requests sent to MCU";
     } else {
         qWarning() << "Cannot refresh signal info: MCU serial port unavailable";
     }

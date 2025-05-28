@@ -89,8 +89,102 @@ Rectangle {
     function processReceiveAsciiData(data) {
         console.log("SignalAnalyzer received ASCII data:", data)
         
+        // 处理SIGNAL_INFO返回数据
+        if (data.indexOf("SIGNAL_INFO") === 0) {
+            var parts = data.trim().split(' ');
+            if (parts.length >= 3) {
+                var parameter = parts[1];   // 参数名
+                var value = parts.slice(2).join(' '); // 参数值（可能包含空格）
+                
+                console.log("Processing SIGNAL_INFO:", parameter, "=", value);
+                
+                // 创建包含单个更新项的信息Map
+                var infoMap = {};
+                
+                // 根据参数类型设置对应的键值
+                switch(parameter) {
+                    case "VIDEO_FORMAT":
+                        infoMap["videoFormat"] = value;
+                        break;
+                    case "COLOR_SPACE":
+                        infoMap["colorSpace"] = value;
+                        break;
+                    case "COLOR_DEPTH":
+                        infoMap["colorDepth"] = value;
+                        break;
+                    case "HDR_FORMAT":
+                        infoMap["hdrFormat"] = value;
+                        break;
+                    case "HDMI_DVI":
+                        infoMap["hdmiDvi"] = value;
+                        break;
+                    case "FRL_RATE":
+                        infoMap["frlRate"] = value;
+                        break;
+                    case "DSC_MODE":
+                        infoMap["dscMode"] = value;
+                        break;
+                    case "HDCP_TYPE":
+                        infoMap["hdcpType"] = value;
+                        break;
+                    case "SAMPLING_FREQ":
+                        infoMap["samplingFreq"] = value;
+                        break;
+                    case "SAMPLING_SIZE":
+                        infoMap["samplingSize"] = value;
+                        break;
+                    case "CHANNEL_COUNT":
+                        infoMap["channelCount"] = value;
+                        break;
+                    case "CHANNEL_NUMBER":
+                        infoMap["channelNumber"] = value;
+                        break;
+                    case "LEVEL_SHIFT":
+                        infoMap["levelShift"] = value;
+                        break;
+                    case "CBIT_SAMPLING_FREQ":
+                        infoMap["cBitSamplingFreq"] = value;
+                        break;
+                    case "CBIT_DATA_TYPE":
+                        infoMap["cBitDataType"] = value;
+                        break;
+                    default:
+                        console.log("Unknown SIGNAL_INFO parameter:", parameter);
+                        return; // 未知参数，直接返回
+                }
+                
+                // 调用C++方法更新信号信息
+                signalAnalyzerManager.updateSignalInfo(infoMap);
+            }
+        }
+        // 处理SIGNAL_ERROR返回数据
+        else if (data.indexOf("SIGNAL_ERROR") === 0) {
+            var parts = data.trim().split(' ');
+            if (parts.length >= 3) {
+                var errorCode = parts[1];
+                var errorMessage = parts.slice(2).join(' ');
+                console.log("Signal error received:", errorCode, "-", errorMessage);
+                
+                // 对于错误情况，设置对应的值为错误信息
+                var errorMap = {};
+                // 可以根据错误代码设置特定的默认值
+                if (errorCode === "002") { // No signal detected
+                    errorMap["videoFormat"] = "No Signal";
+                    errorMap["colorSpace"] = "Unknown";
+                    errorMap["colorDepth"] = "Unknown";
+                    // ... 其他字段设为合适的默认值
+                } else {
+                    // 其他错误统一设为Unknown
+                    console.log("Setting values to Unknown due to error");
+                }
+                
+                if (Object.keys(errorMap).length > 0) {
+                    signalAnalyzerManager.updateSignalInfo(errorMap);
+                }
+            }
+        }
         // 如果需要处理当前EDID查询的响应，可以在这里添加
-        if (data.indexOf("CURRENT EDID") !== -1) {
+        else if (data.indexOf("CURRENT EDID") !== -1) {
             // 处理当前EDID状态响应
             console.log("Current EDID status received:", data);
         }
