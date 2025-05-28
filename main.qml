@@ -219,9 +219,16 @@ Window {
                     if (customTabBar.currentIndex === 1) {
                         signalAnalyzerManager.refreshSignalInfo();
                     }
-                    // 当切换到EDID页(index=2)时请求数据
+                    // 当切换到EDID页(index=2)时请求当前EDID状态
                     else if (customTabBar.currentIndex === 2) {
-                        serialPortManager.writeDataUart5("GET IN1 EDID1 DATA\r\n", 1);
+                        // 自动获取当前选中的EDID状态（指令待确认）
+                        // 可能的指令格式：
+                        // serialPortManager.writeDataUart5("GET IN1 CURRENT EDID\r\n", 1);
+                        // 或者：
+                        // serialPortManager.writeDataUart5("GET IN1 EDID STATUS\r\n", 1);
+                        
+                        console.log("Switched to EDID page - ready to get current EDID status");
+                        // 当MCU指令确认后，取消注释相应的指令
                     }
                     
                     // 即使切换离开Error Rate页面，也保持监测状态

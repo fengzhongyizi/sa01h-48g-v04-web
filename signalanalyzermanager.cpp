@@ -289,27 +289,27 @@ void SignalAnalyzerManager::selectSingleEdid(int index)
     emit edidListChanged();
 }
 
-// 修改 applyEdid 方法，只应用一个选中项
+// 修改 applyEdid 方法使用正确的SET指令格式
 void SignalAnalyzerManager::applyEdid()
 {
     if (!m_serialPortManager)
         return;
 
-    // 查找唯一选中的项
+    // 查找选中的项
     int selectedIndex = -1;
     for (int i = 0; i < m_edidItems.size(); ++i)
     {
         if (m_edidItems[i].selected)
         {
             selectedIndex = i;
-            break; // 找到第一个选中项就退出
+            break;
         }
     }
 
-    // 如果有选中项，发送命令
     if (selectedIndex >= 0)
     {
-        QString cmd = QString("SET IN1 EDID%1\r\n").arg(selectedIndex + 1);
+        // 使用SET IN1 EDID[0-16]格式
+        QString cmd = QString("SET IN1 EDID%1\r\n").arg(selectedIndex);
         m_serialPortManager->writeDataUart5(cmd, 1);
         qDebug() << "Applying EDID:" << m_edidItems[selectedIndex].name
                  << "with command:" << cmd;
@@ -319,6 +319,7 @@ void SignalAnalyzerManager::applyEdid()
         qWarning() << "No EDID selected to apply";
     }
 }
+
 void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels,
                                               const QList<QPointF> &data)
 {
@@ -485,16 +486,18 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager *spMgr,
     // … 原有信号/槽连接和初始化无需改动 …
     // 测试用静态数据，页面打开就能看到复选框
     qDebug() << "SerialPortManager pointer:" << (m_serialPortManager ? "valid" : "nullptr");
-    QStringList test = {
+    QStringList presetEdidList = {
         "FRL48G_8K_2CH_HDR_DSC",
-        "FRL48G_8K_2CH_HDR",
+        "FRL48G_8K_2CH_HDR", 
         "FRL40G_8K_2CH_HDR",
         "4K60HZ_2CH",
         "4K60HZ(Y420)_2CH",
         "4K30HZ_2CH",
-        "1080P-2CH",
-        "USER1", "USER2", "USER3", "USER4", "USER5", "USER6", "USER7", "USER8", "USER9", "USER10"};
-    updateEdidList(test);
+        "1080P_2CH",
+        "USER1", "USER2", "USER3", "USER4", "USER5", 
+        "USER6", "USER7", "USER8", "USER9", "USER10"
+    };
+    updateEdidList(presetEdidList);
 }
 
 // 将 QImage 写入临时文件，并返回 file:// URL
