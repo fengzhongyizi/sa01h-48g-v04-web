@@ -9,7 +9,7 @@ import QtQuick.Layouts 1.12
 Rectangle {
     id: root
     anchors.fill: parent
-    color: "#336699"  // 统一蓝色背景
+    color: "#585858"  // 统一蓝色背景
     border.color: "black"
     border.width: 2
     radius: 4

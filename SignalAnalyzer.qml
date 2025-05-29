@@ -265,7 +265,7 @@ Rectangle {
         // 背景
         Rectangle {
             anchors.fill: parent
-            color: "#336699"     // 蓝色背景
+            color: "#585858"     // 蓝色背景
             border.color: "black"
             border.width: 2
             radius: 4
@@ -401,7 +401,7 @@ Rectangle {
         // 添加蓝色背景
         Rectangle {
             anchors.fill: parent
-            color: "#336699"     // 统一蓝色背景
+            color: "#585858"     // 统一蓝色背景
             border.color: "black"
             border.width: 2
             radius: 4
@@ -617,7 +617,7 @@ Rectangle {
         // 添加蓝色背景
         Rectangle {
             anchors.fill: parent
-            color: "#336699"     // 统一蓝色背景
+            color: "#585858"     // 统一蓝色背景
             border.color: "black"
             border.width: 2
             radius: 4
@@ -732,7 +732,7 @@ Rectangle {
         // 背景
         Rectangle {
             anchors.fill: parent
-            color: "#336699"
+            color: "#585858"
             border.color: "black"; border.width: 2; radius: 4
         }
 
@@ -763,7 +763,7 @@ Rectangle {
                     x: 20
                     y: 0
                     height: 24
-                    color: "#336699"
+                    color: "#585858"
                     radius: 4
                     width: errorRateTitleText.width + 20
 
@@ -1209,7 +1209,7 @@ Rectangle {
                             x: 15
                             y: 0
                             height: 20
-                            color: "#336699"
+                            color: "#585858"
                             radius: 4
                             width: slotSettingText.width + 20
 
@@ -1335,7 +1335,7 @@ Rectangle {
                             x: 15
                             y: 0
                             height: 20
-                            color: "#336699"
+                            color: "#585858"
                             radius: 4
                             width: triggerModeText.width + 20
 
