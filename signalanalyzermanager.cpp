@@ -172,21 +172,30 @@ void SignalAnalyzerManager::startMonitor()
     m_monitorStartTime = QTime::currentTime().toString("hh:mm:ss");
     emit monitorStartTimeChanged();
 
-    if (m_serialPortManager && m_serialPortManager->isUart5Available())
+    if (m_serialPortManager && m_serialPortManager->isUart3Available())
     {
-        // 使用新的指令格式：START SIGNAL MONITOR <INTERVAL> <UNIT> <MODE>
-        QString unit = m_timeSlotInSeconds ? "SECONDS" : "MINUTES";
-        QString cmd = QString("START SIGNAL MONITOR %1 %2 %3\r\n")
-                          .arg(m_timeSlotInterval)
-                          .arg(unit)
-                          .arg(m_triggerMode);
+        // 注意：FPGA使用二进制协议，需要根据实际协议定义命令格式
+        // 假设FPGA的监控命令格式为: AA 00 00 <长度> 00 00 00 <命令> <参数>
         
-        m_serialPortManager->writeDataUart5(cmd, 1);
-        qDebug() << "Starting monitor with command:" << cmd;
+        // 构建监控启动命令
+        // 例如：命令码 0xC0 表示开始监控，参数包含间隔和模式
+        QString cmd = "AA 00 00 08 00 00 00 C0 00 ";
+        
+        // 添加时间间隔参数（1字节）
+        cmd += QString("%1 ").arg(m_timeSlotInterval, 2, 16, QChar('0')).toUpper();
+        
+        // 添加单位参数（1字节：0=秒，1=分钟）
+        cmd += m_timeSlotInSeconds ? "00 " : "01 ";
+        
+        // 添加触发模式参数（1字节）
+        cmd += QString("%1").arg(m_triggerMode, 2, 16, QChar('0')).toUpper();
+        
+        m_serialPortManager->writeData(cmd, 0);
+        qDebug() << "Starting monitor with FPGA command:" << cmd;
     }
     else
     {
-        qWarning() << "Cannot start monitor: serial port unavailable";
+        qWarning() << "Cannot start monitor: FPGA serial port (UART3) unavailable";
     }
 
     // 清空已有数据
@@ -198,24 +207,26 @@ void SignalAnalyzerManager::startMonitor()
 // 停止当前监测
 void SignalAnalyzerManager::stopMonitor()
 {
-    if (m_serialPortManager && m_serialPortManager->isUart5Available())
+    if (m_serialPortManager && m_serialPortManager->isUart3Available())
     {
-        m_serialPortManager->writeDataUart5("STOP SIGNAL MONITOR\r\n", 1);
+        // FPGA停止监控命令，假设命令码为 0xC1
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 C1 00", 0);
         qDebug() << "Monitor stopped at" << QTime::currentTime().toString("hh:mm:ss");
     }
     else
     {
-        qWarning() << "Cannot stop monitor: serial port unavailable";
+        qWarning() << "Cannot stop monitor: FPGA serial port (UART3) unavailable";
     }
 }
 
 // 清除监测数据
 void SignalAnalyzerManager::clearMonitorData()
 {
-    if (m_serialPortManager && m_serialPortManager->isUart5Available())
+    if (m_serialPortManager && m_serialPortManager->isUart3Available())
     {
-        m_serialPortManager->writeDataUart5("CLEAR MONITOR DATA\r\n", 1);
-        qDebug() << "Clear monitor data command sent";
+        // FPGA清除监控数据命令，假设命令码为 0xC2
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 C2 00", 0);
+        qDebug() << "Clear monitor data command sent to FPGA";
     }
     
     // 清空本地数据结构
@@ -441,59 +452,48 @@ void SignalAnalyzerManager::startFpgaVideoViaUart()
 // Signal Info - 从MCU获取信号信息
 void SignalAnalyzerManager::refreshSignalInfo()
 {
-    if (m_serialPortManager && m_serialPortManager->isUart5Available()) {
-        // 从MCU (通过UART5) 获取各种信号信息
-        qDebug() << "Requesting signal info from MCU via UART5";
+    if (m_serialPortManager && m_serialPortManager->isUart3Available()) {
+        // 从FPGA (通过UART3) 获取各种信号信息
+        qDebug() << "Requesting signal info from FPGA via UART3";
         
-        // 请求视频信息
-        m_serialPortManager->writeDataUart5("GET SIGNAL VIDEO_FORMAT\r\n", 1);
+        // 注意：FPGA使用二进制协议，需要使用不同的命令格式
+        // 这里假设FPGA的命令格式为: AA 00 00 06 00 00 00 <CMD> <PARAM>
+        
+        // 请求视频信息 - 需要根据FPGA的实际协议调整命令
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 61 80", 0);  // 获取timing/视频格式
         QThread::msleep(50);  // 小延迟避免命令冲突
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL COLOR_SPACE\r\n", 1);
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 63 80", 0);  // 获取色彩空间
         QThread::msleep(50);
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL COLOR_DEPTH\r\n", 1);
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 64 80", 0);  // 获取色彩深度
         QThread::msleep(50);
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL HDR_FORMAT\r\n", 1);
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 65 80", 0);  // 获取HDCP类型
         QThread::msleep(50);
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL HDMI_DVI\r\n", 1);
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 66 80", 0);  // 获取HDMI/DVI模式
         QThread::msleep(50);
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL FRL_RATE\r\n", 1);
+        // 获取音频信息
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 67 80", 0);  // 获取PCM采样率
         QThread::msleep(50);
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL DSC_MODE\r\n", 1);
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 68 80", 0);  // 获取PCM位深
         QThread::msleep(50);
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL HDCP_TYPE\r\n", 1);
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 6A 80", 0);  // 获取PCM通道数
         QThread::msleep(50);
         
-        // 请求音频信息
-        m_serialPortManager->writeDataUart5("GET SIGNAL SAMPLING_FREQ\r\n", 1);
+        // 获取其他信息
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 6D 80", 0);  // 获取音量
         QThread::msleep(50);
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL SAMPLING_SIZE\r\n", 1);
-        QThread::msleep(50);
+        // 注意：FRL速率、DSC模式等可能需要新的命令码，需要与FPGA固件开发人员确认
         
-        m_serialPortManager->writeDataUart5("GET SIGNAL CHANNEL_COUNT\r\n", 1);
-        QThread::msleep(50);
-        
-        m_serialPortManager->writeDataUart5("GET SIGNAL CHANNEL_NUMBER\r\n", 1);
-        QThread::msleep(50);
-        
-        m_serialPortManager->writeDataUart5("GET SIGNAL LEVEL_SHIFT\r\n", 1);
-        QThread::msleep(50);
-        
-        m_serialPortManager->writeDataUart5("GET SIGNAL CBIT_SAMPLING_FREQ\r\n", 1);
-        QThread::msleep(50);
-        
-        m_serialPortManager->writeDataUart5("GET SIGNAL CBIT_DATA_TYPE\r\n", 1);
-        
-        qDebug() << "All signal info requests sent to MCU";
+        qDebug() << "All signal info requests sent to FPGA";
     } else {
-        qWarning() << "Cannot refresh signal info: MCU serial port unavailable";
+        qWarning() << "Cannot refresh signal info: FPGA serial port (UART3) unavailable";
     }
 }
 
