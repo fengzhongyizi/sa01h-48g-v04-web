@@ -47,6 +47,7 @@ Window {
         anchors.right: parent.right     // 右侧对齐
         anchors.top: parent.top         // 顶部对齐
         anchors.margins: 10             // 外边距
+        z: 1000 // 确保在最顶层
     }
 
     // 全局鼠标区域，用于隐藏虚拟键盘
@@ -115,6 +116,36 @@ Window {
     // 网络管理器 - 处理网络通信
     NetManager {
         id: netManager
+        
+        // 添加网络信息变化的连接
+        onIpAddressChanged: {
+            console.log("IP address updated:", ipAddress);
+            // 如果当前在System Setup页面，可以触发UI更新
+            if (customTabBar.currentIndex === 4) {
+                systemSetupPanel.updateNetworkDisplay();
+            }
+        }
+        
+        onMacAddressChanged: {
+            console.log("MAC address updated:", macAddress);
+        }
+        
+        Component.onCompleted: {
+            console.log("NetManager initialized");
+            // 延迟初始化，确保系统准备就绪
+            initTimer.start();
+        }
+    }
+
+    // 添加初始化定时器
+    Timer {
+        id: initTimer
+        interval: 1000  // 1秒后初始化
+        repeat: false
+        onTriggered: {
+            console.log("Initializing network info...");
+            netManager.updateNetworkInfo();
+        }
     }
 
     // 字体加载器 - 加载自定义字体
@@ -246,6 +277,14 @@ Window {
                     // 当切换到System Setup页(index=4)时的处理
                     else if (customTabBar.currentIndex === 4) {
                         console.log("Switched to System Setup page");
+                        netManager.updateNetworkInfo();
+                        
+                        // 额外的调试信息
+                        console.log("Current network info:");
+                        console.log("- IP:", netManager.ipAddress);
+                        console.log("- MAC:", netManager.macAddress);
+                        console.log("- Netmask:", netManager.netmask);
+                        console.log("- Gateway:", netManager.routerIpAddress);
                     }
                 }
             }

@@ -132,7 +132,7 @@ Rectangle {
                                 id: hostIpField
                                 anchors.fill: parent
                                 anchors.margins: 2
-                                text: "192.168.1.199"
+                                text: netManager.ipAddress || "192.168.1.199"
                                 font.pixelSize: 20
                                 horizontalAlignment: TextInput.AlignHCenter
                                 background: Rectangle { color: "transparent" }
@@ -164,7 +164,7 @@ Rectangle {
                                 id: routerIpField
                                 anchors.fill: parent
                                 anchors.margins: 2
-                                text: "192.168.1.254"
+                                text: netManager.routerIpAddress || "192.168.1.254"
                                 font.pixelSize: 20
                                 horizontalAlignment: TextInput.AlignHCenter
                                 background: Rectangle { color: "transparent" }
@@ -196,7 +196,7 @@ Rectangle {
                                 id: ipMaskField
                                 anchors.fill: parent
                                 anchors.margins: 2
-                                text: "255.255.255.0"
+                                text: netManager.netmask || "255.255.255.0"
                                 font.pixelSize: 20
                                 horizontalAlignment: TextInput.AlignHCenter
                                 background: Rectangle { color: "transparent" }
@@ -227,7 +227,7 @@ Rectangle {
                             Text {
                                 id: macAddressText
                                 anchors.centerIn: parent
-                                text: "00:00:00:00:00:00"
+                                text: netManager.macAddress || "00:00:00:00:00:00"
                                 font.pixelSize: 20
                                 color: "#666666"
                             }
@@ -823,6 +823,27 @@ Rectangle {
         var textComponent = root[componentId + "Text"]
         if (textComponent) {
             textComponent.text = temperature
+        }
+    }
+
+    // 添加网络信息更新函数
+    function updateNetworkDisplay() {
+        console.log("Updating SystemSetup network display");
+        console.log("- IP from netManager:", netManager.ipAddress);
+        console.log("- MAC from netManager:", netManager.macAddress);
+        
+        // 强制更新显示（如果绑定没有自动更新）
+        if (netManager.ipAddress) {
+            hostIpField.text = netManager.ipAddress;
+        }
+        if (netManager.macAddress) {
+            macAddressText.text = netManager.macAddress;
+        }
+        if (netManager.netmask) {
+            ipMaskField.text = netManager.netmask;
+        }
+        if (netManager.routerIpAddress) {
+            routerIpField.text = netManager.routerIpAddress;
         }
     }
 } 
