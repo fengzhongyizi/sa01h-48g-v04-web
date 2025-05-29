@@ -676,6 +676,255 @@ void SerialPortManager::onReadyRead()
                 break;
             }
         }
+        // 检查Signal Info数据包头标识(AB 00 02) - 信号信息包
+        else if (buffer.startsWith("\xAB\x00\x02")) {
+            qDebug() << "*** SIGNAL INFO PACKET DETECTED ***";
+            
+            if (buffer.size() >= 5) {
+                quint8 length = static_cast<quint8>(buffer.at(3));  // 获取数据包长度字段
+                
+                // 如果缓冲区包含完整数据包
+                if (buffer.size() >= 4 + length + 1) {
+                    QByteArray packet = buffer.left(4 + length + 1);
+                    qDebug() << "Complete signal info packet:" << packet.toHex(' ').toUpper();
+                    
+                    // 解析信号信息数据并构造ASCII格式响应
+                    if (packet.size() >= 9 && static_cast<quint8>(packet[7]) == 0x80) {
+                        quint8 infoType = static_cast<quint8>(packet[6]);
+                        QString infoName;
+                        QString infoValue;
+                        
+                        switch(infoType) {
+                            case 0x61:  // timing/视频格式
+                                infoName = "VIDEO_FORMAT";
+                                // 从packet[8]开始解析视频格式数据
+                                // 示例：将二进制数据转换为格式字符串
+                                if (packet.size() >= 12) {
+                                    int width = (static_cast<quint8>(packet[8]) << 8) | static_cast<quint8>(packet[9]);
+                                    int height = (static_cast<quint8>(packet[10]) << 8) | static_cast<quint8>(packet[11]);
+                                    infoValue = QString("%1x%2").arg(width).arg(height);
+                                }
+                                break;
+                            case 0x63:  // 色彩空间
+                                infoName = "COLOR_SPACE";
+                                if (packet.size() >= 9) {
+                                    quint8 cs = static_cast<quint8>(packet[8]);
+                                    infoValue = (cs == 0) ? "RGB" : (cs == 1) ? "YUV444" : "YUV422";
+                                }
+                                break;
+                            case 0x64:  // 色彩深度
+                                infoName = "COLOR_DEPTH";
+                                if (packet.size() >= 9) {
+                                    quint8 cd = static_cast<quint8>(packet[8]);
+                                    infoValue = QString("%1-bit").arg(cd);
+                                }
+                                break;
+                            case 0x65:  // HDCP类型
+                                infoName = "HDCP_TYPE";
+                                if (packet.size() >= 9) {
+                                    quint8 hdcp = static_cast<quint8>(packet[8]);
+                                    infoValue = (hdcp == 0) ? "None" : (hdcp == 1) ? "HDCP 1.4" : "HDCP 2.3";
+                                }
+                                break;
+                            case 0x66:  // HDMI/DVI模式
+                                infoName = "HDMI_DVI";
+                                if (packet.size() >= 9) {
+                                    quint8 mode = static_cast<quint8>(packet[8]);
+                                    infoValue = (mode == 0) ? "DVI" : "HDMI";
+                                }
+                                break;
+                            case 0x67:  // PCM采样率
+                                infoName = "SAMPLING_FREQ";
+                                if (packet.size() >= 9) {
+                                    quint8 freq = static_cast<quint8>(packet[8]);
+                                    infoValue = QString("%1 kHz").arg(freq);
+                                }
+                                break;
+                            case 0x68:  // PCM位深
+                                infoName = "SAMPLING_SIZE";
+                                if (packet.size() >= 9) {
+                                    quint8 bits = static_cast<quint8>(packet[8]);
+                                    infoValue = QString("%1-bit").arg(bits);
+                                }
+                                break;
+                            case 0x69:  // HDR格式
+                                infoName = "HDR_FORMAT";
+                                if (packet.size() >= 9) {
+                                    quint8 hdr = static_cast<quint8>(packet[8]);
+                                    switch(hdr) {
+                                        case 0: infoValue = "SDR"; break;
+                                        case 1: infoValue = "HDR10"; break;
+                                        case 2: infoValue = "HDR10+"; break;
+                                        case 3: infoValue = "Dolby Vision"; break;
+                                        case 4: infoValue = "HLG"; break;
+                                        default: infoValue = QString("HDR Type %1").arg(hdr); break;
+                                    }
+                                }
+                                break;
+                            case 0x6A:  // PCM通道数
+                                infoName = "CHANNEL_COUNT";
+                                if (packet.size() >= 9) {
+                                    quint8 channels = static_cast<quint8>(packet[8]);
+                                    switch(channels) {
+                                        case 2: infoValue = "2.0 (Stereo)"; break;
+                                        case 6: infoValue = "5.1 Surround"; break;
+                                        case 8: infoValue = "7.1 Surround"; break;
+                                        default: infoValue = QString("%1.0").arg(channels); break;
+                                    }
+                                }
+                                break;
+                            case 0x6B:  // 通道编号映射
+                                infoName = "CHANNEL_NUMBER";
+                                if (packet.size() >= 9) {
+                                    quint8 mapping = static_cast<quint8>(packet[8]);
+                                    switch(mapping) {
+                                        case 0: infoValue = "FL/FR"; break;
+                                        case 1: infoValue = "FL/FR/FC/LFE/BL/BR"; break;
+                                        case 2: infoValue = "FL/FR/FC/LFE/BL/BR/SL/SR"; break;
+                                        default: infoValue = QString("Channel Map %1").arg(mapping); break;
+                                    }
+                                }
+                                break;
+                            case 0x6C:  // 音频电平偏移
+                                infoName = "LEVEL_SHIFT";
+                                if (packet.size() >= 9) {
+                                    qint8 shift = static_cast<qint8>(packet[8]);  // 使用有符号数
+                                    infoValue = QString("%1 dB").arg(shift);
+                                }
+                                break;
+                            case 0x6E:  // C-bit采样频率
+                                infoName = "CBIT_SAMPLING_FREQ";
+                                if (packet.size() >= 9) {
+                                    quint8 level = static_cast<quint8>(packet[8]);
+                                    infoValue = QString("Level %1").arg(level);
+                                }
+                                break;
+                            case 0x6F:  // C-bit数据类型
+                                infoName = "CBIT_DATA_TYPE";
+                                if (packet.size() >= 9) {
+                                    quint8 type = static_cast<quint8>(packet[8]);
+                                    switch(type) {
+                                        case 0: infoValue = "PCM"; break;
+                                        case 1: infoValue = "AC-3"; break;
+                                        case 2: infoValue = "MPEG-1"; break;
+                                        case 3: infoValue = "MP3"; break;
+                                        case 4: infoValue = "MPEG-2"; break;
+                                        case 5: infoValue = "AAC"; break;
+                                        case 6: infoValue = "DTS"; break;
+                                        case 7: infoValue = "ATRAC"; break;
+                                        default: infoValue = QString("Type %1").arg(type); break;
+                                    }
+                                }
+                                break;
+                            case 0x70:  // FRL速率
+                                infoName = "FRL_RATE";
+                                if (packet.size() >= 9) {
+                                    quint8 rate = static_cast<quint8>(packet[8]);
+                                    switch(rate) {
+                                        case 0: infoValue = "TMDS"; break;
+                                        case 1: infoValue = "FRL3 (9 Gbps)"; break;
+                                        case 2: infoValue = "FRL6 (18 Gbps)"; break;
+                                        case 3: infoValue = "FRL8 (24 Gbps)"; break;
+                                        case 4: infoValue = "FRL10 (40 Gbps)"; break;
+                                        case 5: infoValue = "FRL12 (48 Gbps)"; break;
+                                        default: infoValue = QString("FRL %1").arg(rate); break;
+                                    }
+                                }
+                                break;
+                            case 0x71:  // DSC模式
+                                infoName = "DSC_MODE";
+                                if (packet.size() >= 9) {
+                                    quint8 dsc = static_cast<quint8>(packet[8]);
+                                    infoValue = (dsc == 0) ? "Disabled" : "Enabled";
+                                }
+                                break;
+                            default:
+                                qDebug() << "Unknown signal info type:" << QString("0x%1").arg(infoType, 2, 16, QChar('0')).toUpper();
+                                break;
+                        }
+                        
+                        // 构造ASCII格式响应并发送
+                        if (!infoName.isEmpty() && !infoValue.isEmpty()) {
+                            QString asciiResponse = QString("SIGNAL_INFO %1 %2\r\n").arg(infoName).arg(infoValue);
+                            emit dataReceivedASCALL(asciiResponse);
+                        }
+                    }
+                    
+                    buffer = buffer.mid(4 + length + 1);  // 移除已处理的数据包
+                } else {
+                    qDebug() << "Incomplete signal info packet, waiting for more data";
+                    break;
+                }
+            } else {
+                qDebug() << "Signal info packet header incomplete";
+                break;
+            }
+        }
+        // 检查Error Rate监控数据包头标识(AB 00 03) - 监控数据包
+        else if (buffer.startsWith("\xAB\x00\x03")) {
+            qDebug() << "*** ERROR RATE MONITOR PACKET DETECTED ***";
+            
+            if (buffer.size() >= 5) {
+                quint8 length = static_cast<quint8>(buffer.at(3));
+                
+                // 检查数据包格式：AB 00 03 <长度> <时间槽ID 2字节> <槽位ID 1字节> <状态数据 1字节>
+                // 期望长度 = 2(时间槽ID) + 1(槽位ID) + 1(状态数据) = 4字节
+                if (length == 4 && buffer.size() >= 4 + length + 1) {
+                    QByteArray packet = buffer.left(4 + length + 1);
+                    qDebug() << "Complete monitor packet:" << packet.toHex(' ').toUpper();
+                    
+                    // 解析监控数据
+                    if (packet.size() >= 9) { // 4(头部) + 4(数据) + 1(校验) = 9
+                        // 提取时间槽ID（2字节，大端序）
+                        quint16 slotId = (static_cast<quint8>(packet[4]) << 8) | static_cast<quint8>(packet[5]);
+                        QString slotIdStr = QString("%1").arg(slotId, 4, 10, QChar('0'));
+                        
+                        // 提取槽位ID（1字节，0-99）
+                        quint8 slotIndex = static_cast<quint8>(packet[6]);
+                        
+                        // 提取状态数据（1字节，0=正常，非0=异常）
+                        quint8 statusValue = static_cast<quint8>(packet[7]);
+                        
+                        qDebug() << "Time slot ID:" << slotIdStr 
+                                 << "Slot index:" << slotIndex 
+                                 << "Status:" << statusValue;
+                        
+                        // 只有异常时才处理（按照设计，FPGA只在检测到异常时发送数据包）
+                        if (statusValue != 0) {
+                            // 构造状态字符串：用于标识具体的槽位异常
+                            // 格式：时间槽ID + 槽位索引 + 状态值
+                            QString monitorData = QString("SIGNAL_SLOT %1 %2 %3")
+                                .arg(slotIdStr)
+                                .arg(slotIndex, 2, 10, QChar('0'))  // 槽位ID，补齐为2位
+                                .arg(statusValue);                   // 状态值
+                            
+                            emit signalMonitorDataReceived(monitorData.toUtf8());
+                            
+                            qDebug() << "ERROR detected - Slot" << slotIdStr 
+                                     << "Position" << slotIndex 
+                                     << "Error type" << statusValue;
+                        } else {
+                            // 如果FPGA发送了状态=0的包，记录但不处理
+                            qDebug() << "Normal status packet received (unusual) - Slot" << slotIdStr 
+                                     << "Position" << slotIndex;
+                        }
+                    }
+                    
+                    buffer = buffer.mid(4 + length + 1);  // 移除已处理的数据包
+                } else {
+                    if (length != 4) {
+                        qWarning() << "Unexpected monitor packet length:" << length << ", expected 4";
+                        buffer.remove(0, 1); // 移除错误的包头，继续寻找
+                    } else {
+                        qDebug() << "Incomplete monitor packet, need" << (4 + length + 1) << "bytes, have" << buffer.size();
+                        break; // 等待更多数据
+                    }
+                }
+            } else {
+                qDebug() << "Monitor packet header incomplete";
+                break;
+            }
+        }
         else {
             // 检查是否可能是原始图像流数据
             if (buffer.size() > 50000) {  // 大于50KB可能是原始图像

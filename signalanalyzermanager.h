@@ -237,6 +237,7 @@ private:
     // 内部信号处理方法
     void processMonitorCommand(const QByteArray &data);
     void updateSlotData(const QString &slotId, const QString &stateStr);
+    void updateSlotError(const QString &slotId, int slotIndex, int statusValue);
     void updateMonitorDataFromTimeSlots();
     bool detectTriggerEvent(const QByteArray &currentFrame, const QByteArray &previousFrame);
     bool isSignalLost(const QByteArray &frame);

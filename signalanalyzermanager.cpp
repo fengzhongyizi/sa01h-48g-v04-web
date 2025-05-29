@@ -91,25 +91,37 @@ bool SignalAnalyzerManager::isSignalLost(const QByteArray &frame)
 void SignalAnalyzerManager::processMonitorCommand(const QByteArray &data)
 {
     // 解析来自硬件的信号监控数据
-    // 格式可能类似: "SIGNAL_SLOT 0001 101010..."
+    // 新格式：SIGNAL_SLOT timeSlotID slotIndex statusValue
+    // 示例："SIGNAL_SLOT 0001 05 1" 表示时间槽0001的槽位05发生异常(类型1)
     QString dataStr = QString::fromUtf8(data);
     QStringList parts = dataStr.split(" ");
 
-    if (parts.size() >= 3 && parts[0] == "SIGNAL_SLOT")
+    if (parts.size() >= 4 && parts[0] == "SIGNAL_SLOT")
     {
-        QString slotId = parts[1];
-        QString states = parts[2];
+        QString slotId = parts[1];        // 时间槽ID (0001-2040)
+        int slotIndex = parts[2].toInt(); // 槽位索引 (0-99)
+        int statusValue = parts[3].toInt(); // 状态值 (0=正常, 非0=异常)
 
-        // 更新指定时间槽的数据
-        updateSlotData(slotId, states);
+        qDebug() << "Received error report - TimeSlot:" << slotId 
+                 << "SlotIndex:" << slotIndex 
+                 << "Status:" << statusValue;
+
+        // 更新指定时间槽和槽位的数据
+        updateSlotError(slotId, slotIndex, statusValue);
     }
 }
 
 /**
- * 2.更新时间槽数据
+ * 2.更新时间槽数据 - 新的按需更新方法
  */
-void SignalAnalyzerManager::updateSlotData(const QString &slotId, const QString &stateStr)
+void SignalAnalyzerManager::updateSlotError(const QString &slotId, int slotIndex, int statusValue)
 {
+    // 验证参数有效性
+    if (slotIndex < 0 || slotIndex >= 100) {
+        qWarning() << "Invalid slot index:" << slotIndex << "(valid range: 0-99)";
+        return;
+    }
+    
     // 在m_signalTimeSlots中查找或创建对应slotId的记录
     int idx = -1;
     if (m_slotIndexMap.contains(slotId))
@@ -121,17 +133,23 @@ void SignalAnalyzerManager::updateSlotData(const QString &slotId, const QString 
         idx = m_signalTimeSlots.size();
         SignalTimeSlot newSlot;
         newSlot.slotId = slotId;
-        // newSlot.signalStates.resize(100, false); // 默认100个时间点
-        newSlot.signalStates = QVector<bool>(100, false);
+        newSlot.signalStates = QVector<bool>(100, false); // 初始化100个槽位为正常状态
         m_signalTimeSlots.append(newSlot);
         m_slotIndexMap[slotId] = idx;
+        
+        qDebug() << "Created new time slot:" << slotId << "at index" << idx;
     }
 
-    // 更新该时间槽的状态数据
-    for (int i = 0; i < qMin(stateStr.length(), 100); i++)
-    {
-        m_signalTimeSlots[idx].signalStates[i] = (stateStr[i] == '1');
-    }
+    // 更新该时间槽中特定槽位的状态
+    bool hasError = (statusValue != 0);
+    bool previousState = m_signalTimeSlots[idx].signalStates[slotIndex];
+    
+    m_signalTimeSlots[idx].signalStates[slotIndex] = hasError;
+    
+    qDebug() << "Updated slot" << slotId << "position" << slotIndex 
+             << "from" << (previousState ? "ERROR" : "OK") 
+             << "to" << (hasError ? "ERROR" : "OK")
+             << "(status value:" << statusValue << ")";
 
     // 转换为QML可用格式并发送通知
     updateMonitorDataFromTimeSlots();
@@ -177,6 +195,11 @@ void SignalAnalyzerManager::startMonitor()
         // 注意：FPGA使用二进制协议，需要根据实际协议定义命令格式
         // 假设FPGA的监控命令格式为: AA 00 00 <长度> 00 00 00 <命令> <参数>
         
+        qDebug() << "=== Starting Error Rate Monitor ===";
+        qDebug() << "Start time:" << m_monitorStartTime;
+        qDebug() << "Time slot interval:" << m_timeSlotInterval << (m_timeSlotInSeconds ? "seconds" : "minutes");
+        qDebug() << "Trigger mode:" << m_triggerMode;
+        
         // 构建监控启动命令
         // 例如：命令码 0xC0 表示开始监控，参数包含间隔和模式
         QString cmd = "AA 00 00 08 00 00 00 C0 00 ";
@@ -191,7 +214,8 @@ void SignalAnalyzerManager::startMonitor()
         cmd += QString("%1").arg(m_triggerMode, 2, 16, QChar('0')).toUpper();
         
         m_serialPortManager->writeData(cmd, 0);
-        qDebug() << "Starting monitor with FPGA command:" << cmd;
+        qDebug() << "Sent monitor start command to FPGA:" << cmd;
+        qDebug() << "Expecting monitor data packets with header AB 00 03...";
     }
     else
     {
@@ -209,9 +233,25 @@ void SignalAnalyzerManager::stopMonitor()
 {
     if (m_serialPortManager && m_serialPortManager->isUart3Available())
     {
+        qDebug() << "=== Stopping Error Rate Monitor ===";
+        
         // FPGA停止监控命令，假设命令码为 0xC1
-        m_serialPortManager->writeData("AA 00 00 06 00 00 00 C1 00", 0);
-        qDebug() << "Monitor stopped at" << QTime::currentTime().toString("hh:mm:ss");
+        QString cmd = "AA 00 00 06 00 00 00 C1 00";
+        m_serialPortManager->writeData(cmd, 0);
+        
+        QString stopTime = QTime::currentTime().toString("hh:mm:ss");
+        qDebug() << "Sent monitor stop command to FPGA:" << cmd;
+        qDebug() << "Monitor stopped at:" << stopTime;
+        qDebug() << "Total monitored slots:" << m_signalTimeSlots.size();
+        
+        // 输出统计信息
+        int totalErrors = 0;
+        for (const auto& slot : m_signalTimeSlots) {
+            for (bool state : slot.signalStates) {
+                if (state) totalErrors++;
+            }
+        }
+        qDebug() << "Total error events detected:" << totalErrors;
     }
     else
     {
@@ -459,39 +499,71 @@ void SignalAnalyzerManager::refreshSignalInfo()
         // 注意：FPGA使用二进制协议，需要使用不同的命令格式
         // 这里假设FPGA的命令格式为: AA 00 00 06 00 00 00 <CMD> <PARAM>
         
-        // 请求视频信息 - 需要根据FPGA的实际协议调整命令
+        qDebug() << "=== Sending Signal Info requests to FPGA (15 commands) ===";
+        
+        // === 视频信息命令 (8个) ===
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 61 80", 0);  // 获取timing/视频格式
+        qDebug() << "Sent request for VIDEO_FORMAT (cmd 0x61 80)";
         QThread::msleep(50);  // 小延迟避免命令冲突
         
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 63 80", 0);  // 获取色彩空间
+        qDebug() << "Sent request for COLOR_SPACE (cmd 0x63 80)";
         QThread::msleep(50);
         
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 64 80", 0);  // 获取色彩深度
+        qDebug() << "Sent request for COLOR_DEPTH (cmd 0x64 80)";
         QThread::msleep(50);
         
-        m_serialPortManager->writeData("AA 00 00 06 00 00 00 65 80", 0);  // 获取HDCP类型
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 69 80", 0);  // 获取HDR格式
+        qDebug() << "Sent request for HDR_FORMAT (cmd 0x69 80)";
         QThread::msleep(50);
         
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 66 80", 0);  // 获取HDMI/DVI模式
+        qDebug() << "Sent request for HDMI_DVI (cmd 0x66 80)";
         QThread::msleep(50);
         
-        // 获取音频信息
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 70 80", 0);  // 获取FRL速率
+        qDebug() << "Sent request for FRL_RATE (cmd 0x70 80)";
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 71 80", 0);  // 获取DSC模式
+        qDebug() << "Sent request for DSC_MODE (cmd 0x71 80)";
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 65 80", 0);  // 获取HDCP类型
+        qDebug() << "Sent request for HDCP_TYPE (cmd 0x65 80)";
+        QThread::msleep(50);
+        
+        // === 音频信息命令 (7个) ===
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 67 80", 0);  // 获取PCM采样率
+        qDebug() << "Sent request for SAMPLING_FREQ (cmd 0x67 80)";
         QThread::msleep(50);
         
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 68 80", 0);  // 获取PCM位深
+        qDebug() << "Sent request for SAMPLING_SIZE (cmd 0x68 80)";
         QThread::msleep(50);
         
         m_serialPortManager->writeData("AA 00 00 06 00 00 00 6A 80", 0);  // 获取PCM通道数
+        qDebug() << "Sent request for CHANNEL_COUNT (cmd 0x6A 80)";
         QThread::msleep(50);
         
-        // 获取其他信息
-        m_serialPortManager->writeData("AA 00 00 06 00 00 00 6D 80", 0);  // 获取音量
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 6B 80", 0);  // 获取通道编号映射
+        qDebug() << "Sent request for CHANNEL_NUMBER (cmd 0x6B 80)";
         QThread::msleep(50);
         
-        // 注意：FRL速率、DSC模式等可能需要新的命令码，需要与FPGA固件开发人员确认
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 6C 80", 0);  // 获取音频电平偏移
+        qDebug() << "Sent request for LEVEL_SHIFT (cmd 0x6C 80)";
+        QThread::msleep(50);
         
-        qDebug() << "All signal info requests sent to FPGA";
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 6E 80", 0);  // 获取C-bit采样频率
+        qDebug() << "Sent request for CBIT_SAMPLING_FREQ (cmd 0x6E 80)";
+        QThread::msleep(50);
+        
+        m_serialPortManager->writeData("AA 00 00 06 00 00 00 6F 80", 0);  // 获取C-bit数据类型
+        qDebug() << "Sent request for CBIT_DATA_TYPE (cmd 0x6F 80)";
+        
+        qDebug() << "=== All 15 signal info requests sent to FPGA ===";
+        qDebug() << "Expecting FPGA responses with packet header AB 00 02...";
     } else {
         qWarning() << "Cannot refresh signal info: FPGA serial port (UART3) unavailable";
     }
