@@ -53,6 +53,10 @@ public:
     // mode: 网络配置模式，"dhcp"为动态获取IP，其他值为静态IP
     Q_INVOKABLE void setIpAddress(const QString& ipAddress, const QString& netmask,const QString& gateway,const QString& mode);
 
+    void renewDhcpLease();
+
+    void checkNetworkStatus();
+
 signals:
     // 当IP地址变化时发出的信号
     // data: 新的IP地址
@@ -73,6 +77,10 @@ signals:
     // 当TCP端口列表变化时发出的信号
     // data: 新的TCP端口列表
     void tcpPortsChanged(const QString &data);
+    
+    // DHCP配置失败信号
+    void dhcpConfigurationFailed(const QString &error);
+
 
 public slots:
     // 更新网络信息的槽函数
@@ -94,6 +102,9 @@ private:
     
     // 存储当前监听的TCP端口列表
     QString m_tcpPorts;
+    
+    // 检查可用的网络工具
+    void checkNetworkTools();
 };
 
 #endif // NETMANAGER_H

@@ -28,7 +28,8 @@ SOURCES += \
     filemanager.cpp \            # 文件管理器实现
     websocketserver.cpp \        # WebSocket服务器实现
     tcpserver.cpp \              # TCP服务器实现
-    signalanalyzermanager.cpp    # 信号分析器管理器实现
+    signalanalyzermanager.cpp \  # 信号分析器管理器实现
+    gpiocontroller.cpp           # GPIO控制器实现
 
 # 项目资源文件
 RESOURCES += qml.qrc            # 包含QML界面文件的资源文件
@@ -59,9 +60,8 @@ HEADERS += \
     filemanager.h \              # 文件管理器头文件
     websocketserver.h \          # WebSocket服务器头文件
     tcpserver.h \                # TCP服务器头文件
-    signalanalyzermanager.h      # 信号分析器管理器头文件
-
-
+    signalanalyzermanager.h \    # 信号分析器管理器头文件
+    gpiocontroller.h             # GPIO控制器头文件
 
 # 在SA01H-48G-V04.pro中添加
 QMAKE_LFLAGS += -Wl,--allow-shlib-undefined

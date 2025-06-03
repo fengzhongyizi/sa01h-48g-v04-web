@@ -7,20 +7,30 @@ import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.12
 
 Rectangle {
-    id: root
+    id: systemSetupPanel
     anchors.fill: parent
-    color: "#585858"  // 统一蓝色背景
+    color: "#585858"  // Unified blue background
     border.color: "black"
     border.width: 2
     radius: 4
 
-    // 信号定义，用于与C++后端通信
+    // Signal definition for communication with C++ backend
     signal confirmsignal(string str, var num)
 
-    // 属性定义
-    property bool dhcpEnabled: false
+    // Add property aliases for backward compatibility
+    property alias hostIpText: hostIpField.text
+    property alias ipMaskText: ipMaskField.text
+    property alias routerIpText: routerIpField.text
+
+    // Or provide more direct text access
+    function getHostIp() { return hostIpField.text; }
+    function getIpMask() { return ipMaskField.text; }
+    function getRouterIp() { return routerIpField.text; }
+
+    // Property definitions
+    property bool isDhcpMode: true
     property int fanControlMode: 0
-    property int currentSection: 0  // 当前显示的功能区: 0=IP, 1=Fan, 2=Reset, 3=Vitals
+    property int currentSection: 0  // Current display section: 0=IP, 1=Fan, 2=FPGA, 3=Reset, 4=Vitals
 
     // 主布局
     ColumnLayout {
@@ -47,18 +57,19 @@ Rectangle {
                 model: [
                     { name: "IP Management", index: 0 },
                     { name: "Fan Control", index: 1 },
-                    { name: "Reset & Reboot", index: 2 },
-                    { name: "Vitals", index: 3 }
+                    { name: "FPGA Control", index: 2 },
+                    { name: "Reset & Reboot", index: 3 },
+                    { name: "Vitals", index: 4 }
                 ]
                 
                 Button {
                     Layout.fillWidth: true
                     Layout.preferredHeight: 70
                     text: modelData.name
-                    font.pixelSize: 18
+                    font.pixelSize: 16
                     
                     background: Rectangle {
-                        color: root.currentSection === modelData.index ? "#ffffff" : "#888888"
+                        color: currentSection === modelData.index ? "#ffffff" : "#888888"
                         border.color: "black"
                         border.width: 2
                         radius: 4
@@ -67,15 +78,15 @@ Rectangle {
                     contentItem: Text {
                         text: parent.text
                         font: parent.font
-                        color: root.currentSection === modelData.index ? "black" : "white"
+                        color: currentSection === modelData.index ? "black" : "white"
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
                     }
                     
                     onClicked: {
-                        root.currentSection = modelData.index
+                        currentSection = modelData.index
                         // 如果切换到Vitals页面，请求设备状态
-                        if (modelData.index === 3) {
+                        if (modelData.index === 4) {
                             requestVitalsData()
                         }
                     }
@@ -91,7 +102,7 @@ Rectangle {
 
             // IP管理面板
             Rectangle {
-                visible: root.currentSection === 0
+                visible: currentSection === 0
                 width: parent.parent.width - 40
                 height: Math.max(600, ipColumn.implicitHeight + 40)
                 color: "transparent"
@@ -104,6 +115,49 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 20
                     spacing: 20
+
+                    // 在IP表单上方添加实时状态显示
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width - 40
+                        height: 100
+                        color: "transparent"
+                        border.color: "yellow"
+                        border.width: 2
+                        radius: 4
+                        
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: 10
+                            spacing: 5
+                            
+                            Text {
+                                text: "当前网络状态"
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: "white"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            
+                            Text {
+                                text: "IP: " + (netManager.ipAddress || "未检测到")
+                                font.pixelSize: 16
+                                color: "white"
+                            }
+                            
+                            Text {
+                                text: "网关: " + (netManager.routerIpAddress || "未检测到")
+                                font.pixelSize: 16
+                                color: "white"
+                            }
+                            
+                            Text {
+                                text: "MAC: " + (netManager.macAddress || "未检测到")
+                                font.pixelSize: 16
+                                color: "white"
+                            }
+                        }
+                    }
 
                     // IP设置表单
                     Grid {
@@ -271,7 +325,7 @@ Rectangle {
                             Layout.preferredHeight: 60
                             
                             background: Rectangle {
-                                color: root.dhcpEnabled ? "#ffffff" : "#888888"
+                                color: isDhcpMode ? "#ffffff" : "#888888"
                                 border.color: "black"
                                 border.width: 2
                                 radius: 4
@@ -280,14 +334,17 @@ Rectangle {
                             contentItem: Text {
                                 text: parent.text
                                 font: parent.font
-                                color: root.dhcpEnabled ? "black" : "white"
+                                color: isDhcpMode ? "black" : "white"
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             
                             onClicked: {
-                                root.dhcpEnabled = true
-                                root.confirmsignal("DHCP", true)
+                                if (!isDhcpMode) {  // 只有在未启用DHCP时才执行
+                                    console.log("Switching to DHCP mode");
+                                    isDhcpMode = true;
+                                    confirmsignal("DHCP", true);  // 发送true启用DHCP
+                                }
                             }
                         }
                         
@@ -298,7 +355,7 @@ Rectangle {
                             Layout.preferredHeight: 60
                             
                             background: Rectangle {
-                                color: !root.dhcpEnabled ? "#ffffff" : "#888888"
+                                color: !isDhcpMode ? "#ffffff" : "#888888"
                                 border.color: "black"
                                 border.width: 2
                                 radius: 4
@@ -307,14 +364,71 @@ Rectangle {
                             contentItem: Text {
                                 text: parent.text
                                 font: parent.font
-                                color: !root.dhcpEnabled ? "black" : "white"
+                                color: !isDhcpMode ? "black" : "white"
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             
                             onClicked: {
-                                root.dhcpEnabled = false
-                                root.confirmsignal("DHCP", false)
+                                isDhcpMode = false
+                                confirmsignal("DHCP", false)
+                            }
+                        }
+                    }
+
+                    // 在DHCP/Static按钮下方添加Apply按钮
+                    RowLayout {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 20
+                        visible: !isDhcpMode  // 只在静态IP模式下显示
+                        
+                        Button {
+                            text: "Apply Static IP"
+                            font.pixelSize: 18
+                            Layout.preferredWidth: 200
+                            Layout.preferredHeight: 50
+                            
+                            background: Rectangle {
+                                color: "#4CAF50"  // 绿色
+                                border.color: "black"
+                                border.width: 2
+                                radius: 4
+                            }
+                            
+                            contentItem: Text {
+                                text: parent.text
+                                font: parent.font
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            
+                            onClicked: {
+                                // 强制刷新输入框的值
+                                hostIpField.focus = false;
+                                routerIpField.focus = false;
+                                ipMaskField.focus = false;
+                                
+                                // 等待一帧后读取值
+                                Qt.callLater(function() {
+                                    console.log("Applying static IP configuration");
+                                    console.log("- Host IP:", hostIpField.text);
+                                    console.log("- Router IP:", routerIpField.text);
+                                    console.log("- IP Mask:", ipMaskField.text);
+                                    
+                                    // 使用实际的文本值而不是属性绑定
+                                    var actualHostIp = hostIpField.text;
+                                    var actualRouterIp = routerIpField.text;
+                                    var actualIpMask = ipMaskField.text;
+                                    
+                                    console.log("Actual values to apply:");
+                                    console.log("- Host IP:", actualHostIp);
+                                    console.log("- Router IP:", actualRouterIp);
+                                    console.log("- IP Mask:", actualIpMask);
+                                    
+                                    // 直接调用netManager设置，不依赖confirmsignal
+                                    netManager.setIpAddress(actualHostIp, actualIpMask, actualRouterIp, "static");
+                                });
                             }
                         }
                     }
@@ -323,7 +437,7 @@ Rectangle {
 
             // 风扇控制面板
             Rectangle {
-                visible: root.currentSection === 1
+                visible: currentSection === 1
                 width: parent.parent.width - 40
                 height: 400
                 color: "transparent"
@@ -353,7 +467,7 @@ Rectangle {
                             Layout.preferredHeight: 80
                             
                             background: Rectangle {
-                                color: root.fanControlMode === modelData.value ? "#ffffff" : "#888888"
+                                color: fanControlMode === modelData.value ? "#ffffff" : "#888888"
                                 border.color: "black"
                                 border.width: 2
                                 radius: 4
@@ -362,14 +476,188 @@ Rectangle {
                             contentItem: Text {
                                 text: parent.text
                                 font: parent.font
-                                color: root.fanControlMode === modelData.value ? "black" : "white"
+                                color: fanControlMode === modelData.value ? "black" : "white"
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             
                             onClicked: {
-                                root.fanControlMode = modelData.value
-                                root.confirmsignal("FanControl", modelData.value)
+                                fanControlMode = modelData.value
+                                confirmsignal("FanControl", modelData.value)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // FPGA控制面板
+            Rectangle {
+                visible: currentSection === 2
+                width: parent.parent.width - 40
+                height: 500
+                color: "transparent"
+                border.color: "white"
+                border.width: 2
+                radius: 8
+
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 20
+                    spacing: 30
+
+                    // 标题
+                    Text {
+                        text: "FPGA Flash升级控制"
+                        font.pixelSize: 28
+                        font.bold: true
+                        color: "white"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    // 状态显示
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width - 40
+                        height: 100
+                        color: "transparent"
+                        border.color: gpioController.fpgaFlashMode ? "#ff6666" : "#66ff66"
+                        border.width: 2
+                        radius: 4
+                        
+                        Column {
+                            anchors.centerIn: parent
+                            spacing: 5
+                            
+                            Text {
+                                text: "当前状态："
+                                font.pixelSize: 20
+                                font.bold: true
+                                color: "white"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            
+                            Text {
+                                text: gpioController.fpgaFlashMode ? "FPGA Flash升级模式" : "正常工作模式"
+                                font.pixelSize: 18
+                                color: gpioController.fpgaFlashMode ? "#ff6666" : "#66ff66"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                            
+                            Text {
+                                text: gpioController.fpgaFlashMode ? 
+                                      "A21: HIGH | U3: LOW | AF2: LOW" : 
+                                      "A21: LOW | U3: HIGH | AF2: HIGH-Z"
+                                font.pixelSize: 16
+                                color: "white"
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+                        }
+                    }
+
+                    // 控制按钮
+                    RowLayout {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 50
+                        
+                        Button {
+                            text: "进入升级模式"
+                            font.pixelSize: 20
+                            Layout.preferredWidth: 250
+                            Layout.preferredHeight: 100
+                            enabled: !gpioController.fpgaFlashMode
+                            
+                            background: Rectangle {
+                                color: parent.enabled ? "#ff6666" : "#888888"
+                                border.color: "black"
+                                border.width: 2
+                                radius: 4
+                            }
+                            
+                            contentItem: Text {
+                                text: parent.text
+                                font: parent.font
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            
+                            onClicked: {
+                                gpioController.enterFpgaFlashMode()
+                            }
+                        }
+                        
+                        Button {
+                            text: "退出升级模式"
+                            font.pixelSize: 20
+                            Layout.preferredWidth: 250
+                            Layout.preferredHeight: 100
+                            enabled: gpioController.fpgaFlashMode
+                            
+                            background: Rectangle {
+                                color: parent.enabled ? "#66ff66" : "#888888"
+                                border.color: "black"
+                                border.width: 2
+                                radius: 4
+                            }
+                            
+                            contentItem: Text {
+                                text: parent.text
+                                font: parent.font
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                            
+                            onClicked: {
+                                gpioController.exitFpgaFlashMode()
+                            }
+                        }
+                    }
+
+                    // 说明文本
+                    Rectangle {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: parent.width - 40
+                        height: 120
+                        color: "transparent"
+                        border.color: "yellow"
+                        border.width: 1
+                        radius: 4
+                        
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: 15
+                            spacing: 8
+                            
+                            Text {
+                                text: "使用说明："
+                                font.pixelSize: 18
+                                font.bold: true
+                                color: "yellow"
+                            }
+                            
+                            Text {
+                                text: "• 进入升级模式：A21拉高，U3拉低，AF2设为低电平"
+                                font.pixelSize: 14
+                                color: "white"
+                                wrapMode: Text.WordWrap
+                                width: parent.width - 10
+                            }
+                            
+                            Text {
+                                text: "• 退出升级模式：A21拉低，U3拉高，AF2恢复高阻状态"
+                                font.pixelSize: 14
+                                color: "white"
+                                wrapMode: Text.WordWrap
+                                width: parent.width - 10
+                            }
+                            
+                            Text {
+                                text: "• 升级完成后请务必退出升级模式，恢复正常工作状态"
+                                font.pixelSize: 14
+                                color: "#ffaa00"
+                                wrapMode: Text.WordWrap
+                                width: parent.width - 10
                             }
                         }
                     }
@@ -378,7 +666,7 @@ Rectangle {
 
             // 重置重启面板
             Rectangle {
-                visible: root.currentSection === 2
+                visible: currentSection === 3
                 width: parent.parent.width - 40
                 height: 300
                 color: "transparent"
@@ -412,7 +700,7 @@ Rectangle {
                         }
                         
                         onClicked: {
-                            root.confirmsignal("ResetDefault", true)
+                            confirmsignal("ResetDefault", true)
                         }
                     }
                     
@@ -438,7 +726,7 @@ Rectangle {
                         }
                         
                         onClicked: {
-                            root.confirmsignal("Reboot", true)
+                            confirmsignal("Reboot", true)
                         }
                     }
                 }
@@ -446,7 +734,7 @@ Rectangle {
 
             // 设备状态面板
             Rectangle {
-                visible: root.currentSection === 3
+                visible: currentSection === 4
                 width: parent.parent.width - 40
                 height: Math.max(800, vitalsColumn.implicitHeight + 40)
                 color: "transparent"
@@ -791,6 +1079,7 @@ Rectangle {
                     }
                 }
             }
+
         }
     }
 
@@ -812,7 +1101,7 @@ Rectangle {
 
     // 添加用于更新版本信息的函数
     function updateVersionInfo(componentId, version) {
-        var textComponent = root[componentId + "Text"]
+        var textComponent = systemSetupPanel[componentId + "Text"]
         if (textComponent) {
             textComponent.text = version
         }
@@ -820,7 +1109,7 @@ Rectangle {
     
     // 添加用于更新温度信息的函数
     function updateTemperatureInfo(componentId, temperature) {
-        var textComponent = root[componentId + "Text"]
+        var textComponent = systemSetupPanel[componentId + "Text"]
         if (textComponent) {
             textComponent.text = temperature
         }
@@ -844,6 +1133,105 @@ Rectangle {
         }
         if (netManager.routerIpAddress) {
             routerIpField.text = netManager.routerIpAddress;
+        }
+    }
+
+    // 在SystemSetupPanel中添加DHCP状态显示和错误处理
+    Rectangle {
+        id: dhcpStatusRect
+        anchors.horizontalCenter: parent.horizontalCenter
+        width: parent.width - 40
+        height: 60
+        color: "transparent"
+        border.color: dhcpStatusText.text.includes("faile") ? "red" : "yellow"
+        border.width: 2
+        radius: 4
+        visible: isDhcpMode
+        
+        Text {
+            id: dhcpStatusText
+            anchors.centerIn: parent
+            text: "DHCP status: requiring IP..."
+            font.pixelSize: 16
+            color: "white"
+            font.bold: true
+        }
+        
+        // DHCP状态更新定时器
+        Timer {
+            id: dhcpStatusTimer
+            interval: 30000  // 30秒超时
+            repeat: false
+            onTriggered: {
+                dhcpStatusText.text = "DHCP timeout: There may be no DHCP server in the network. It is recommended to use a static IP."
+                dhcpStatusRect.border.color = "red"
+            }
+        }
+    }
+
+    // 添加建议切换到静态IP的按钮
+    Button {
+        text: "change to static IP"
+        visible: isDhcpMode && dhcpStatusText.text.includes("faile")
+        anchors.horizontalCenter: parent.horizontalCenter
+        Layout.preferredWidth: 200
+        Layout.preferredHeight: 50
+        
+        background: Rectangle {
+            color: "#FF9800"
+            border.color: "black"
+            border.width: 2
+            radius: 4
+        }
+        
+        contentItem: Text {
+            text: parent.text
+            font: parent.font
+            color: "white"
+            horizontalAlignment: Text.AlignHCenter
+            verticalAlignment: Text.AlignVCenter
+        }
+        
+        onClicked: {
+            console.log("Switching back to static IP mode");
+            isDhcpMode = false;
+            dhcpStatusRect.visible = false;
+        }
+    }
+
+    // 添加网络测试函数
+    function testNetworkConnectivity() {
+        // 执行ping测试
+        terminalManager.executeCommand("ping -c 3 8.8.8.8");
+        
+        // 显示测试结果
+        console.log("Network connectivity test initiated");
+    }
+
+    // 添加DHCP错误显示函数
+    function showDhcpError(error) {
+        dhcpStatusText.text = "DHCP faile: " + error;
+        dhcpStatusRect.border.color = "red";
+        dhcpStatusRect.visible = true;
+    }
+
+    // GPIO控制器信号连接
+    Connections {
+        target: gpioController
+        
+        function onGpioOperationResult(success, message) {
+            console.log("GPIO操作结果:", success, message);
+            
+            // 可以在这里添加消息提示框或状态更新
+            if (success) {
+                console.log("GPIO操作成功:", message);
+            } else {
+                console.log("GPIO操作失败:", message);
+            }
+        }
+        
+        function onFpgaFlashModeChanged() {
+            console.log("FPGA Flash模式状态改变:", gpioController.fpgaFlashMode);
         }
     }
 } 

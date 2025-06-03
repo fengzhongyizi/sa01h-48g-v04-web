@@ -14,6 +14,7 @@
 #include "websocketserver.h"       // WebSocket服务器类
 #include "signalanalyzermanager.h" // 信号分析器管理类
 #include "tcpserver.h"             // TCP服务器类
+#include "gpiocontroller.h"        // GPIO控制器类
 
 #include <signal.h>                // 引入信号处理功能，用于处理系统信号
 
@@ -75,6 +76,10 @@ int main(int argc, char *argv[])
         // 依赖串口管理器进行通信
         auto saMgr = new SignalAnalyzerManager(spMgr, &app);
 
+        // 创建GPIO控制器实例
+        // 用于控制RK3568的GPIO引脚，特别是FPGA Flash升级控制
+        auto gpioCtrl = new GpioController(&app);
+
         // 创建QML应用引擎
         // 用于加载和运行QML用户界面
         QQmlApplicationEngine engine;
@@ -83,6 +88,7 @@ int main(int argc, char *argv[])
         // 使QML代码可以直接访问这些对象的属性和方法
         engine.rootContext()->setContextProperty("serialPortManager", spMgr);
         engine.rootContext()->setContextProperty("signalAnalyzerManager", saMgr);
+        engine.rootContext()->setContextProperty("gpioController", gpioCtrl);
 
         // 注册C++类型到QML类型系统
         // 允许在QML中创建这些类型的实例
@@ -92,6 +98,8 @@ int main(int argc, char *argv[])
         qmlRegisterType<WebSocketServer>("WebSocketServer", 1, 0, "WebSocketServer"); // WebSocket服务器
         // 注册串口管理器类型，允许在QML中直接创建实例
         qmlRegisterType<SerialPortManager>("SerialPort", 1, 0, "SerialPortManager");
+        // 注册GPIO控制器类型，允许在QML中直接创建实例
+        qmlRegisterType<GpioController>("GpioController", 1, 0, "GpioController");
         
         // 连接SerialPortManager的PCIe视频信号到SignalAnalyzerManager
         QObject::connect(spMgr, &SerialPortManager::pcieFrameReceived, 
@@ -100,6 +108,9 @@ int main(int argc, char *argv[])
                         [](const QString &error) {
                             qWarning() << "PCIe Video Error:" << error;
                         });
+
+        // 初始化GPIO控制器
+        gpioCtrl->initializeGpio();
 
         // 加载主QML文件
         // 这是UI的入口点

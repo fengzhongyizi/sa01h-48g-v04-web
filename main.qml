@@ -42,12 +42,12 @@ Window {
     // 电池状态指示器组件
     BatteryIndicator {
         id: batteryIndicator
-        batteryLevel: 30                // 初始电池电量
-        isCharging: true                // 是否正在充电
-        anchors.right: parent.right     // 右侧对齐
-        anchors.top: parent.top         // 顶部对齐
-        anchors.margins: 10             // 外边距
-        z: 1000 // 确保在最顶层
+        batteryLevel: 100               // Default to 100% when powered directly
+        isCharging: false               // Not charging when powered directly
+        anchors.right: parent.right     
+        anchors.top: parent.top         
+        anchors.margins: 10             
+        z: 1000 // Ensure on top layer
     }
 
     // 全局鼠标区域，用于隐藏虚拟键盘
@@ -128,6 +128,15 @@ Window {
         
         onMacAddressChanged: {
             console.log("MAC address updated:", macAddress);
+        }
+        
+        // 添加DHCP失败处理
+        onDhcpConfigurationFailed: {
+            console.log("DHCP configuration failed:", error);
+            // 可以显示错误对话框或通知用户
+            if (customTabBar.currentIndex === 4) {
+                systemSetupPanel.showDhcpError(error);
+            }
         }
         
         Component.onCompleted: {
@@ -370,13 +379,18 @@ Window {
             strcode = getdata[7] + getdata[8];   // 提取状态码
             var num = getdata.slice(9, length+4); // 提取数据部分
             
-            // 处理电池状态相关数据，组件会根据SerialPortManager接收的数据自动更新
+            // Process battery status related data - component will auto-update based on SerialPortManager received data
             if(strcode == "9880"){
-                // 电池电量处理
+                // Battery level processing
                 var value = parseInt(getdata[9]+getdata[10], 16);
-                batteryIndicator.batteryLevel = (value-1.75)*200;
+                var calculatedLevel = (value-1.75)*200;
+                // Only update if we get valid battery data
+                if (calculatedLevel >= 0 && calculatedLevel <= 100) {
+                    batteryIndicator.batteryLevel = calculatedLevel;
+                    batteryIndicator.isCharging = false; // Will be updated by next packet if charging
+                }
             } else if(strcode == "9980"){
-                // 电池充电状态处理
+                // Battery charging status processing
                 var batteryconnet = parseInt(getdata[9], 16);
                 var batterystatus = parseInt(getdata[10], 16);
                 if(batteryconnet===1){
@@ -397,7 +411,7 @@ Window {
         }
         
         function onDataReceivedASCALL(data){
-            // 与二进制数据类似，根据当前选中标签转发数据
+            // Similar to binary data, forward data based on current selected tab
             if (customTabBar.currentIndex === 0) {
                 monitorAnalyzer.processReceiveAsciiData(data);
             } else if (customTabBar.currentIndex === 1) {
@@ -436,19 +450,43 @@ Window {
             
             // 根据不同的设置类型处理
             if (str === "DHCP") {
-                if (num === 1) {
-                    // 启用DHCP模式
-                    netManager.setIpAddress("192.168.1.223", "255.255.0.0", "192.168.1.2", "dhcp");
+                if (num === true) {
+                    console.log("Enabling DHCP mode");
+                    netManager.setIpAddress("", "", "", "dhcp");  // 清空静态参数
                     fileManager.updateData("ipmode", "dhcp");
                 } else {
-                    // 启用静态IP模式
-                    netManager.setIpAddress(systemSetupPanel.host_ip.text, 
-                                          systemSetupPanel.ip_mask.text, 
-                                          systemSetupPanel.router_ip.text, "static");
+                    console.log("Enabling static IP mode with values:");
+                    
+                    // 直接从组件获取当前值，不使用别名
+                    var hostIp = systemSetupPanel.children[2].children[0].children[1].children[1].children[0].text;
+                    var ipMask = systemSetupPanel.children[2].children[0].children[1].children[5].children[0].text;
+                    var routerIp = systemSetupPanel.children[2].children[0].children[1].children[3].children[0].text;
+                    
+                    // 更安全的方式：添加findChild函数
+                    function findTextFieldById(parent, id) {
+                        for (var i = 0; i < parent.children.length; i++) {
+                            var child = parent.children[i];
+                            if (child.objectName === id) {
+                                return child;
+                            }
+                            var found = findTextFieldById(child, id);
+                            if (found) return found;
+                        }
+                        return null;
+                    }
+                    
+                    // 或者直接使用更可靠的方式
+                    netManager.setIpAddress(
+                        systemSetupPanel.hostIpText,
+                        systemSetupPanel.ipMaskText,
+                        systemSetupPanel.routerIpText,
+                        "static"
+                    );
+                    
                     fileManager.updateData("ipmode", "static");
-                    fileManager.updateData("iphost", systemSetupPanel.host_ip.text);
-                    fileManager.updateData("ipmask", systemSetupPanel.ip_mask.text);
-                    fileManager.updateData("iprouter", systemSetupPanel.router_ip.text);
+                    fileManager.updateData("iphost", systemSetupPanel.hostIpText);
+                    fileManager.updateData("ipmask", systemSetupPanel.ipMaskText);
+                    fileManager.updateData("iprouter", systemSetupPanel.routerIpText);
                 }
             } else if (str === "ARC/eARC_OUT") {
                 strcode = "83 00 ";

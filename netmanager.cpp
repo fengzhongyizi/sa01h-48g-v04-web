@@ -2,13 +2,14 @@
 #include "netmanager.h"      // 网络管理器的声明
 #include <QProcess>          // 提供执行外部程序的功能
 #include <QTimer>            // 提供定时器功能
+#include <QThread>
 
 // 构造函数
 // 创建网络管理器并初始化网络信息
 // parent: 父对象指针，用于Qt对象树管理
 NetManager::NetManager(QObject* parent)
     : QObject(parent) {
-//    setIpAddress("192.168.1.239", "255.255.255.0","192.168.1.1","static"); // 已注释的硬编码IP设置
+    checkNetworkTools();  // 检查可用的网络工具
     updateNetworkInfo();  // 初始化时更新网络信息
 }
 
@@ -178,52 +179,159 @@ void NetManager::updateNetworkInfo() {
 // netmask: 要设置的子网掩码
 // gateway: 要设置的默认网关
 // mode: 网络模式，"dhcp"为动态获取，其他值为静态IP
-void NetManager::setIpAddress(const QString& ipAddress, const QString& netmask,const QString& gateway,const QString& mode) {
-    if(mode == "dhcp"){
-        // DHCP模式配置
-        QProcess dhcpprocess;
-        // 先重置IP，然后使用dhcpcd客户端获取IP
-        QString dhcpCommand = QString("ifconfig eth0 0.0.0.0 up && dhcpcd --waitip=4 --persistent");
-        dhcpprocess.start("sh", QStringList() << "-c" << dhcpCommand);
-        dhcpprocess.waitForFinished();
-        if (dhcpprocess.exitStatus() == QProcess::NormalExit && dhcpprocess.exitCode() == 0) {
-           qDebug() << "set dhcp successfully.";
+void NetManager::setIpAddress(const QString& ipAddress, const QString& netmask, const QString& gateway, const QString& mode)
+{
+    qDebug() << "Setting IP configuration:";
+    qDebug() << "- IP:" << ipAddress;
+    qDebug() << "- Netmask:" << netmask;
+    qDebug() << "- Gateway:" << gateway;
+    qDebug() << "- Mode:" << mode;
+    
+    QProcess process;
+    
+    if (mode == "dhcp") {
+        // DHCP mode using udhcpc
+        QStringList udhcpcArgs;
+        udhcpcArgs << "-i" << "eth0"    
+                   << "-n"               
+                   << "-q"              
+                   << "-A" << "3"        
+                   << "-T" << "5"        
+                   << "-t" << "10";      
 
-           // 延迟2秒后更新网络信息，确保DHCP有足够时间获取地址
-           QTimer::singleShot(2000, [this]() {
-                  qDebug() << "2 seconds later...";
-                  updateNetworkInfo();
-              });
-
-        } else {
-           qWarning() << "Failed to set dhcp:" << dhcpprocess.readAllStandardError();
+        process.start("udhcpc", udhcpcArgs);
+        
+        if (!process.waitForFinished(30000)) {  // 30 second timeout
+            process.kill();
+            qWarning() << "DHCP timeout - no server available";
+            emit dhcpConfigurationFailed("No DHCP server found");
+            return;
         }
-    }else {
-        // 静态IP模式配置
-        // 步骤1: 设置IP地址和子网掩码
-        QString command = QString("ifconfig eth0 %1 netmask %2 up").arg(ipAddress).arg(netmask);
-        QProcess process;
-        process.start("sh", QStringList() << "-c" << command);
-        process.waitForFinished();
-        if (process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0) {
+
+        if (process.exitCode() == 0) {
+            // Wait for DHCP to take effect
+            QThread::msleep(2000);
+            updateNetworkInfo();
+        } else {
+            emit dhcpConfigurationFailed("No DHCP server found");
+        }
+    } else {
+        // 静态IP模式
+        qDebug() << "Configuring static IP mode";
+        
+        // 1. 设置IP地址和子网掩码
+        QStringList ifconfigArgs;
+        ifconfigArgs << "eth0" << ipAddress << "netmask" << netmask << "up";
+        
+        process.start("ifconfig", ifconfigArgs);
+        process.waitForFinished(3000);
+        
+        if (process.exitCode() == 0) {
             qDebug() << "IP address set successfully.";
+            
+            // 2. 删除现有默认路由（避免"File exists"错误）
+            process.start("route", QStringList() << "del" << "default");
+            process.waitForFinished(2000);
+            qDebug() << "Removed existing default route";
+            
+            // 3. 添加新的默认网关
+            QStringList routeArgs;
+            routeArgs << "add" << "default" << "gw" << gateway;
+            
+            process.start("route", routeArgs);
+            process.waitForFinished(3000);
+            
+            if (process.exitCode() == 0) {
+                qDebug() << "Default gateway set successfully.";
+            } else {
+                QString error = process.readAllStandardError();
+                qWarning() << "Failed to set default gateway:" << error;
+            }
+            
+            // 4. 更新网络信息
+            QTimer::singleShot(1000, this, [this]() {
+                updateNetworkInfo();
+            });
+            
         } else {
-            qWarning() << "Failed to set IP address:" << process.readAllStandardError();
+            QString error = process.readAllStandardError();
+            qWarning() << "Failed to set IP address:" << error;
         }
-
-        // 步骤2: 设置默认网关
-        QString routeCommand = QString("route add default gw %1 eth0").arg(gateway);
-        QProcess routeProcess;
-        routeProcess.start("sh", QStringList() << "-c" << routeCommand);
-        routeProcess.waitForFinished();
-
-        if (routeProcess.exitStatus() == QProcess::NormalExit && routeProcess.exitCode() == 0) {
-           qDebug() << "Default gateway set successfully.";
-
-        } else {
-           qWarning() << "Failed to set default gateway:" << routeProcess.readAllStandardError();
-        }
-        // 立即更新网络信息，不需要延迟
-        updateNetworkInfo();
     }
+}
+
+// 添加专门的DHCP重新获取方法
+void NetManager::renewDhcpLease()
+{
+    QProcess process;
+    
+    // Kill existing udhcpc process
+    process.start("killall", QStringList() << "udhcpc");
+    process.waitForFinished(2000);
+    
+    // Start new DHCP request
+    QStringList args;
+    args << "-i" << "eth0" << "-n" << "-q" << "-A" << "3";
+    
+    process.start("udhcpc", args);
+    if (process.waitForFinished(20000) && process.exitCode() == 0) {
+        QThread::msleep(1000);
+        updateNetworkInfo();
+    } else {
+        qWarning() << "Failed to renew DHCP lease";
+    }
+}
+
+// 添加网络工具检查方法
+void NetManager::checkNetworkTools()
+{
+    QProcess process;
+    
+    // Check udhcpc availability
+    process.start("which", QStringList() << "udhcpc");
+    process.waitForFinished(1000);
+    
+    if (process.exitCode() == 0) {
+        qDebug() << "Network tools: udhcpc available";
+    } else {
+        qWarning() << "Network tools: udhcpc not found";
+    }
+}
+
+// 添加网络状态检查方法
+void NetManager::checkNetworkStatus()
+{
+    QProcess process;
+    
+    qDebug() << "=== Network Status Check ===";
+    
+    // 检查接口状态
+    process.start("ifconfig", QStringList() << "eth0");
+    process.waitForFinished(2000);
+    qDebug() << "Interface status:" << process.readAllStandardOutput();
+    
+    // 检查路由表
+    process.start("route", QStringList() << "-n");
+    process.waitForFinished(2000);
+    qDebug() << "Routing table:" << process.readAllStandardOutput();
+    
+    // 尝试ping网关（如果有的话）
+    process.start("sh", QStringList() << "-c" << "ip route | grep default | awk '{print $3}'");
+    process.waitForFinished(1000);
+    QString gateway = process.readAllStandardOutput().trimmed();
+    
+    if (!gateway.isEmpty()) {
+        qDebug() << "Found gateway:" << gateway;
+        process.start("ping", QStringList() << "-c" << "1" << "-W" << "2" << gateway);
+        process.waitForFinished(3000);
+        if (process.exitCode() == 0) {
+            qDebug() << "Gateway is reachable";
+        } else {
+            qDebug() << "Gateway is not reachable";
+        }
+    } else {
+        qDebug() << "No default gateway found";
+    }
+    
+    qDebug() << "=== Network Status Check Complete ===";
 }

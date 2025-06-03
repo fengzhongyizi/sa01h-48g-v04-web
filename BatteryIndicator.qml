@@ -194,14 +194,7 @@ Item {
         timeout: 5000  // 显示时间
         
         contentItem: Text {
-            text: {
-                if (isCharging)
-                    return qsTr("Charging: %1%").arg(batteryLevel)
-                else if (batteryLevel <= 15)
-                    return qsTr("Low Battery: %1%").arg(batteryLevel)
-                else
-                    return qsTr("Battery: %1%").arg(batteryLevel)
-            }
+            text: getBatteryStatusText()
             color: "#FFFFFF"
             font.pixelSize: 12
         }
@@ -240,6 +233,18 @@ Item {
         if (batteryLevel <= 10 && !isCharging) {
             console.log("Battery critically low!")
             // 可以触发系统警告或其他操作
+        }
+    }
+    
+    function getBatteryStatusText() {
+        if (batteryLevel === 100 && !isCharging) {
+            return "AC Power"
+        } else if (isCharging) {
+            return qsTr("Charging: %1%").arg(batteryLevel)
+        } else if (batteryLevel <= 15) {
+            return qsTr("Low Battery: %1%").arg(batteryLevel)
+        } else {
+            return qsTr("Battery: %1%").arg(batteryLevel)
         }
     }
 }
