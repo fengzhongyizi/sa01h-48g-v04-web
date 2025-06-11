@@ -18,18 +18,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # 还可以选择只禁用特定Qt版本之前的废弃API
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # 禁用Qt 6.0.0之前所有废弃的API
 
-# 项目源文件列表
+# pcievideoreciver.cpp \       # PCIe视频接收器实现
+
 SOURCES += \
         main.cpp \               # 主程序入口
     serialportmanager.cpp \      # 串口管理器实现
-    pcievideoreciver.cpp \       # PCIe视频接收器实现
     netmanager.cpp \             # 网络管理器实现
     terminalmanager.cpp \        # 终端管理器实现
     filemanager.cpp \            # 文件管理器实现
     websocketserver.cpp \        # WebSocket服务器实现
     tcpserver.cpp \              # TCP服务器实现
-    signalanalyzermanager.cpp \  # 信号分析器管理器实现
-    gpiocontroller.cpp           # GPIO控制器实现
+    tcpclient.cpp \
+    cht8310.cpp \
+    parseedid.cpp \
+    signalanalyzermanager.cpp  # 信号分析器管理器实现
 
 # 项目资源文件
 RESOURCES += qml.qrc            # 包含QML界面文件的资源文件
@@ -53,15 +55,16 @@ DISTFILES +=
 
 # 项目头文件列表
 HEADERS += \
-    serialportmanager.h \        # 串口管理器头文件
-    pcievideoreciver.h \         # PCIe视频接收器头文件
-    netmanager.h \               # 网络管理器头文件
-    terminalmanager.h \          # 终端管理器头文件
-    filemanager.h \              # 文件管理器头文件
-    websocketserver.h \          # WebSocket服务器头文件
-    tcpserver.h \                # TCP服务器头文件
-    signalanalyzermanager.h \    # 信号分析器管理器头文件
-    gpiocontroller.h             # GPIO控制器头文件
+    serialportmanager.h \
+    netmanager.h \
+    terminalmanager.h \
+    filemanager.h \
+    websocketserver.h \
+    tcpserver.h \
+    tcpclient.h \
+    cht8310.h \
+    parseedid.h \
+    signalanalyzermanager.h
 
 # 在SA01H-48G-V04.pro中添加
 QMAKE_LFLAGS += -Wl,--allow-shlib-undefined

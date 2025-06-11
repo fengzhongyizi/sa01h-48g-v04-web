@@ -1,59 +1,52 @@
-// 导入必要的Qt模块
-import QtQuick 2.0                  // 提供QML基本元素和类型
-import QtQuick.Controls 2.5         // 提供UI控件如按钮、文本输入等
-import QtQuick.Layouts 1.12         // 提供布局管理功能
+import QtQuick 2.0
+import QtQuick.Controls 2.5
+import QtQuick.Layouts 1.12
 
-// 系统设置主界面根容器
 Rectangle {
-    id: root
-    anchors.fill: parent            // 填充父容器
-    signal confirmsignal(string str, int num)  // 定义信号用于向C++后端发送命令
+    id:root
+    anchors.fill: parent
+    signal confirmsignal(string str,int num)
 
-    // 通过别名导出内部组件，使其可从外部访问
-    property alias host_ip: host_ip             // 主机IP输入框
-    property alias router_ip: router_ip         // 路由器IP输入框
-    property alias ip_mask: ip_mask             // IP掩码输入框
-    property alias mac_address: mac_address     // MAC地址显示框
-    property alias tcp_port: tcp_port           // TCP端口显示框
+    property alias host_ip: host_ip
+    property alias router_ip: router_ip
+    property alias ip_mask: ip_mask
+    property alias mac_address: mac_address
+    property alias tcp_port: tcp_port
 
-    // 固件版本信息显示字段
-    property alias main_mcu: main_mcu           // 主MCU版本
-    property alias tx_mcu: tx_mcu               // 发送MCU版本
-    property alias key_mcu: key_mcu             // 按键MCU版本
-    property alias lan_mcu: lan_mcu             // 网络MCU版本
-    property alias av_mcu: av_mcu               // 音视频MCU版本
-    property alias main_fpga: main_fpga         // 主FPGA版本
-    property alias aux_fpga: aux_fpga           // 辅助FPGA版本
-    property alias aux2_fpga: aux2_fpga         // 辅助2 FPGA版本
-    property alias dsp_module: dsp_module       // DSP模块版本
+    property alias main_mcu: main_mcu
+//    property alias tx_mcu: tx_mcu
+    property alias key_mcu: key_mcu
+    property alias lan_mcu: lan_mcu
+//    property alias av_mcu: av_mcu
+    property alias main_fpga: main_fpga
+//    property alias aux_fpga: aux_fpga
+//    property alias aux2_fpga: aux2_fpga
+    property alias dsp_module: dsp_module
 
-    // 芯片温度信息显示字段
-    property alias chip_main_mcu: chip_main_mcu       // 主MCU温度
-    property alias chip_main_fgpa: chip_main_fgpa     // 主FPGA温度
-    property alias chip_aux_fpga: chip_aux_fpga       // 辅助FPGA温度
+    property alias chip_main_mcu: chip_main_mcu
+    property alias chip_main_fgpa: chip_main_fgpa
+    property alias chip_aux_fpga: chip_aux_fpga
 
-    // 页面状态控制属性
-    property int pageindex: 0       // 子页面索引
-    property int pageflag: 0        // 页面标志，用于指示当前所在主页面
-    property int btnWidth: 300      // 按钮标准宽度
-    property int btnHeight: 120     // 按钮标准高度
-    property int btnfontsize: 35    // 按钮文字大小
+    property int pageindex: 0
+    property int pageflag: 0
+    property int btnWidth: 300
+    property int btnHeight: 120
+    property int btnfontsize: 35
 
-    // 返回按钮，在子页面时显示
+
     CustomButton{
-        id: back
-        visible: pageflag == 0 ? false : true  // 仅在子页面显示
-        width: 150
-        height: 80
+        id:back
+        visible: pageflag == 0?false:true
+        width:150
+        height:80
         border.color: "black"
         border.width: 2
-        color: flag ? 'gray' : 'black'  // 按下状态改变颜色
+        color: flag?'gray':'black'
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.topMargin: 10
         anchors.leftMargin: 10
-        property bool flag: false    // 按下状态标志
-        
+        property bool flag:false
         Text {
             text: qsTr("Back")
             anchors.centerIn: parent
@@ -61,130 +54,103 @@ Rectangle {
             font.pixelSize: btnfontsize
             color: "white"
         }
-        
-        // 点击处理：返回上级菜单
         MouseArea{
             anchors.fill: parent
             onPressed: {
-                back.flag = true     // 按下状态
+                back.flag = true
             }
             onReleased: {
-                back.flag = false    // 释放状态
-                // 根据当前页面层级返回
-                if(pageindex == 1){  // 从一级子页面返回主菜单
+                back.flag = false
+                if(pageindex == 1){
                     pageflag = 0
                     pageindex = 0
-                }else if(pageindex == 2){ // 从二级子页面返回一级子页面
+                }else if(pageindex == 2){
                     pageindex = 1
                 }
             }
         }
     }
 
-    // 主菜单页面 - 显示主要功能选项
+    //page
     GridLayout{
-        visible: pageflag == 0 ? true : false  // 仅在主菜单时显示
+        visible: pageflag == 0?true:false
         anchors.top: parent.top
         anchors.topMargin: 150
         width: parent.width
         rowSpacing: 50
-        columns: 3                   // 每行显示3个按钮
-        
-        // 主菜单数据模型 - 定义所有可用功能
+        columns: 3
         ListModel {
             id: edid_model
-            ListElement { first: "IP MANAGEMENT"; number: 1 }          // IP管理
-            ListElement { first: "ARC/eARC OUT SETUP"; number: 2 }     // ARC/eARC输出设置
-            ListElement { first: "VITALS"; number: 3 }                 // 设备状态信息
-            ListElement { first: "FAN CONTROL"; number: 4 }            // 风扇控制
-            ListElement { first: "RESET & REBOOT"; number: 5 }         // 重置和重启
-            ListElement { first: "Tools"; number: 6 }                  // 工具
-            ListElement { first: "POWER OUT "; number: 7 }             // 电源输出控制
+            ListElement { first: "IP Management"; number: 1 }
+            ListElement { first: "Fan Control"; number: 2 }
+            ListElement { first: "Reset & Reboot"; number: 3 }
+            ListElement { first: "Vitals"; number: 4 }
         }
-        
-        // 创建主菜单按钮 - 根据模型数据生成
         Repeater{
             model: edid_model
             CustomButton{
-                width: btnWidth
-                height: btnHeight
-                border.color: pageflag == number ? "orange" : "black"  // 当前选中项高亮
+                width:btnWidth
+                height:btnHeight
+                border.color: pageflag==number?"orange":"black"
                 border.width: 4
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                 color: 'black'
-                
                 Column{
                     anchors.centerIn: parent
                     Text {
-                        text: first   // 从模型中获取显示文本
+                        text: first
                         font.family: myriadPro.name
                         font.pixelSize: btnfontsize
                         color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.horizontalCenter : parent.horizontalCenter
                     }
                 }
 
-                // 点击处理：切换到对应功能页面
                 MouseArea{
                     anchors.fill: parent
                     onClicked: {
-                        pageflag = number  // 设置页面标志
-                        pageindex = 1      // 进入一级子页面
-                        
-                        // VITALS页面特殊处理：请求所有组件状态
-                        if(pageflag == 3){
-                            // 向后端发送请求各组件状态的信号
-                            confirmsignal("vitals", 0x00); // KEY MCU
-                            confirmsignal("vitals", 0x01); // MAIN MCU
-                            confirmsignal("vitals", 0x02); // TX MCU
-                            confirmsignal("vitals", 0x10); // MAIN FPGA
-                            confirmsignal("vitals", 0x11); // AUX FPGA
-                            confirmsignal("vitals", 0x12); // AUX2 FPGA
-                            confirmsignal("vitals", 0x20); // LAN MCU
-                            confirmsignal("vitals", 0x21); // AV MCU
-                            confirmsignal("vitals", 0x22); // DSP Module
-                            confirmsignal("vitals", 0x30); // Power Management
-                            confirmsignal("vitals", 0xff); // all component
+                        pageflag=number
+                        pageindex = 1
+                        if(pageflag==2){
+                            // Fan Control - 不需要预加载数据
+                        }else if(pageflag==3){
+                            // Reset & Reboot - 不需要预加载数据
+                        }else if(pageflag==4){
+                            // Vitals - 获取系统状态信息
+                            confirmsignal("vitals",0x00);
                         }
-                        // 风扇控制页面初始化（已注释）
-                        //else if(pageflag == 4){
-                        //    confirmsignal("FanControl", 0x00);
-                        //}
                     }
                 }
             }
         }
+
     }
 
-    // IP 管理页面属性
-    property bool ip_management_dhcp_flag: false  // DHCP启用状态标志
-    
-    // IP管理页面布局
+
+
+    //ip management
+    property bool ip_management_dhcp_flag: false
     RowLayout {
-        visible: pageflag == 1 && pageindex == 1 ? true : false  // 仅在IP管理页面显示
+        visible: pageflag==1&&pageindex == 1?true:false
         anchors.top: parent.top
         anchors.topMargin: 150
         width: parent.width
-        
-        // IP设置面板容器
         Rectangle{
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
             border.width: 1
             border.color: "white"
             radius: 5
             color: "gray"
             height: 600
             width: 800
-            
             Column{
                 width: parent.width
                 anchors.top: parent.top
                 anchors.topMargin: 50
-                spacing: 20
-                
-                // 主机IP设置行
+                spacing:20
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
                         width: 160
                         height: 40
@@ -203,13 +169,13 @@ Rectangle {
                     Rectangle{
                         width: 250
                         height: 50
-                        radius: 5
+                        radius:5
                         color: "white"
                         TextField {
-                            id: host_ip
+                            id:host_ip
                             width: 250
                             height: 50
-                            text: qsTr("192.168.1.199")  // 默认IP
+                            text: qsTr("192.168.1.199")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -218,7 +184,6 @@ Rectangle {
                                 color: "transparent"
                                 border.width: 0
                             }
-                            // 点击时显示虚拟键盘
                             onPressed: {
                                 currentInputField = host_ip;
                                 virtualKeyboard.visible = true
@@ -226,10 +191,8 @@ Rectangle {
                         }
                     }
                 }
-                
-                // 路由器IP设置行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
                         width: 160
                         height: 40
@@ -248,13 +211,13 @@ Rectangle {
                     Rectangle{
                         width: 250
                         height: 50
-                        radius: 5
+                        radius:5
                         color: "white"
                         TextField {
-                            id: router_ip
+                            id:router_ip
                             width: 250
                             height: 50
-                            text: qsTr("192.168.1.254")  // 默认网关IP
+                            text: qsTr("192.168.1.254")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -263,7 +226,6 @@ Rectangle {
                                 color: "transparent"
                                 border.width: 0
                             }
-                            // 点击时显示虚拟键盘
                             onPressed: {
                                 currentInputField = router_ip;
                                 virtualKeyboard.visible = true
@@ -271,10 +233,8 @@ Rectangle {
                         }
                     }
                 }
-                
-                // IP掩码设置行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
                         width: 160
                         height: 40
@@ -293,13 +253,13 @@ Rectangle {
                     Rectangle{
                         width: 250
                         height: 50
-                        radius: 5
+                        radius:5
                         color: "white"
                         TextField {
-                            id: ip_mask
+                            id:ip_mask
                             width: 250
                             height: 50
-                            text: qsTr("255.255.255")  // 默认子网掩码
+                            text: qsTr("255.255.255")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -308,7 +268,6 @@ Rectangle {
                                 color: "transparent"
                                 border.width: 0
                             }
-                            // 点击时显示虚拟键盘
                             onPressed: {
                                 currentInputField = ip_mask;
                                 virtualKeyboard.visible = true
@@ -316,10 +275,8 @@ Rectangle {
                         }
                     }
                 }
-                
-                // MAC地址显示行（只读）
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     enabled: false
                     Rectangle {
                         width: 160
@@ -339,25 +296,23 @@ Rectangle {
                     Rectangle{
                         width: 250
                         height: 50
-                        radius: 5
+                        radius:5
                         color: "white"
                         TextField{
-                            id: mac_address
+                            id:mac_address
                             width: 250
                             height: 50
-                            text: "0"  // 默认为0，实际值由后端填充
+                            text: "0"
                             font.pixelSize: btnfontsize
                             font.family: myriadPro.name
                             horizontalAlignment: TextInput.AlignHCenter
                             color: "black"
-                            enabled: false  // 禁用编辑
+                            enabled: false
                         }
                     }
                 }
-                
-                // TCP端口显示行（只读）
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
 
                     Rectangle {
                         width: 160
@@ -377,41 +332,37 @@ Rectangle {
                     Rectangle{
                         width: 250
                         height: 50
-                        radius: 5
+                        radius:5
                         color: "white"
                         TextField{
-                            id: tcp_port
+                            id:tcp_port
                             width: 250
                             height: 50
-                            text: "0"  // 默认为0，实际值由后端填充
+                            text: "0"
                             font.pixelSize: btnfontsize
                             font.family: myriadPro.name
                             horizontalAlignment: TextInput.AlignHCenter
                             color: "black"
-                            enabled: false  // 禁用编辑
+                            enabled: false
                         }
                     }
                 }
 
-                // 间距占位
                 Rectangle{
                     height: 20
                     width: 100
                     color: "transparent"
                 }
 
-                // DHCP设置切换按钮组
                 RowLayout {
                     width: parent.width
-                    
-                    // DHCP开启按钮
                     CustomButton{
-                        id: dhcp_on
-                        width: 200
-                        height: 60
-                        border.color: !ip_management_dhcp_flag ? "black" : "orange"  // 选中状态高亮
+                        id:dhcp_on
+                        width:200
+                        height:60
+                        border.color: !ip_management_dhcp_flag ? "black" : "orange"
                         border.width: 4
-                        color: !ip_management_dhcp_flag ? 'gray' : 'black'  // 根据状态更改颜色
+                        color: !ip_management_dhcp_flag?'gray':'black'
                         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                         Text {
                             text: qsTr("DHCP")
@@ -424,19 +375,18 @@ Rectangle {
                         MouseArea{
                             anchors.fill: parent
                             onClicked: {
-                                ip_management_dhcp_flag = true  // 设置为DHCP模式
-                                confirmsignal("DHCP", true)     // 发送信号到后端
+                                ip_management_dhcp_flag = true
+
+                                confirmsignal("DHCP",true)
                             }
                         }
                     }
-                    
-                    // 静态IP按钮
                     CustomButton{
-                        width: 200
-                        height: 60
-                        border.color: ip_management_dhcp_flag ? "black" : "orange"  // 选中状态高亮
+                        width:200
+                        height:60
+                        border.color: ip_management_dhcp_flag ? "black" : "orange"
                         border.width: 4
-                        color: ip_management_dhcp_flag ? 'gray' : 'black'  // 根据状态更改颜色
+                        color: ip_management_dhcp_flag?'gray':'black'
                         Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                         Text {
                             text: qsTr("Static")
@@ -449,43 +399,41 @@ Rectangle {
                         MouseArea{
                             anchors.fill: parent
                             onClicked: {
-                                ip_management_dhcp_flag = false  // 设置为静态IP模式
-                                confirmsignal("DHCP", false)     // 发送信号到后端
+                                ip_management_dhcp_flag = false
+
+                                confirmsignal("DHCP",false)
                             }
                         }
                     }
+
                 }
             }
+
         }
     }
 
-    // ARC/eARC输出设置页面属性
-    property int out_setup_flag: 0  // 当前选择的输出模式
-    
-    // ARC/eARC输出设置页面布局
+    //fan control
+    property int fan_control_flag: 0
     GridLayout{
-        visible: pageflag == 2 && pageindex == 1 ? true : false  // 仅在ARC/eARC设置页面显示
+        visible: pageflag==2&&pageindex == 1?true:false
         anchors.top: parent.top
         anchors.topMargin: 150
         width: parent.width
         rowSpacing: 50
-        columns: 3  // 每行3个按钮
-        
-        // ARC/eARC选项数据模型
+        columns: 2
         ListModel {
-            id: out_setup_model
-            ListElement { first: "DISABLE ARC/eARC"; number: 0x00 }  // 禁用ARC/eARC
-            ListElement { first: "ENABLE eARC"; number: 0x01 }       // 启用eARC
-            ListElement { first: "ENABLE ARC"; number: 0x02 }        // 启用ARC
+            id: fan_control_model
+            ListElement { first: "Auto"; number: 4 }
+            ListElement { first: "Speed 1"; number: 1 }
+            ListElement { first: "Speed 2"; number: 2 }
+            ListElement { first: "Speed 3"; number: 3 }
         }
-        
-        // 创建ARC/eARC选项按钮
         Repeater{
-            model: out_setup_model
+            model: fan_control_model
             CustomButton{
-                width: btnWidth
-                height: btnHeight
-                border.color: out_setup_flag == number ? "orange" : "black"  // 当前选中项高亮
+                width:btnWidth
+                height:btnHeight
+                border.color: fan_control_flag==number?"orange":"black"
                 border.width: 4
                 color: 'black'
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
@@ -496,45 +444,84 @@ Rectangle {
                         font.family: myriadPro.name
                         font.pixelSize: btnfontsize
                         color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.horizontalCenter : parent.horizontalCenter
                     }
                 }
 
                 MouseArea{
                     anchors.fill: parent
                     onClicked: {
-                        out_setup_flag = number  // 更新当前选中状态
-                        confirmsignal("ARC/eARC_OUT", number)  // 发送信号到后端
+                        fan_control_flag=number
+                        confirmsignal("FanControl",number)
                     }
                 }
             }
         }
     }
 
-    // 设备状态信息页面布局
+    //reset & reboot
+    GridLayout{
+        visible: pageflag==3&&pageindex == 1?true:false
+        anchors.top: parent.top
+        anchors.topMargin: 150
+        width: parent.width
+        rowSpacing: 50
+        columns: 2
+        ListModel {
+            id: reset_reboot_model
+            ListElement { first: "Factory Reset"; action: "ResetDefault" }
+            ListElement { first: "Reboot System"; action: "Reboot" }
+        }
+        Repeater{
+            model: reset_reboot_model
+            CustomButton{
+                width:btnWidth
+                height:btnHeight
+                border.color: "black"
+                border.width: 4
+                color: 'black'
+                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                Column{
+                    anchors.centerIn: parent
+                    Text {
+                        text: first
+                        font.family: myriadPro.name
+                        font.pixelSize: btnfontsize
+                        color: "white"
+                        anchors.horizontalCenter : parent.horizontalCenter
+                    }
+                }
+
+                MouseArea{
+                    anchors.fill: parent
+                    onClicked: {
+                        confirmsignal(action, 0)
+                    }
+                }
+            }
+        }
+    }
+
+    //vitals
     RowLayout {
-        visible: pageflag == 3 && pageindex == 1 ? true : false  // 仅在设备状态页面显示
+        visible: pageflag==4&&pageindex == 1?true:false
         anchors.top: parent.top
         anchors.topMargin: 120
         width: parent.width
-        
-        // 设备状态信息面板容器
         Rectangle{
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
             border.width: 1
             border.color: "white"
             radius: 5
             color: "gray"
             height: 750
             width: 700
-            
             Column{
                 width: parent.width
                 anchors.top: parent.top
                 anchors.topMargin: 20
-                spacing: 10
-                
-                // 固件版本标题
+                spacing:10
                 Text {
                     text: "FIRMWARE VERSION"
                     font.family: myriadPro.name
@@ -542,12 +529,10 @@ Rectangle {
                     color: "black"
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
-                
-                // 主MCU版本行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
@@ -564,11 +549,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: main_mcu
-                            text: qsTr("")  // 由后端填充实际版本号
+                            id:main_mcu
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -576,17 +561,47 @@ Rectangle {
                         }
                     }
                 }
-                
-                // TX MCU版本行
+//                RowLayout{
+//                    anchors.horizontalCenter : parent.horizontalCenter
+//                    Rectangle {
+//                        width: 150
+//                        height: 40
+//                        color: "transparent"
+
+//                        Text {
+//                            text: "TX MCU:"
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.left: parent.left
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            horizontalAlignment: Text.AlignLeft
+//                        }
+//                    }
+//                    Rectangle{
+//                        width: 200
+//                        height: 40
+//                        radius:5
+//                        color: "white"
+//                        Text {
+//                            id:tx_mcu
+//                            text: qsTr("")
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.centerIn: parent
+//                        }
+//                    }
+//                }
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
                         Text {
-                            text: "TX MCU:"
+                            text: "C51 MCU:"
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -598,11 +613,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: tx_mcu
-                            text: qsTr("")  // 由后端填充实际版本号
+                            id:key_mcu
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -610,114 +625,10 @@ Rectangle {
                         }
                     }
                 }
-                
-                // 按键MCU版本行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
-                        height: 40
-                        color: "transparent"
-
-                        Text {
-                            text: "Key MCU:"
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            horizontalAlignment: Text.AlignLeft
-                        }
-                    }
-                    Rectangle{
-                        width: 200
-                        height: 40
-                        radius: 5
-                        color: "white"
-                        Text {
-                            id: key_mcu
-                            text: qsTr("")  // 由后端填充实际版本号
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.centerIn: parent
-                        }
-                    }
-                }
-                
-                // 网络MCU版本行
-                RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    Rectangle {
-                        width: 150
-                        height: 40
-                        color: "transparent"
-
-                        Text {
-                            text: "LAN MCU:"
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            horizontalAlignment: Text.AlignLeft
-                        }
-                    }
-                    Rectangle{
-                        width: 200
-                        height: 40
-                        radius: 5
-                        color: "white"
-                        Text {
-                            id: lan_mcu
-                            text: qsTr("")  // 由后端填充实际版本号
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.centerIn: parent
-                        }
-                    }
-                }
-                
-                // 音视频MCU版本行
-                RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    Rectangle {
-                        width: 150
-                        height: 40
-                        color: "transparent"
-
-                        Text {
-                            text: "AV MCU:"
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            horizontalAlignment: Text.AlignLeft
-                        }
-                    }
-                    Rectangle{
-                        width: 200
-                        height: 40
-                        radius: 5
-                        color: "white"
-                        Text {
-                            id: av_mcu
-                            text: qsTr("")  // 由后端填充实际版本号
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.centerIn: parent
-                        }
-                    }
-                }
-                
-                // 主FPGA版本行
-                RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
@@ -734,11 +645,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: main_fpga
-                            text: qsTr("")  // 由后端填充实际版本号
+                            id:main_fpga
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -746,17 +657,15 @@ Rectangle {
                         }
                     }
                 }
-                
-                // 辅助FPGA版本行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
                         Text {
-                            text: "AUX FPGA:"
+                            text: "Control Module:"
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -768,11 +677,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: aux_fpga
-                            text: qsTr("")  // 由后端填充实际版本号
+                            id:lan_mcu
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -780,46 +689,108 @@ Rectangle {
                         }
                     }
                 }
-                
-                // 辅助2 FPGA版本行
-                RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    Rectangle {
-                        width: 150
-                        height: 40
-                        color: "transparent"
+//                RowLayout{
+//                    anchors.horizontalCenter : parent.horizontalCenter
+//                    Rectangle {
+//                        width: 150
+//                        height: 40
+//                        color: "transparent"
 
-                        Text {
-                            text: "AUX2 FPGA:"
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.left: parent.left
-                            anchors.verticalCenter: parent.verticalCenter
-                            horizontalAlignment: Text.AlignLeft
-                        }
-                    }
-                    Rectangle{
-                        width: 200
-                        height: 40
-                        radius: 5
-                        color: "white"
-                        Text {
-                            id: aux2_fpga
-                            text: qsTr("")  // 由后端填充实际版本号
-                            font.family: myriadPro.name
-                            font.pixelSize: btnfontsize
-                            color: "black"
-                            anchors.centerIn: parent
-                        }
-                    }
-                }
-                
-                // DSP模块版本行
+//                        Text {
+//                            text: "AV MCU:"
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.left: parent.left
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            horizontalAlignment: Text.AlignLeft
+//                        }
+//                    }
+//                    Rectangle{
+//                        width: 200
+//                        height: 40
+//                        radius:5
+//                        color: "white"
+//                        Text {
+//                            id:av_mcu
+//                            text: qsTr("")
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.centerIn: parent
+//                        }
+//                    }
+//                }
+
+
+//                RowLayout{
+//                    anchors.horizontalCenter : parent.horizontalCenter
+//                    Rectangle {
+//                        width: 150
+//                        height: 40
+//                        color: "transparent"
+
+//                        Text {
+//                            text: "AUX FPGA:"
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.left: parent.left
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            horizontalAlignment: Text.AlignLeft
+//                        }
+//                    }
+//                    Rectangle{
+//                        width: 200
+//                        height: 40
+//                        radius:5
+//                        color: "white"
+//                        Text {
+//                            id:aux_fpga
+//                            text: qsTr("")
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.centerIn: parent
+//                        }
+//                    }
+//                }
+//                RowLayout{
+//                    anchors.horizontalCenter : parent.horizontalCenter
+//                    Rectangle {
+//                        width: 150
+//                        height: 40
+//                        color: "transparent"
+
+//                        Text {
+//                            text: "AUX2 FPGA:"
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.left: parent.left
+//                            anchors.verticalCenter: parent.verticalCenter
+//                            horizontalAlignment: Text.AlignLeft
+//                        }
+//                    }
+//                    Rectangle{
+//                        width: 200
+//                        height: 40
+//                        radius:5
+//                        color: "white"
+//                        Text {
+//                            id:aux2_fpga
+//                            text: qsTr("")
+//                            font.family: myriadPro.name
+//                            font.pixelSize: btnfontsize
+//                            color: "black"
+//                            anchors.centerIn: parent
+//                        }
+//                    }
+//                }
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
@@ -836,11 +807,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: dsp_module
-                            text: qsTr("")  // 由后端填充实际版本号
+                            id:dsp_module
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -849,7 +820,6 @@ Rectangle {
                     }
                 }
 
-                // 主芯片温度标题
                 Text {
                     text: "MAIN CHIP TEMPERATURE"
                     font.family: myriadPro.name
@@ -857,12 +827,10 @@ Rectangle {
                     color: "black"
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
-                
-                // 主MCU温度行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
@@ -879,11 +847,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: chip_main_mcu
-                            text: qsTr("")  // 由后端填充实际温度
+                            id:chip_main_mcu
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -891,12 +859,10 @@ Rectangle {
                         }
                     }
                 }
-                
-                // 主FPGA温度行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
@@ -913,11 +879,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: chip_main_fgpa
-                            text: qsTr("")  // 由后端填充实际温度
+                            id:chip_main_fgpa
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -925,17 +891,15 @@ Rectangle {
                         }
                     }
                 }
-                
-                // 辅助FPGA温度行
                 RowLayout{
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    anchors.horizontalCenter : parent.horizontalCenter
                     Rectangle {
-                        width: 150
+                        width: 170
                         height: 40
                         color: "transparent"
 
                         Text {
-                            text: "AUX FPGA:"
+                            text: "Control Module:"
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -947,11 +911,11 @@ Rectangle {
                     Rectangle{
                         width: 200
                         height: 40
-                        radius: 5
+                        radius:5
                         color: "white"
                         Text {
-                            id: chip_aux_fpga
-                            text: qsTr("")  // 由后端填充实际温度
+                            id:chip_aux_fpga
+                            text: qsTr("")
                             font.family: myriadPro.name
                             font.pixelSize: btnfontsize
                             color: "black"
@@ -959,82 +923,29 @@ Rectangle {
                         }
                     }
                 }
+
             }
+
         }
     }
 
 
-    // 风扇控制页面属性
-    property int fan_control_flag: 0  // 当前选择的风扇模式
-    
-    // 风扇控制页面布局
-    GridLayout{
-        visible: pageflag == 4 && pageindex == 1 ? true : false  // 仅在风扇控制页面显示
-        anchors.top: parent.top
-        anchors.topMargin: 150
-        width: parent.width
-        rowSpacing: 50
-        columns: 3  // 每行3个按钮
-        
-        // 风扇模式数据模型
-        ListModel {
-            id: fan_control_model
-            ListElement { first: "OFF"; number: 0x00 }               // 关闭风扇
-            ListElement { first: "LOW SPEED"; number: 0x01 }         // 低速运行
-            ListElement { first: "MIDDLE SPEED"; number: 0x02 }      // 中速运行
-            ListElement { first: "HIGH SPEED"; number: 0x03 }        // 高速运行
-            ListElement { first: "AUTO"; number: 0x04 }              // 自动调节
-        }
-        
-        // 创建风扇控制模式按钮
-        Repeater{
-            model: fan_control_model
-            CustomButton{
-                width: btnWidth
-                height: btnHeight
-                border.color: fan_control_flag == number ? "orange" : "black"  // 当前选中项高亮
-                border.width: 4
-                color: 'black'
-                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                Column{
-                    anchors.centerIn: parent
-                    Text {
-                        text: first
-                        font.family: myriadPro.name
-                        font.pixelSize: btnfontsize
-                        color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-                }
 
-                MouseArea{
-                    anchors.fill: parent
-                    onClicked: {
-                        fan_control_flag = number  // 更新当前选中状态
-                        confirmsignal("FanControl", number)  // 发送信号到后端控制风扇
-                    }
-                }
-            }
-        }
-    }
-
-    // 重置和重启页面布局
+    //reset & reboot (old implementation - should be removed)
     RowLayout {
-        visible: pageflag == 5 && pageindex == 1 ? true : false  // 仅在重置/重启页面显示
+        visible: false
         anchors.top: parent.top
         anchors.topMargin: 120
         width: parent.width
-        
-        // 恢复默认设置按钮
         CustomButton{
-            id: reset_btn
-            width: btnWidth
-            height: btnHeight
+            id:reset_btn
+            width:btnWidth
+            height:btnHeight
             border.color: "black"
             border.width: 2
-            color: flag ? 'gray' : 'black'  // 按下状态改变颜色
+            color: flag?'gray':'black'
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            property bool flag: false  // 按下状态标志
+            property bool flag:false
             Text {
                 text: qsTr("Reset Default")
                 anchors.centerIn: parent
@@ -1046,25 +957,24 @@ Rectangle {
             MouseArea{
                 anchors.fill: parent
                 onPressed: {
-                    reset_btn.flag = true  // 设置按下状态
+                    reset_btn.flag = true
                 }
                 onReleased: {
-                    reset_btn.flag = false  // 恢复正常状态
-                    confirmsignal("ResetDefault", true)  // 发送重置信号到后端
+                    reset_btn.flag = false
+                    confirmsignal("ResetDefault",true)
                 }
             }
         }
 
-        // 重启设备按钮
         CustomButton{
-            id: reboot_btn
-            width: btnWidth
-            height: btnHeight
+            id:reboot_btn
+            width:btnWidth
+            height:btnHeight
             border.color: "black"
             border.width: 2
-            color: flag ? 'gray' : 'black'  // 按下状态改变颜色
+            color: flag?'gray':'black'
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            property bool flag: false  // 按下状态标志
+            property bool flag:false
             Text {
                 text: qsTr("Reboot")
                 anchors.centerIn: parent
@@ -1076,36 +986,32 @@ Rectangle {
             MouseArea{
                 anchors.fill: parent
                 onPressed: {
-                    reboot_btn.flag = true  // 设置按下状态
+                    reboot_btn.flag = true
                 }
                 onReleased: {
-                    reboot_btn.flag = false  // 恢复正常状态
-                    confirmsignal("Reboot", true)  // 发送重启信号到后端
+                    reboot_btn.flag = false
+                    confirmsignal("Reboot",true)
                 }
             }
         }
     }
 
-    // 工具页面属性
-    property int tool_flag: 0  // 当前选择的工具
-    
-    // 工具选择页面布局
+    //Tools (disabled)
+    property int tool_flag: 0
     RowLayout {
-        visible: pageflag == 6 && pageindex == 1 ? true : false  // 仅在工具选择页面显示
+        visible: false
         anchors.top: parent.top
         anchors.topMargin: 120
         width: parent.width
-        
-        // 音频信息帧工具按钮
         CustomButton{
-            id: audio_info
-            width: btnWidth
-            height: btnHeight
+            id:audio_info
+            width:btnWidth
+            height:btnHeight
             border.color: "black"
             border.width: 2
-            color: flag ? 'gray' : 'black'  // 按下状态改变颜色
+            color: flag?'gray':'black'
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            property bool flag: false  // 按下状态标志
+            property bool flag:false
             Text {
                 text: qsTr("Audio Infoframe")
                 anchors.centerIn: parent
@@ -1117,26 +1023,24 @@ Rectangle {
             MouseArea{
                 anchors.fill: parent
                 onPressed: {
-                    audio_info.flag = true  // 设置按下状态
+                    audio_info.flag = true
                 }
                 onReleased: {
-                    audio_info.flag = false  // 恢复正常状态
-                    pageindex = 2  // 进入二级子页面
-                    tool_flag = 1  // 设置工具标志为音频信息帧
+                    audio_info.flag = false
+                    pageindex = 2
+                    tool_flag = 1
                 }
             }
         }
-        
-        // 链路训练工具按钮
         CustomButton{
-            id: link_train
-            width: btnWidth
-            height: btnHeight
+            id:link_train
+            width:btnWidth
+            height:btnHeight
             border.color: "black"
             border.width: 2
-            color: flag ? 'gray' : 'black'  // 按下状态改变颜色
+            color: flag?'gray':'black'
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            property bool flag: false  // 按下状态标志
+            property bool flag:false
             Text {
                 text: qsTr("Link Train")
                 anchors.centerIn: parent
@@ -1148,202 +1052,186 @@ Rectangle {
             MouseArea{
                 anchors.fill: parent
                 onPressed: {
-                    link_train.flag = true  // 设置按下状态
+                    link_train.flag = true
                 }
                 onReleased: {
-                    link_train.flag = false  // 恢复正常状态
-                    pageindex = 2  // 进入二级子页面
-                    tool_flag = 2  // 设置工具标志为链路训练
+                    link_train.flag = false
+                    pageindex = 2
+                    tool_flag = 2
                 }
             }
         }
     }
-
-    // 音频信息帧写入处理函数
     function writeinfoframe(){
-        var data = ["84", "01", "0A"];  // 初始化数据数组，包含帧头信息
-        
-        // 第1个数据字节处理
+        var data = ["84", "01", "0A"];
+        //1
         var byte1 =
-                this.combobox1.currentText.substring(0, 4) + "0" + this.combobox2.currentText.substring(0, 3);
+        this.combobox1.currentText.substring(0, 4) + "0" + this.combobox2.currentText.substring(0, 3);
         if (parseInt(byte1, 2).toString(16).length === 1) {
-            byte1 = "0" + parseInt(byte1, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+            byte1 = "0" + parseInt(byte1, 2).toString(16).toUpperCase();
         } else {
             byte1 = parseInt(byte1, 2).toString(16).toUpperCase();
         }
-        data.push(byte1);  // 添加到数据数组
-        
-        // 第2个数据字节处理
+        data.push(byte1);
+        //2
         var byte2 =
-                "000" + this.combobox3.currentText.substring(0, 3) + this.combobox4.currentText.substring(0, 2);
+            "000" + this.combobox3.currentText.substring(0, 3) + this.combobox4.currentText.substring(0, 2);
         if (parseInt(byte2, 2).toString(16).length === 1) {
-            byte2 = "0" + parseInt(byte2, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+            byte2 = "0" + parseInt(byte2, 2).toString(16).toUpperCase();
         } else {
             byte2 = parseInt(byte2, 2).toString(16).toUpperCase();
         }
-        data.push(byte2);  // 添加到数据数组
-        
-        // 第3个数据字节处理
+        data.push(byte2);
+        //3
         var byte3 = this.combobox5.currentText.substring(2, 4);
-        data.push(byte3);  // 添加到数据数组
-        
-        // 第4个数据字节处理
+        data.push(byte3);
+        //4
         var byte4 = this.combobox6.currentText.substring(2, 4);
-        data.push(byte4);  // 添加到数据数组
-        
-        // 第5个数据字节处理
+        data.push(byte4);
+        //5
         var byte5 =
-                this.combobox7.currentText.substring(0, 1) +
-                this.combobox8.currentText.substring(0, 4) +
-                "0" +
-                this.combobox9.currentText.substring(0, 2);
+            this.combobox7.currentText.substring(0, 1) +
+            this.combobox8.currentText.substring(0, 4) +
+            "0" +
+            this.combobox9.currentText.substring(0, 2);
         if (parseInt(byte5, 2).toString(16).length === 1) {
-            byte5 = "0" + parseInt(byte5, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+            byte5 = "0" + parseInt(byte5, 2).toString(16).toUpperCase();
         } else {
             byte5 = parseInt(byte5, 2).toString(16).toUpperCase();
         }
-        data.push(byte5);  // 添加到数据数组
-        
-        // 根据不同的音频格式处理后续字节
+        data.push(byte5);
         if (this.combobox6.currentText === "0xFE") {
-            // 特殊格式0xFE下的第6个字节处理
+            //6
             var byte6 =
-                    this.combobox6_1.currentText +
-                    this.combobox6_2.currentText +
-                    this.combobox6_3.currentText +
-                    this.combobox6_4.currentText +
-                    this.combobox6_5.currentText +
-                    this.combobox6_6.currentText +
-                    this.combobox6_7.currentText +
-                    this.combobox6_8.currentText;
+              this.combobox6_1.currentText +
+              this.combobox6_2.currentText +
+              this.combobox6_3.currentText +
+              this.combobox6_4.currentText +
+              this.combobox6_5.currentText +
+              this.combobox6_6.currentText +
+              this.combobox6_7.currentText +
+              this.combobox6_8.currentText;
             if (parseInt(byte6, 2).toString(16).length === 1) {
-                byte6 = "0" + parseInt(byte6, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+              byte6 = "0" + parseInt(byte6, 2).toString(16).toUpperCase();
             } else {
-                byte6 = parseInt(byte6, 2).toString(16).toUpperCase();
+              byte6 = parseInt(byte6, 2).toString(16).toUpperCase();
             }
             data.push(byte6);
-            
-            // 特殊格式0xFE下的第7个字节处理
+            //7
             var byte7 =
-                    this.combobox7_1.currentText +
-                    this.combobox7_2.currentText +
-                    this.combobox7_3.currentText +
-                    this.combobox7_4.currentText +
-                    this.combobox7_5.currentText +
-                    this.combobox7_6.currentText +
-                    this.combobox7_7.currentText +
-                    this.combobox7_8.currentText;
+              this.combobox7_1.currentText +
+              this.combobox7_2.currentText +
+              this.combobox7_3.currentText +
+              this.combobox7_4.currentText +
+              this.combobox7_5.currentText +
+              this.combobox7_6.currentText +
+              this.combobox7_7.currentText +
+              this.combobox7_8.currentText;
             if (parseInt(byte7, 2).toString(16).length === 1) {
-                byte7 = "0" + parseInt(byte7, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+              byte7 = "0" + parseInt(byte7, 2).toString(16).toUpperCase();
             } else {
-                byte7 = parseInt(byte7, 2).toString(16).toUpperCase();
+              byte7 = parseInt(byte7, 2).toString(16).toUpperCase();
             }
             data.push(byte7);
-            
-            // 特殊格式0xFE下的第8个字节处理
+            //8
             var byte8 =
-                    "0000" +
-                    this.combobox8_5.currentText +
-                    this.combobox8_6.currentText +
-                    this.combobox8_7.currentText +
-                    this.combobox8_8.currentText;
+              "0000" +
+              this.combobox8_5.currentText +
+              this.combobox8_6.currentText +
+              this.combobox8_7.currentText +
+              this.combobox8_8.currentText;
             if (parseInt(byte8, 2).toString(16).length === 1) {
-                byte8 = "0" + parseInt(byte8, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+              byte8 = "0" + parseInt(byte8, 2).toString(16).toUpperCase();
             } else {
-                byte8 = parseInt(byte8, 2).toString(16).toUpperCase();
+              byte8 = parseInt(byte8, 2).toString(16).toUpperCase();
             }
             data.push(byte8);
-            data.push("00");  // 第9个字节置0
-            data.push("00");  // 第10个字节置0
-        } else if (this.combobox6.currentText === "0xFF") {
-            // 特殊格式0xFF下的第6个字节处理
+            data.push("00");
+            data.push("00");
+          } else if (this.combobox6.currentText === "0xFF") {
+            //6
             byte6 =
-                    this.combobox6_1.currentText +
-                    this.combobox6_2.currentText +
-                    this.combobox6_3.currentText +
-                    this.combobox6_4.currentText +
-                    this.combobox6_5.currentText +
-                    this.combobox6_6.currentText +
-                    this.combobox6_7.currentText +
-                    this.combobox6_8.currentText;
+              this.combobox6_1.currentText +
+              this.combobox6_2.currentText +
+              this.combobox6_3.currentText +
+              this.combobox6_4.currentText +
+              this.combobox6_5.currentText +
+              this.combobox6_6.currentText +
+              this.combobox6_7.currentText +
+              this.combobox6_8.currentText;
             if (parseInt(byte6, 2).toString(16).length === 1) {
-                byte6 = "0" + parseInt(byte6, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+              byte6 = "0" + parseInt(byte6, 2).toString(16).toUpperCase();
             } else {
-                byte6 = parseInt(byte6, 2).toString(16).toUpperCase();
+              byte6 = parseInt(byte6, 2).toString(16).toUpperCase();
             }
             data.push(byte6);
-            
-            // 特殊格式0xFF下的第7个字节处理
+            //7
             byte7 =
-                    this.combobox7_1.currentText +
-                    this.combobox7_2.currentText +
-                    this.combobox7_3.currentText +
-                    this.combobox7_4.currentText +
-                    this.combobox7_5.currentText +
-                    this.combobox7_6.currentText +
-                    this.combobox7_7.currentText +
-                    this.combobox7_8.currentText;
+              this.combobox7_1.currentText +
+              this.combobox7_2.currentText +
+              this.combobox7_3.currentText +
+              this.combobox7_4.currentText +
+              this.combobox7_5.currentText +
+              this.combobox7_6.currentText +
+              this.combobox7_7.currentText +
+              this.combobox7_8.currentText;
             if (parseInt(byte7, 2).toString(16).length === 1) {
-                byte7 = "0" + parseInt(byte7, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+              byte7 = "0" + parseInt(byte7, 2).toString(16).toUpperCase();
             } else {
-                byte7 = parseInt(byte7, 2).toString(16).toUpperCase();
+              byte7 = parseInt(byte7, 2).toString(16).toUpperCase();
             }
             data.push(byte7);
-            
-            // 特殊格式0xFF下的第8个字节处理
+            //8
             byte8 =
-                    this.combobox8_1.currentText +
-                    this.combobox8_1.currentText +
-                    this.combobox8_1.currentText +
-                    this.combobox8_1.currentText +
-                    this.combobox8_1.currentText +
-                    this.combobox8_1.currentText +
-                    this.combobox8_1.currentText +
-                    this.combobox8_1.currentText;
+              this.combobox8_1.currentText +
+              this.combobox8_1.currentText +
+              this.combobox8_1.currentText +
+              this.combobox8_1.currentText +
+              this.combobox8_1.currentText +
+              this.combobox8_1.currentText +
+              this.combobox8_1.currentText +
+              this.combobox8_1.currentText;
             if (parseInt(byte8, 2).toString(16).length === 1) {
-                byte8 = "0" + parseInt(byte8, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+              byte8 = "0" + parseInt(byte8, 2).toString(16).toUpperCase();
             } else {
-                byte8 = parseInt(byte8, 2).toString(16).toUpperCase();
+              byte8 = parseInt(byte8, 2).toString(16).toUpperCase();
             }
             data.push(byte8);
-            
-            // 特殊格式0xFF下的第9个字节处理
+            //9
             var byte9 =
-                    this.combobox9_1.currentText +
-                    this.combobox9_2.currentText +
-                    this.combobox9_3.currentText +
-                    this.combobox9_4.currentText +
-                    this.combobox9_5.currentText +
-                    this.combobox9_6.currentText +
-                    this.combobox9_7.currentText +
-                    this.combobox9_8.currentText;
+              this.combobox9_1.currentText +
+              this.combobox9_2.currentText +
+              this.combobox9_3.currentText +
+              this.combobox9_4.currentText +
+              this.combobox9_5.currentText +
+              this.combobox9_6.currentText +
+              this.combobox9_7.currentText +
+              this.combobox9_8.currentText;
             if (parseInt(byte9, 2).toString(16).length === 1) {
-                byte9 = "0" + parseInt(byte9, 2).toString(16).toUpperCase();  // 补0确保两位十六进制
+              byte9 = "0" + parseInt(byte9, 2).toString(16).toUpperCase();
             } else {
-                byte9 = parseInt(byte9, 2).toString(16).toUpperCase();
+              byte9 = parseInt(byte9, 2).toString(16).toUpperCase();
             }
             data.push(byte9);
-            data.push("00");  // 第10个字节置0
-        } else {
-            // 普通格式下后续字节全部置0
+            data.push("00");
+          } else {
             for (var a = 0; a < 5; a++) {
-                data.push("00");
+              data.push("00");
             }
-        }
-        console.log("data=", data);  // 调试输出
-        confirmsignal("AudioInfoframeWrite", data);  // 发送数据到后端
+          }
+        console.log("data=",data);
+        confirmsignal("AudioInfoframeWrite",data);
     }
 
-    // 音频信息帧工具页面布局
+    //Tools-audio-infoframe
     RowLayout {
-        visible: pageflag == 6 && pageindex == 2 && tool_flag == 1 ? true : false  // 仅在音频信息帧工具页面显示
+        visible: pageflag==6&&pageindex == 2&&tool_flag==1?true:false
         anchors.top: parent.top
         anchors.topMargin: 110
         width: parent.width
-        
-        // 音频信息帧面板容器
         Rectangle{
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
             border.width: 1
             border.color: "white"
             radius: 5
@@ -1351,19 +1239,19 @@ Rectangle {
             height: 900
             width: 1600
 
-            // 读取按钮
+            //read
             CustomButton{
-                id: audio_info_read
-                width: 200
-                height: 80
+                id:audio_info_read
+                width:200
+                height:80
                 anchors.left: parent.left
                 anchors.leftMargin: 10
                 anchors.top: parent.top
                 anchors.topMargin: 10
                 border.color: "black"
                 border.width: 2
-                color: flag ? 'gray' : 'black'  // 按下状态改变颜色
-                property bool flag: false  // 按下状态标志
+                color: flag?'gray':'black'
+                property bool flag:false
                 Text {
                     text: qsTr("Read")
                     anchors.centerIn: parent
@@ -1375,27 +1263,26 @@ Rectangle {
                 MouseArea{
                     anchors.fill: parent
                     onPressed: {
-                        audio_info_read.flag = true  // 设置按下状态
-                        confirmsignal("AudioInfoframeRead", 0xfe01);  // 发送读取信号到后端
+                        audio_info_read.flag = true
+                        confirmsignal("AudioInfoframeRead",0xfe01);
                     }
                     onReleased: {
-                        audio_info_read.flag = false  // 恢复正常状态
+                        audio_info_read.flag = false
                     }
                 }
             }
-            
-            // 写入按钮
+            //write
             CustomButton{
-                id: audio_info_write
+                id:audio_info_write
                 anchors.top: audio_info_read.top
                 anchors.left: audio_info_read.right
                 anchors.leftMargin: 10
-                width: 200
-                height: 80
+                width:200
+                height:80
                 border.color: "black"
                 border.width: 2
-                color: flag ? 'gray' : 'black'  // 按下状态改变颜色
-                property bool flag: false  // 按下状态标志
+                color: flag?'gray':'black'
+                property bool flag:false
                 Text {
                     text: qsTr("Write")
                     anchors.centerIn: parent
@@ -1407,19 +1294,19 @@ Rectangle {
                 MouseArea{
                     anchors.fill: parent
                     onPressed: {
-                        audio_info_write.flag = true  // 设置按下状态
-                        // 调用写入信息帧函数
+                        audio_info_write.flag = true
+//                        confirmsignal("AudioInfoframeWrite",0x7e01);
                         writeinfoframe();
                     }
                     onReleased: {
-                        audio_info_write.flag = false  // 恢复正常状态
+                        audio_info_write.flag = false
                     }
                 }
             }
 
-            // 数据字节1标签和控件
+            //data byte 1
             Text {
-                id: label1
+                id:label1
                 text: qsTr("Data Byte 1:")
                 font.family: myriadPro.name
                 font.pixelSize: btnfontsize
@@ -1429,11 +1316,9 @@ Rectangle {
                 anchors.bottom: label2.top
                 anchors.bottomMargin: 30
             }
-            
-            // 音频编码类型
             Text {
-                id: ct
-                text: qsTr("CT:")  // 编码类型标签
+                id:ct
+                text: qsTr("CT:")
                 font.family: myriadPro.name
                 font.pixelSize: 30
                 color: "black"
@@ -1441,10 +1326,8 @@ Rectangle {
                 anchors.leftMargin: 10
                 anchors.verticalCenter: label1.verticalCenter
             }
-            
-            // 音频编码类型下拉框
             ComboBox{
-                id: combobox1
+                id:combobox1
                 width: 900
                 height: 60
                 anchors.left: ct.right
@@ -1475,7 +1358,7 @@ Rectangle {
                     width: combobox1.width
                     contentItem: Text {
                         text: modelData
-                        color: combobox1.highlightedIndex == index ? "#5e5e5e" : "black"
+                        color: combobox1.highlightedIndex == index?"#5e5e5e":"black"
                         font.pixelSize: 26
                         elide: Text.ElideRight
                         verticalAlignment: Text.AlignVCenter
@@ -1490,11 +1373,9 @@ Rectangle {
                     }
                 }
             }
-            
-            // 声道数
             Text {
-                id: f13
-                text: qsTr("F13=0       CC:")  // 声道数标签
+                id:f13
+                text: qsTr("F13=0       CC:")
                 font.family: myriadPro.name
                 font.pixelSize: 30
                 color: "black"
@@ -1502,10 +1383,8 @@ Rectangle {
                 anchors.leftMargin: 10
                 anchors.verticalCenter: combobox1.verticalCenter
             }
-            
-            // 声道数下拉框
             ComboBox{
-                id: combobox2
+                id:combobox2
                 width: 358
                 height: 60
                 anchors.left: f13.right
@@ -1521,6 +1400,7 @@ Rectangle {
                     "101(6 channels)",
                     "110(7 channels)",
                     "111(8 channels)",
+
                 ]
                 font.pixelSize: 30
 
@@ -1528,7 +1408,7 @@ Rectangle {
                     width: combobox2.width
                     contentItem: Text {
                         text: modelData
-                        color: combobox2.highlightedIndex == index ? "#5e5e5e" : "black"
+                        color: combobox2.highlightedIndex == index?"#5e5e5e":"black"
                         font.pixelSize: 26
                         elide: Text.ElideRight
                         verticalAlignment: Text.AlignVCenter
@@ -2441,7 +2321,7 @@ Rectangle {
             }
             Text {
                 id:f76
-                text: qsTr((combobox6.currentText === "0xEF") ? "SiL/SiR:" : (combobox6.currentText === "0xFF")?"CID14":"F76=0")
+               text: qsTr((combobox6.currentText === "0xEF") ? "SiL/SiR:" : (combobox6.currentText === "0xFF")?"CID14":"F76=0")
                 font.family: myriadPro.name
                 font.pixelSize: 30
                 color: "black"
@@ -3482,58 +3362,48 @@ Rectangle {
             }
         }
     }
-
-    // 链路训练工具页面属性
-    property int link_train_flag: 0  // 当前选择的链路训练模式
-    
-    // 链路训练工具页面布局
+    //Link Train
+    property int link_train_flag: 0
     RowLayout {
-        visible: pageflag == 6 && pageindex == 2 && tool_flag == 2 ? true : false  // 仅在链路训练工具页面显示
+        visible: pageflag==6&&pageindex == 2&&tool_flag==2?true:false
         anchors.top: parent.top
         anchors.topMargin: 150
         width: parent.width
-        
-        // 链路训练面板容器
         Rectangle{
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+
             border.width: 1
             border.color: "white"
             radius: 5
             color: "gray"
             height: 750
             width: 1120
-            
             RowLayout{
-                width: parent.width
-                spacing: 50
-
-                // 链路训练模式选择区域
+               width: parent.width
+               spacing: 50
                 GridLayout{
                     Layout.topMargin: 30
                     Layout.leftMargin: 50
                     width: parent.width
                     rowSpacing: 20
                     columns: 1
-                    
-                    // 链路训练模式数据模型
                     ListModel {
                         id: link_train_model
-                        ListElement { first: "FRL Off"; number: 0x0000 }                  // 关闭FRL模式
-                        ListElement { first: "Force 3 Lanes / 3 Gbps"; number: 0x0101 }   // 强制3车道/3Gbps模式
-                        ListElement { first: "Force 3 Lanes / 6 Gbps"; number: 0x0102 }   // 强制3车道/6Gbps模式
-                        ListElement { first: "Force 4 Lanes / 6 Gbps"; number: 0x0103 }   // 强制4车道/6Gbps模式
-                        ListElement { first: "Force 4 Lanes / 8 Gbps"; number: 0x0104 }   // 强制4车道/8Gbps模式
-                        ListElement { first: "Force 4 Lanes / 10 Gbps"; number: 0x0105 }  // 强制4车道/10Gbps模式
-                        ListElement { first: "Force 4 Lanes / 12 Gbps"; number: 0x0106 }  // 强制4车道/12Gbps模式
+                        ListElement { first: "FRL Off"; number: 0x0000 }
+                        ListElement { first: "Force 3 Lanes / 3 Gbps"; number: 0x0101 }
+                        ListElement { first: "Force 3 Lanes / 6 Gbps"; number: 0x0102 }
+                        ListElement { first: "Force 4 Lanes / 6 Gbps"; number: 0x0103 }
+                        ListElement { first: "Force 4 Lanes / 8 Gbps"; number: 0x0104 }
+                        ListElement { first: "Force 4 Lanes / 10 Gbps"; number: 0x0105 }
+                        ListElement { first: "Force 4 Lanes / 12 Gbps"; number: 0x0106 }
+
                     }
-                    
-                    // 创建链路训练模式按钮
                     Repeater{
                         model: link_train_model
                         CustomButton{
-                            width: 300
-                            height: 80
-                            border.color: link_train_flag == number ? "orange" : "black"  // 当前选中项高亮
+                            width:300
+                            height:80
+                            border.color: link_train_flag==number?"orange":"black"
                             border.width: 4
                             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
                             color: 'black'
@@ -3544,27 +3414,25 @@ Rectangle {
                                     font.family: myriadPro.name
                                     font.pixelSize: btnfontsize
                                     color: "white"
-                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    anchors.horizontalCenter : parent.horizontalCenter
                                 }
                             }
 
                             MouseArea{
                                 anchors.fill: parent
                                 onClicked: {
-                                    link_train_flag = number  // 更新当前选中状态
-                                    confirmsignal("LinkTrainForce", number)  // 发送信号到后端
+                                    link_train_flag=number
+                                    confirmsignal("LinkTrainForce",number)
                                 }
                             }
                         }
                     }
+
                 }
 
-                // 链路训练控制区域
                 RowLayout{
                     width: parent.width
                     spacing: 50
-                    
-                    // 车道/速率强制训练控制
                     Column{
                         Text {
                             text: "Force Link Train at Lane / Rate"
@@ -3573,12 +3441,26 @@ Rectangle {
                             color: "black"
                         }
 
-                        // 链路训练模式下拉框
+//                        Rectangle{
+//                            width: 300
+//                            height: 60
+//                            color: "white"
+//                            Text {
+//                                id:force_link_train_text
+//                                text: qsTr("")
+//                                font.family: myriadPro.name
+//                                font.pixelSize: btnfontsize
+//                                color: "black"
+//                                anchors.centerIn: parent
+//                            }
+//                        }
                         ComboBox{
-                            id: combobox10
+                            id:combobox10
                             width: 300
                             height: 60
+//                            anchors.left: ct.right
                             anchors.leftMargin: 10
+//                            anchors.verticalCenter: label1.verticalCenter
                             font.family: myriadPro.name
                             model: [
                                 "FRL Off",
@@ -3594,7 +3476,7 @@ Rectangle {
                                 width: combobox10.width
                                 contentItem: Text {
                                     text: modelData
-                                    color: combobox10.highlightedIndex == index ? "#5e5e5e" : "black"
+                                    color: combobox10.highlightedIndex == index?"#5e5e5e":"black"
                                     font.pixelSize: 26
                                     elide: Text.ElideRight
                                     verticalAlignment: Text.AlignVCenter
@@ -3608,16 +3490,12 @@ Rectangle {
                                     color: combobox10.highlightedIndex == index ? "#CCCCCC" : "#e0e0e0"
                                 }
                             }
-                            // 选择改变时发送命令
                             onActivated: {
-                                // 生成十六进制命令字符串并发送
                                 var str = combobox10.currentIndex.toString(16).padStart(2, '0') + combobox11.currentIndex.toString(16).padStart(2, '0');
-                                confirmsignal("LinkTrain", parseInt(str, 16))
+                                confirmsignal("LinkTrain",parseInt(str, 16))
                             }
                         }
                     }
-                    
-                    // 训练状态强制控制
                     Column{
                         Text {
                             text: "Force Training Status"
@@ -3626,18 +3504,32 @@ Rectangle {
                             color: "black"
                         }
 
-                        // 训练状态下拉框
+//                        Rectangle{
+//                            width: 300
+//                            height: 60
+//                            color: "white"
+//                            Text {
+//                                id:force_training_text
+//                                text: qsTr("")
+//                                font.family: myriadPro.name
+//                                font.pixelSize: btnfontsize
+//                                color: "black"
+//                                anchors.centerIn: parent
+//                            }
+//                        }
                         ComboBox{
-                            id: combobox11
+                            id:combobox11
                             width: 300
                             height: 60
+//                            anchors.left: ct.right
                             anchors.leftMargin: 10
+//                            anchors.verticalCenter: label1.verticalCenter
                             font.family: myriadPro.name
                             model: [
-                                "FRL_LT_STOP",      // 停止训练
-                                "FRL_LT_PROGRESS",  // 训练进行中
-                                "FRL_LT_PASS",      // 训练通过
-                                "FRL_LT_TMDS",      // TMDS模式
+                                "FRL_LT_STOP",
+                                "FRL_LT_PROGRESS",
+                                "FRL_LT_PASS",
+                                "FRL_LT_TMDS",
                             ]
                             font.pixelSize: 30
 
@@ -3645,7 +3537,7 @@ Rectangle {
                                 width: combobox11.width
                                 contentItem: Text {
                                     text: modelData
-                                    color: combobox11.highlightedIndex == index ? "#5e5e5e" : "black"
+                                    color: combobox11.highlightedIndex == index?"#5e5e5e":"black"
                                     font.pixelSize: 26
                                     elide: Text.ElideRight
                                     verticalAlignment: Text.AlignVCenter
@@ -3658,12 +3550,11 @@ Rectangle {
                                     opacity: enabled ? 1 : 0.3
                                     color: combobox11.highlightedIndex == index ? "#CCCCCC" : "#e0e0e0"
                                 }
+
                             }
-                            // 选择改变时发送命令
                             onActivated: {
-                                // 生成十六进制命令字符串并发送
                                 var str = combobox10.currentIndex.toString(16).padStart(2, '0') + combobox11.currentIndex.toString(16).padStart(2, '0');
-                                confirmsignal("LinkTrain", parseInt(str, 16))
+                                confirmsignal("LinkTrain",parseInt(str, 16))
                             }
                         }
                     }
@@ -3671,23 +3562,23 @@ Rectangle {
             }
         }
     }
-    // 电源输出控制页面布局
+
+    property int powerbtn_flag: 0
+    //power out (disabled)
     RowLayout {
-        visible: pageflag == 7 && pageindex == 1 ? true : false  // 仅在电源输出控制页面显示
+        visible: false
         anchors.top: parent.top
         anchors.topMargin: 120
         width: parent.width
-        
-        // 正常电源模式按钮
         CustomButton{
-            id: poweron_btn
-            width: btnWidth
-            height: btnHeight
-            border.color: "black"
-            border.width: 2
-            color: flag ? 'gray' : 'black'  // 按下状态改变颜色
+            id:poweron_btn
+            width:btnWidth
+            height:btnHeight
+            border.color: powerbtn_flag==0?"orange":"black"
+            border.width: 4
+            color: flag?'gray':'black'
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            property bool flag: false  // 按下状态标志
+            property bool flag:false
             Text {
                 text: qsTr("Normal")
                 anchors.centerIn: parent
@@ -3699,25 +3590,25 @@ Rectangle {
             MouseArea{
                 anchors.fill: parent
                 onPressed: {
-                    poweron_btn.flag = true  // 设置按下状态
+                    poweron_btn.flag = true
                 }
                 onReleased: {
-                    poweron_btn.flag = false  // 恢复正常状态
-                    confirmsignal("PowerOut", "0")  // 发送正常电源模式信号
+                    poweron_btn.flag = false
+                    powerbtn_flag =0;
+                    confirmsignal("PowerOut","0")
                 }
             }
         }
 
-        // 待机电源模式按钮
         CustomButton{
-            id: poweroff_btn
-            width: btnWidth
-            height: btnHeight
-            border.color: "black"
-            border.width: 2
-            color: flag ? 'gray' : 'black'  // 按下状态改变颜色
+            id:poweroff_btn
+            width:btnWidth
+            height:btnHeight
+            border.color: powerbtn_flag==1?"orange":"black"
+            border.width: 4
+            color: flag?'gray':'black'
             Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-            property bool flag: false  // 按下状态标志
+            property bool flag:false
             Text {
                 text: qsTr("Standby")
                 anchors.centerIn: parent
@@ -3729,13 +3620,17 @@ Rectangle {
             MouseArea{
                 anchors.fill: parent
                 onPressed: {
-                    poweroff_btn.flag = true  // 设置按下状态
+                    poweroff_btn.flag = true
                 }
                 onReleased: {
-                    poweroff_btn.flag = false  // 恢复正常状态
-                    confirmsignal("PowerOut", "1")  // 发送待机电源模式信号
+                    poweroff_btn.flag = false
+                    powerbtn_flag =1;
+                    confirmsignal("PowerOut","1")
                 }
             }
         }
     }
+
+
+
 }

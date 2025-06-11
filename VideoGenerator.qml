@@ -776,34 +776,41 @@ Rectangle {
         }
         RowLayout {
             width: parent.width
+//            CustomButton{
+//                id:timing_auto
+//                width:btnWidth
+//                height:btnHeight
+//                border.color: "black"
+//                border.width: 2
+//                color: flag?'gray':'black'
+//                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+//                property bool flag:false
+//                Text {
+//                    text: qsTr("AUTO")
+//                    anchors.centerIn: parent
+//                    font.family: myriadPro.name
+//                    font.pixelSize: btnfontsize
+//                    color: "white"
+//                }
+
+//                MouseArea{
+//                    anchors.fill: parent
+//                    onPressed: {
+//                        timing_auto.flag = true
+//                    }
+//                    onReleased: {
+//                        timing_auto.flag = false
+//                        pageindex = 2
+//                        timingFlag = 10
+//                    }
+//                }
+//            }
             CustomButton{
-                id:timing_auto
+                id:empty00
                 width:btnWidth
                 height:btnHeight
-                border.color: "black"
-                border.width: 2
-                color: flag?'gray':'black'
+                opacity:0
                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
-                property bool flag:false
-                Text {
-                    text: qsTr("AUTO")
-                    anchors.centerIn: parent
-                    font.family: myriadPro.name
-                    font.pixelSize: btnfontsize
-                    color: "white"
-                }
-
-                MouseArea{
-                    anchors.fill: parent
-                    onPressed: {
-                        timing_auto.flag = true
-                    }
-                    onReleased: {
-                        timing_auto.flag = false
-                        pageindex = 2
-                        timingFlag = 10
-                    }
-                }
             }
             CustomButton{
                 id:empty1
@@ -1500,7 +1507,9 @@ Rectangle {
                         timingSelect=number
                         confirmsignal("Timing",number)
 //                        settiming(timing4k,index)
-//                        deal_timingDetails()
+                        in_m_UserdefineTiming.currentIndex =index;
+                        var str = deal_timingDetails();
+                        confirmsignal("timingdetails",str);
                     }
                 }
             }
@@ -1780,6 +1789,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -1853,6 +1864,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -1997,6 +2010,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2076,6 +2091,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2166,6 +2183,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2257,6 +2276,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2335,6 +2356,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2457,6 +2480,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2525,6 +2550,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2595,6 +2622,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2663,6 +2692,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2796,6 +2827,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2864,6 +2897,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -2954,6 +2989,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3024,6 +3061,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3178,6 +3217,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3262,6 +3303,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3362,6 +3405,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3466,6 +3511,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3574,6 +3621,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3653,6 +3702,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3765,6 +3816,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3847,6 +3900,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -3928,6 +3983,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -4016,6 +4073,8 @@ Rectangle {
                                 source: first
                                 height: 170
                                 width: 292
+                                asynchronous: true
+                                cache: true
                             }
                             Text {
                                 text: second
@@ -7362,32 +7421,32 @@ Rectangle {
         ["59.4","1280","720","3300","750","2020","30","18","24","40","5","1760","5","0","0","0"],//1280x720@24Hz
         ["74.25","1280","720","3960","750","2680","30","18.75","25","40","5","2420","5","0","0","0"],//1280x720@25Hz
         ["74.25","1280","720","3300","750","2020","30","22.5","30","40","5","1760","5","0","0","0"],//1280x720@30Hz
-        ["90","1280","720","2500","750","1220","30","36","48","40","5","960","5","0","0","0"],//1280x720@48Hz
+        ["90.00","1280","720","2500","750","1220","30","36","48","40","5","960","5","0","0","0"],//1280x720@48Hz
         ["148.5","1920","1080","2750","1125","830","45","54","48","44","5","638","4","0","0","0"],//1920x1080@48Hz
         ["59.4","1680","720","3300","750","1620","30","18","24","40","5","1360","5","0","0","0"],//1680x720@24Hz
         ["59.4","1680","720","3168","750","1488","30","18.75","25","40","5","1228","5","0","0","0"],//1680x720@25Hz
         ["59.4","1680","720","2640","750","960","30","22.5","30","40","5","700","5","0","0","0"],//1680x720@30Hz
-        ["99","1680","720","2750","750","1070","30","36","48","40","5","8100","5","0","0","0"],//1680x720@48Hz
-        ["99","2560","1080","3750","1100","1190","20","26.4","24","44","5","998","5","0","0","0"],//2560x1080@24Hz
-        ["90","2560","1080","3200","1125","640","45","28.125","25","44","5","448","4","0","0","0"],//2560x1080@25Hz
+        ["99.0","1680","720","2750","750","1070","30","36","48","40","5","8100","5","0","0","0"],//1680x720@48Hz
+        ["99.0","2560","1080","3750","1100","1190","20","26.4","24","44","5","998","5","0","0","0"],//2560x1080@24Hz
+        ["90.0","2560","1080","3200","1125","640","45","28.125","25","44","5","448","4","0","0","0"],//2560x1080@25Hz
         ["118.8","2560","1080","3520","1125","960","45","33.75","30","44","5","768","4","0","0","0"],//2560x1080@30Hz
-        ["198","2560","1080","3750","1100","1190","20","52.8","48","44","5","998","4","0","0","0"],//2560x1080@48Hz
+        ["198.0","2560","1080","3750","1100","1190","20","52.8","48","44","5","998","4","0","0","0"],//2560x1080@48Hz
         ["82.5","1680","720","2200","750","520","30","37.5","50","40","5","260","5","0","0","0"],//1680x720@50Hz
         ["185.62","2560","1080","3300","1125","740","45","56.25","50","44","5","548","4","0","0","0"],//2560x1080@50Hz
-        ["99","1680","720","2200","750","520","30","45","60","40","5","260","5","0","0","0"],//1680x720@60Hz
-        ["198","2560","1080","3300","1100","440","20","66","60","44","5","248","4","0","0","0"],//2560x1080@60Hz
+        ["99.0","1680","720","2200","750","520","30","45","60","40","5","260","5","0","0","0"],//1680x720@60Hz
+        ["198.0","2560","1080","3300","1100","440","20","66","60","44","5","248","4","0","0","0"],//2560x1080@60Hz
         ["148.5","1920","540","2640","1225","720","22","56.25","100","44","5","528","2","1","0","0"],//1920x1080i@100Hz
         ["148.5","1280","720","1980","750","700","30","75","100","40","5","440","5","0","0","0"],//1280x720@100Hz
-        ["54","720","576","864","625","144","49","62.5","100","64","5","12","5","0","0","0"],//"720x576_100Hz"
-        ["297","1920","1080","2640","1125","720","45","112.5","100","40","5","528","4","0","0","0"],//"1920x1080_100Hz"
-        ["165","1680","720","2000","825","320","105","82.5","100","40","5","60","5","0","0","0"],//"1680x720_100Hz"
+        ["54.0","720","576","864","625","144","49","62.5","100","64","5","12","5","0","0","0"],//"720x576_100Hz"
+        ["297.0","1920","1080","2640","1125","720","45","112.5","100","40","5","528","4","0","0","0"],//"1920x1080_100Hz"
+        ["165.0","1680","720","2000","825","320","105","82.5","100","40","5","60","5","0","0","0"],//"1680x720_100Hz"
         ["148.5","1920","540","2200","1125","280","22","67.5","120","44","5","88","2","1","0","0"],//1920x1080i@120Hz
         ["148.5","1280","720","1650","750","370","30","90","120","40","5","110","5","0","0","0"],//1280x720@120Hz
-        ["54","720","480","858","525","138","45","62.937","119.88","62","6","16","9","0","0","0"],//720x480@119.88Hz
-        ["297","1920","1080","2200","1125","280","45","135","120","44","5","88","4","0","0","0"],//1920x1080P@120Hz
-        ["198","1680","720","2000","825","320","105","99","120","40","5","60","5","0","0","0"],//1680x720@120Hz
-        ["108","720","576","864","625","144","49","125","200","64","5","12","5","0","0","0"],//720X576@200Hz
-        ["108","720","480","858","525","138","45","125.874","239.76","62","6","16","9","0","0","0"],//720X480@239.76Hz
+        ["54.0","720","480","858","525","138","45","62.937","119.88","62","6","16","9","0","0","0"],//720x480@119.88Hz
+        ["297.0","1920","1080","2200","1125","280","45","135","120","44","5","88","4","0","0","0"],//1920x1080P@120Hz
+        ["198.0","1680","720","2000","825","320","105","99","120","40","5","60","5","0","0","0"],//1680x720@120Hz
+        ["108.0","720","576","864","625","144","49","125","200","64","5","12","5","0","0","0"],//720X576@200Hz
+        ["108.0","720","480","858","525","138","45","125.874","239.76","62","6","16","9","0","0","0"],//720X480@239.76Hz
     ]
 
 
@@ -7448,8 +7507,19 @@ Rectangle {
     }
 
     function deal_timingDetails (){
+        var timing_details1 =""
+        if(in_m_PCLOCK.text.indexOf(".")!==-1){
+            var tmp = in_m_PCLOCK.text.split(".");
+            if(tmp[1].length===1){
+                timing_details1 = formatHex(parseInt(tmp[0]+tmp[1].slice(0,1)+"0", 10),2*2);
+            }else {
+                timing_details1 = formatHex(parseInt(tmp[0]+tmp[1].slice(0,2), 10),2*2);
+            }
+        }else{
+            timing_details1 = formatHex(parseInt(in_m_PCLOCK.text, 10),2*2);
+        }
 
-        var timing_details1 = formatHex(parseInt(in_m_PCLOCK.text*1000, 10),2*2);
+//        timing_details1 = formatHex(parseInt(in_m_PCLOCK.text*1000, 10),2*2);
 
         var binaryString = "00000" +
                             (in_m_VSPOLAR_R.checked ? "0" : "1") +
@@ -7488,8 +7558,8 @@ Rectangle {
 
         in_m_HTOTAL.text = parseInt(in_m_HACTIVE.text, 10) + parseInt(in_m_HBLANK.text, 10);
         in_m_VTOTAL.text = parseInt(in_m_VACTIVE.text, 10) + parseInt(in_m_VBLANK.text, 10);
-        in_m_HFREQ.text = (parseInt(in_m_PCLOCK.text*1000, 10) / parseInt(in_m_HTOTAL.text, 10)).toFixed(3);
-        in_m_VFREQ.text = (parseInt(in_m_PCLOCK.text*1000000, 10) / (parseInt(in_m_VTOTAL.text, 10) * parseInt(in_m_HTOTAL.text, 10))).toFixed(3);
+        in_m_HFREQ.text = (parseInt(in_m_PCLOCK.text*1000, 10) / parseInt(in_m_HTOTAL.text, 10)).toFixed(2);
+        in_m_VFREQ.text = (parseInt(in_m_PCLOCK.text*1000000, 10) / (parseInt(in_m_VTOTAL.text, 10) * parseInt(in_m_HTOTAL.text, 10))).toFixed(2);
         return tim_details;
 
     }
@@ -8062,7 +8132,7 @@ Rectangle {
                                     var savename = "timingDetails" + (in_m_UserdefineTiming.currentIndex+1);
                                     var rgb = fileManager.getValue(savename);
                                     var getdata = rgb.split(" ");
-                                    in_m_PCLOCK.text = parseInt(getdata[2]+getdata[1],16)/1000;
+                                    in_m_PCLOCK.text = parseInt(getdata[2]+getdata[1],16)/10;
                                     in_m_SCANP_P.checked = parseInt(getdata[3],16)==="0";
                                     in_m_SCANP_I.checked = parseInt(getdata[3],16)==="1";
                                     in_m_HACTIVE.text = parseInt(getdata[5]+getdata[4],16);
@@ -8147,9 +8217,9 @@ Rectangle {
                         ,"2560x1080_60Hz"
                         ,"1920x1080i_100Hz"
                         ,"1280x720_100Hz"
-//                        ,"720x576_100Hz"
-//                        ,"1920x1080_100Hz"
-//                        ,"1680x720_100Hz"
+                        ,"720x576_100Hz"
+                        ,"1920x1080_100Hz"
+                        ,"1680x720_100Hz"
                         ,"1920x1080i_120Hz"
                         ,"1280x720_120Hz"
                         ,"720x480_119.88Hz"
@@ -8179,28 +8249,6 @@ Rectangle {
                     onActivated: {
                         var str = in_mInsideResolution.currentIndex.toString(16).padStart(2, '0');
                         settiming(timingdetailsType,in_mInsideResolution.currentIndex)
-
-//                        in_m_PCLOCK.text = timingdetailsType[parseInt(str, 16)][0];
-//                        in_m_HACTIVE.text = timingdetailsType[parseInt(str, 16)][1];
-//                        in_m_VACTIVE.text = timingdetailsType[parseInt(str, 16)][2];
-//                        in_m_HTOTAL.text = timingdetailsType[parseInt(str, 16)][3];
-//                        in_m_VTOTAL.text = timingdetailsType[parseInt(str, 16)][4];
-//                        in_m_HBLANK.text = timingdetailsType[parseInt(str, 16)][5];
-//                        in_m_VBLANK.text = timingdetailsType[parseInt(str, 16)][6];
-//                        in_m_HFREQ.text = timingdetailsType[parseInt(str, 16)][7];
-//                        in_m_VFREQ.text = timingdetailsType[parseInt(str, 16)][8];
-//                        in_m_HSYNCWIDTH.text = timingdetailsType[parseInt(str, 16)][9];
-//                        in_m_VSYNCWIDTH.text = timingdetailsType[parseInt(str, 16)][10];
-//                        in_m_HSOFFSET.text = timingdetailsType[parseInt(str, 16)][11];
-//                        in_m_VSOFFSET.text = timingdetailsType[parseInt(str, 16)][12];
-//                        in_m_SCANP_P.checked = timingdetailsType[parseInt(str, 16)][13]==="0";
-//                        in_m_SCANP_I.checked = timingdetailsType[parseInt(str, 16)][13]==="1";
-//                        in_m_HSPOLAR_R.checked = timingdetailsType[parseInt(str, 16)][14]==="0";
-//                        in_m_HSPOLAR_P.checked = timingdetailsType[parseInt(str, 16)][14]==="1";
-//                        in_m_VSPOLAR_R.checked = timingdetailsType[parseInt(str, 16)][15]==="0";
-//                        in_m_VSPOLAR_P.checked = timingdetailsType[parseInt(str, 16)][15]==="1";
-
-//                        confirmsignal("LinkTrain",parseInt(str, 16))
                     }
 
                 }

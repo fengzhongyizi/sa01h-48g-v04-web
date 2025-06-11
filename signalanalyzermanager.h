@@ -59,7 +59,6 @@ class SignalAnalyzerManager : public QObject {
 
 
 public:
-    //explicit SignalAnalyzerManager(QObject* parent = nullptr);
     explicit SignalAnalyzerManager(SerialPortManager* spMgr,QObject* parent = nullptr);
     QString frameUrl()    const { return m_frameUrl; }
     QString signalStatus()const { return m_signalStatus; }
@@ -70,8 +69,8 @@ public:
     QString colorSpace()  const { return m_colorSpace; }
     QString colorDepth()  const { return m_colorDepth; }
     QString bt2020Status()const { return m_bt2020Status; }
-    //QStringList edidList() const { return m_edidList; }
     QVariantList edidList() const;
+    
     // checkbox callback in qml
     Q_INVOKABLE void setEdidSelected(int index,bool selected);
     // new buttom 'Apply' in qml
@@ -80,8 +79,6 @@ public:
 
     // getters
     QString videoFormat() const    { return m_videoFormat; }
-    //QString colorSpace() const      { return m_colorSpace; }
-    //QString colorDepth() const      { return m_colorDepth; }
     QString hdrFormat() const       { return m_hdrFormat; }
     QString hdmiDvi() const         { return m_hdmiDvi; }
     QString frlRate() const         { return m_frlRate; }
@@ -96,15 +93,8 @@ public:
     QString cBitSamplingFreq() const{ return m_cBitSamplingFreq; }
     QString cBitDataType() const    { return m_cBitDataType; }
 
-
-
-    //Subsequent implementation of PCIe/FPGA frame capture
     Q_INVOKABLE void startFpgaVideo();
-    
-    // 新增：通过串口方式获取FPGA视频数据
     Q_INVOKABLE void startFpgaVideoViaUart();
-
-    // Signal Info - 从MCU获取信号信息
     Q_INVOKABLE void refreshSignalInfo();
 
     // Monitor control interface
@@ -112,11 +102,9 @@ public:
     Q_INVOKABLE void setTimeSlotInterval(int secs);
     Q_INVOKABLE void setTimeSlotUnit(bool inSeconds);
     Q_INVOKABLE void setTriggerMode(int mode);
-    // Monitor 数据刷新（在串口或后台回调中调用）
     void updateMonitorData(const QStringList &slotLabels,
                            const QList<QPointF> &data);
 
-    // 新增的访问器
     QString     monitorStartTime()  const { return m_monitorStartTime; }
     int         timeSlotInterval()  const { return m_timeSlotInterval; }
     bool        timeSlotInSeconds() const { return m_timeSlotInSeconds; }
@@ -124,9 +112,9 @@ public:
     QVariantList monitorSlotLabels() const { return m_monitorSlotLabels; }
     QVariantList monitorData()       const { return m_monitorData; }
 
-    // 新增的导出/触发检测方法
     Q_INVOKABLE bool exportMonitorData(const QString &filePath);
-    
+    Q_INVOKABLE void stopMonitor();
+    Q_INVOKABLE void clearMonitorData();
 
 public slots:
     void updateFrame(const QImage &img);
@@ -139,17 +127,8 @@ public slots:
                     const QString &cd,
                     const QString &bt2020);
 
-    // 一个统一的更新接口，接收到新数据后调用
     void updateSignalInfo(const QVariantMap &info);
-
-    //When the lower layer receives EDID data,it calls
     void updateEdidList(const QStringList &edidData);
-
-    // 停止当前监测
-    Q_INVOKABLE void stopMonitor();
-    
-    // 清除监测数据
-    Q_INVOKABLE void clearMonitorData();
 
 signals:
     void frameUrlChanged();
@@ -165,8 +144,6 @@ signals:
 
     // Video Info signals
     void videoFormatChanged();
-    //void colorSpaceChanged();
-    //void colorDepthChanged();
     void hdrFormatChanged();
     void hdmiDviChanged();
     void frlRateChanged();
@@ -183,7 +160,6 @@ signals:
     void cBitDataTypeChanged();
 
     // Monitor
-    // 对应的变化信号
     void monitorStartTimeChanged();
     void timeSlotIntervalChanged();
     void timeSlotInSecondsChanged();
@@ -201,22 +177,14 @@ private:
     QString m_colorSpace;
     QString m_colorDepth;
     QString m_bt2020Status;
-    //QStringList m_edidList;
-    QList<EdidItem> m_edidItems;
-    SerialPortManager*       m_serialPortManager;  // ← 保存串口管理器指针
-
-    QString saveTempImageAndGetUrl(const QImage &img);
-
-    // 存储成员
+    
     QString m_videoFormat;
-    //QString m_colorSpace;
-    //QString m_colorDepth;
     QString m_hdrFormat;
     QString m_hdmiDvi;
     QString m_frlRate;
     QString m_dscMode;
     QString m_hdcpType;
-
+    
     QString m_samplingFreq;
     QString m_samplingSize;
     QString m_channelCount;
@@ -224,28 +192,29 @@ private:
     QString m_levelShift;
     QString m_cBitSamplingFreq;
     QString m_cBitDataType;
-
-    // Monitor
-    QString     m_monitorStartTime;
-    int         m_timeSlotInterval = 1;
-    bool        m_timeSlotInSeconds = true;
-    int         m_triggerMode      = 0;
+    
+    QList<EdidItem> m_edidItems;
+    SerialPortManager* m_serialPortManager;
+    
+    // Monitor相关成员变量
+    QString      m_monitorStartTime;
+    int          m_timeSlotInterval;
+    bool         m_timeSlotInSeconds;
+    int          m_triggerMode;
     QVariantList m_monitorSlotLabels;
-    QVariantList m_monitorData;  // 每个元素是 { x: qreal, y: qreal }
-
-
-    // 内部信号处理方法
+    QVariantList m_monitorData;
+    
+    QVector<SignalTimeSlot> m_timeSlots;
+    QByteArray m_previousFrame;
+    bool m_monitorRunning;
+    
+    QString saveTempImageAndGetUrl(const QImage &img);
     void processMonitorCommand(const QByteArray &data);
     void updateSlotData(const QString &slotId, const QString &stateStr);
     void updateSlotError(const QString &slotId, int slotIndex, int statusValue);
     void updateMonitorDataFromTimeSlots();
     bool detectTriggerEvent(const QByteArray &currentFrame, const QByteArray &previousFrame);
     bool isSignalLost(const QByteArray &frame);
-    
-    // 其他私有成员变量
-    QVector<SignalTimeSlot> m_signalTimeSlots; // 存储完整网格数据
-    QMap<QString, int> m_slotIndexMap;         // 映射槽ID到索引
-    static const int DIFF_THRESHOLD = 10000;          // 图像差异阈值
 };
 
-#endif // SIGNALANALYZERMANAGER_H
+#endif // SIGNALANALYZERMANAGER_H 

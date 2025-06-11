@@ -10,6 +10,12 @@
         <file>AudioTests.qml</file>
         <file>Edid_eARC_CDS.qml</file>
         <file>SystemSetup.qml</file>
+        <file>SignalAnalyzer.qml</file>
+        <file>SystemSetupPanel.qml</file>
+        <file>CustomButton.qml</file>
+        <file>VirtualKeyboard.qml</file>
+        <file>BatteryIndicator.qml</file>
+        <file>NumericKeypad.qml</file>
         <file>icons/bg.png</file>
         <file>img/FPGA/image01.png</file>
         <file>img/FPGA/image02.png</file>
@@ -551,15 +557,9 @@
         <file>img/DVS/DV_RESOLUTION/image06.png</file>
         <file>img/DVS/DV_RESOLUTION/image07.png</file>
         <file>img/DVS/DV_RESOLUTION/image08.png</file>
-        <file>VirtualKeyboard.qml</file>
         <file>img/TIMD/bitmap1.bmp</file>
         <file>img/TIMD/bmp00001.bmp</file>
-        <file>CustomButton.qml</file>
-        <file>BatteryIndicator.qml</file>
         <file>img/TIMD/icon1.ico</file>
         <file>img/TIMD/icon_plu.ico</file>
-        <file>SignalAnalyzer.qml</file>
-        <file>NumericKeypad.qml</file>
-        <file>SystemSetupPanel.qml</file>
     </qresource>
 </RCC>

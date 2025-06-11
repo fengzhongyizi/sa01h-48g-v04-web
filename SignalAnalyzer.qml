@@ -14,7 +14,7 @@ Rectangle {
     anchors.fill: parent        // 填充父容器
     color: "lightgray"          // 背景色
 
-    // 页面标识: 0=主菜单, 1=Monitor, 2=Signal Info, 3=EDID, 4=Error Rate
+    // 页面标识，由外部main.qml传入: 0=Monitor, 1=Signal Info, 2=EDID, 3=Error Rate
     property int pageFlag: 0
 
     // 数据和状态属性
@@ -256,11 +256,11 @@ Rectangle {
     }
 
     // ----------------------------------------
-    // 1: Monitor 页面实现
+    // 0: Monitor 页面实现
     // ----------------------------------------
     Item {
         anchors.fill: parent
-        visible: pageFlag === 1  // 仅在Monitor模式显示
+        visible: pageFlag === 0  // 仅在Monitor模式显示
 
         // 背景
         Rectangle {
@@ -392,11 +392,11 @@ Rectangle {
     }
 
     // ----------------------------------------
-    // 2: Signal Info 页面实现
+    // 1: Signal Info 页面实现
     // ----------------------------------------
     Item {
         anchors.fill: parent
-        visible: pageFlag === 2  // 仅在Signal Info模式显示
+        visible: pageFlag === 1  // 仅在Signal Info模式显示
 
         // 添加蓝色背景
         Rectangle {
@@ -608,11 +608,11 @@ Rectangle {
     }
 
     // ----------------------------------------
-    // 3: EDID 页面实现
+    // 2: EDID 页面实现
     // ----------------------------------------
     Item {
         anchors.fill: parent
-        visible: pageFlag === 3  // 仅在EDID模式显示
+        visible: pageFlag === 2  // 仅在EDID模式显示
 
         // 添加蓝色背景
         Rectangle {
@@ -723,11 +723,11 @@ Rectangle {
     }
 
     // ----------------------------------------
-    // 4: Error Rate 页面实现
+    // 3: Error Rate 页面实现
     // ----------------------------------------
     Item {
         anchors.fill: parent
-        visible: pageFlag === 4  // 仅在Error Rate模式显示
+        visible: pageFlag === 3  // 仅在Error Rate模式显示
 
         // 背景
         Rectangle {

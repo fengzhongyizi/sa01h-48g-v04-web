@@ -9,7 +9,7 @@ import QtQuick.Layouts 1.12
 Rectangle {
     id: systemSetupPanel
     anchors.fill: parent
-    color: "#585858"  // Unified blue background
+    color: "#585858"          // 背景色
     border.color: "black"
     border.width: 2
     radius: 4
@@ -30,22 +30,13 @@ Rectangle {
     // Property definitions
     property bool isDhcpMode: true
     property int fanControlMode: 0
-    property int currentSection: 0  // Current display section: 0=IP, 1=Fan, 2=FPGA, 3=Reset, 4=Vitals
+    property int currentSection: 0  // Current display section: 0=IP, 1=Fan, 2=Reset, 3=Vitals
 
     // 主布局
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 20
         spacing: 20
-
-        // 标题
-        Text {
-            text: qsTr("System Setup")
-            font.bold: true
-            font.pixelSize: 36
-            color: "white"
-            Layout.alignment: Qt.AlignHCenter
-        }
 
         // 功能导航按钮区
         RowLayout {
@@ -57,9 +48,8 @@ Rectangle {
                 model: [
                     { name: "IP Management", index: 0 },
                     { name: "Fan Control", index: 1 },
-                    { name: "FPGA Control", index: 2 },
-                    { name: "Reset & Reboot", index: 3 },
-                    { name: "Vitals", index: 4 }
+                    { name: "Reset & Reboot", index: 2 },
+                    { name: "Vitals", index: 3 }
                 ]
                 
                 Button {
@@ -86,7 +76,7 @@ Rectangle {
                     onClicked: {
                         currentSection = modelData.index
                         // 如果切换到Vitals页面，请求设备状态
-                        if (modelData.index === 4) {
+                        if (modelData.index === 3) {
                             requestVitalsData()
                         }
                     }
@@ -116,48 +106,6 @@ Rectangle {
                     anchors.margins: 20
                     spacing: 20
 
-                    // 在IP表单上方添加实时状态显示
-                    Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: parent.width - 40
-                        height: 100
-                        color: "transparent"
-                        border.color: "yellow"
-                        border.width: 2
-                        radius: 4
-                        
-                        Column {
-                            anchors.fill: parent
-                            anchors.margins: 10
-                            spacing: 5
-                            
-                            Text {
-                                text: "当前网络状态"
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: "white"
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                            
-                            Text {
-                                text: "IP: " + (netManager.ipAddress || "未检测到")
-                                font.pixelSize: 16
-                                color: "white"
-                            }
-                            
-                            Text {
-                                text: "网关: " + (netManager.routerIpAddress || "未检测到")
-                                font.pixelSize: 16
-                                color: "white"
-                            }
-                            
-                            Text {
-                                text: "MAC: " + (netManager.macAddress || "未检测到")
-                                font.pixelSize: 16
-                                color: "white"
-                            }
-                        }
-                    }
 
                     // IP设置表单
                     Grid {
@@ -490,183 +438,9 @@ Rectangle {
                 }
             }
 
-            // FPGA控制面板
-            Rectangle {
-                visible: currentSection === 2
-                width: parent.parent.width - 40
-                height: 500
-                color: "transparent"
-                border.color: "white"
-                border.width: 2
-                radius: 8
-
-                Column {
-                    anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 30
-
-                    // 标题
-                    Text {
-                        text: "FPGA Flash升级控制"
-                        font.pixelSize: 28
-                        font.bold: true
-                        color: "white"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
-
-                    // 状态显示
-                    Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: parent.width - 40
-                        height: 100
-                        color: "transparent"
-                        border.color: gpioController.fpgaFlashMode ? "#ff6666" : "#66ff66"
-                        border.width: 2
-                        radius: 4
-                        
-                        Column {
-                            anchors.centerIn: parent
-                            spacing: 5
-                            
-                            Text {
-                                text: "当前状态："
-                                font.pixelSize: 20
-                                font.bold: true
-                                color: "white"
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                            
-                            Text {
-                                text: gpioController.fpgaFlashMode ? "FPGA Flash升级模式" : "正常工作模式"
-                                font.pixelSize: 18
-                                color: gpioController.fpgaFlashMode ? "#ff6666" : "#66ff66"
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                            
-                            Text {
-                                text: gpioController.fpgaFlashMode ? 
-                                      "A21: HIGH | U3: LOW | AF2: LOW" : 
-                                      "A21: LOW | U3: HIGH | AF2: HIGH-Z"
-                                font.pixelSize: 16
-                                color: "white"
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-                        }
-                    }
-
-                    // 控制按钮
-                    RowLayout {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        spacing: 50
-                        
-                        Button {
-                            text: "进入升级模式"
-                            font.pixelSize: 20
-                            Layout.preferredWidth: 250
-                            Layout.preferredHeight: 100
-                            enabled: !gpioController.fpgaFlashMode
-                            
-                            background: Rectangle {
-                                color: parent.enabled ? "#ff6666" : "#888888"
-                                border.color: "black"
-                                border.width: 2
-                                radius: 4
-                            }
-                            
-                            contentItem: Text {
-                                text: parent.text
-                                font: parent.font
-                                color: "white"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            
-                            onClicked: {
-                                gpioController.enterFpgaFlashMode()
-                            }
-                        }
-                        
-                        Button {
-                            text: "退出升级模式"
-                            font.pixelSize: 20
-                            Layout.preferredWidth: 250
-                            Layout.preferredHeight: 100
-                            enabled: gpioController.fpgaFlashMode
-                            
-                            background: Rectangle {
-                                color: parent.enabled ? "#66ff66" : "#888888"
-                                border.color: "black"
-                                border.width: 2
-                                radius: 4
-                            }
-                            
-                            contentItem: Text {
-                                text: parent.text
-                                font: parent.font
-                                color: "white"
-                                horizontalAlignment: Text.AlignHCenter
-                                verticalAlignment: Text.AlignVCenter
-                            }
-                            
-                            onClicked: {
-                                gpioController.exitFpgaFlashMode()
-                            }
-                        }
-                    }
-
-                    // 说明文本
-                    Rectangle {
-                        anchors.horizontalCenter: parent.horizontalCenter
-                        width: parent.width - 40
-                        height: 120
-                        color: "transparent"
-                        border.color: "yellow"
-                        border.width: 1
-                        radius: 4
-                        
-                        Column {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 8
-                            
-                            Text {
-                                text: "使用说明："
-                                font.pixelSize: 18
-                                font.bold: true
-                                color: "yellow"
-                            }
-                            
-                            Text {
-                                text: "• 进入升级模式：A21拉高，U3拉低，AF2设为低电平"
-                                font.pixelSize: 14
-                                color: "white"
-                                wrapMode: Text.WordWrap
-                                width: parent.width - 10
-                            }
-                            
-                            Text {
-                                text: "• 退出升级模式：A21拉低，U3拉高，AF2恢复高阻状态"
-                                font.pixelSize: 14
-                                color: "white"
-                                wrapMode: Text.WordWrap
-                                width: parent.width - 10
-                            }
-                            
-                            Text {
-                                text: "• 升级完成后请务必退出升级模式，恢复正常工作状态"
-                                font.pixelSize: 14
-                                color: "#ffaa00"
-                                wrapMode: Text.WordWrap
-                                width: parent.width - 10
-                            }
-                        }
-                    }
-                }
-            }
-
             // 重置重启面板
             Rectangle {
-                visible: currentSection === 3
+                visible: currentSection === 2
                 width: parent.parent.width - 40
                 height: 300
                 color: "transparent"
@@ -734,7 +508,7 @@ Rectangle {
 
             // 设备状态面板
             Rectangle {
-                visible: currentSection === 4
+                visible: currentSection === 3
                 width: parent.parent.width - 40
                 height: Math.max(800, vitalsColumn.implicitHeight + 40)
                 color: "transparent"
@@ -1136,68 +910,6 @@ Rectangle {
         }
     }
 
-    // 在SystemSetupPanel中添加DHCP状态显示和错误处理
-    Rectangle {
-        id: dhcpStatusRect
-        anchors.horizontalCenter: parent.horizontalCenter
-        width: parent.width - 40
-        height: 60
-        color: "transparent"
-        border.color: dhcpStatusText.text.includes("faile") ? "red" : "yellow"
-        border.width: 2
-        radius: 4
-        visible: isDhcpMode
-        
-        Text {
-            id: dhcpStatusText
-            anchors.centerIn: parent
-            text: "DHCP status: requiring IP..."
-            font.pixelSize: 16
-            color: "white"
-            font.bold: true
-        }
-        
-        // DHCP状态更新定时器
-        Timer {
-            id: dhcpStatusTimer
-            interval: 30000  // 30秒超时
-            repeat: false
-            onTriggered: {
-                dhcpStatusText.text = "DHCP timeout: There may be no DHCP server in the network. It is recommended to use a static IP."
-                dhcpStatusRect.border.color = "red"
-            }
-        }
-    }
-
-    // 添加建议切换到静态IP的按钮
-    Button {
-        text: "change to static IP"
-        visible: isDhcpMode && dhcpStatusText.text.includes("faile")
-        anchors.horizontalCenter: parent.horizontalCenter
-        Layout.preferredWidth: 200
-        Layout.preferredHeight: 50
-        
-        background: Rectangle {
-            color: "#FF9800"
-            border.color: "black"
-            border.width: 2
-            radius: 4
-        }
-        
-        contentItem: Text {
-            text: parent.text
-            font: parent.font
-            color: "white"
-            horizontalAlignment: Text.AlignHCenter
-            verticalAlignment: Text.AlignVCenter
-        }
-        
-        onClicked: {
-            console.log("Switching back to static IP mode");
-            isDhcpMode = false;
-            dhcpStatusRect.visible = false;
-        }
-    }
 
     // 添加网络测试函数
     function testNetworkConnectivity() {
@@ -1215,23 +927,4 @@ Rectangle {
         dhcpStatusRect.visible = true;
     }
 
-    // GPIO控制器信号连接
-    Connections {
-        target: gpioController
-        
-        function onGpioOperationResult(success, message) {
-            console.log("GPIO操作结果:", success, message);
-            
-            // 可以在这里添加消息提示框或状态更新
-            if (success) {
-                console.log("GPIO操作成功:", message);
-            } else {
-                console.log("GPIO操作失败:", message);
-            }
-        }
-        
-        function onFpgaFlashModeChanged() {
-            console.log("FPGA Flash模式状态改变:", gpioController.fpgaFlashMode);
-        }
-    }
 } 
