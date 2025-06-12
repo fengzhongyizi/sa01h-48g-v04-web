@@ -68,6 +68,7 @@ void NetManager::updateNetworkInfo() {
     QString token = outputList1.value(15);
     QString port  = token.split(":").value(1);
     m_tcpPorts = port;
+    emit tcpPortsChanged(m_tcpPorts);  // ⭐ 添加这行，保持功能完整性
 }
 
 //void NetManager::setIpAddress(const QString& ipAddress, const QString& netmask, const QString& gateway, const QString& mode) {

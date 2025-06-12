@@ -45,6 +45,7 @@ WebSocketServer::~WebSocketServer()
 
 void WebSocketServer::onNewConnection()
 {
+    // 固定写法，这是 Qt 网络编程中的标准写法，用于拿到连接对象。（从 WebSocket 服务器中取出排队的客户端连接（握手完成后的连接））
     QWebSocket *pSocket = m_pWebSocketServer->nextPendingConnection();
 
     if (!pSocket) {
@@ -52,19 +53,22 @@ void WebSocketServer::onNewConnection()
         return;
     }
 
-    QString path = pSocket->requestUrl().path();
+    // WebSocket 协议允许路径（如：ws://host:port/ws/upload），这个 path 就是你在浏览器或客户端发起连接时写的路径
+    QString path = pSocket->requestUrl().path();  // 固定写法，路径区分用途是标准设计思路（用于服务端路由）。
     qDebug() << "New client connected to path:" << path;
 
+    // 这是一个 WebSocket 路由机制：你根据 path 来做“分流”处理，相当于 RESTful API 中的 URL 路径
     if (path == "/ws/upload") {
-        m_uploadClients << pSocket;
+        m_uploadClients << pSocket;  // 表示此连接是用于文件上传，放进 m_uploadClients 列表
     } else if (path == "/ws/uart") {
-        m_clients << pSocket;
+        m_clients << pSocket;  // 表示用于 UART 串口通信，放进 m_clients 列表
     } else {
         qDebug() << "Unknown path, closing connection:" << path;
         pSocket->close();
         return;
     }
 
+    // 绑定消息处理函数，固定写法，处理消息时必须绑定这些信号
     connect(pSocket, &QWebSocket::textMessageReceived,this, &WebSocketServer::processTextMessage);
     connect(pSocket, &QWebSocket::binaryMessageReceived,this, &WebSocketServer::processBinaryMessage);
     connect(pSocket, &QWebSocket::disconnected,this, &WebSocketServer::socketDisconnected);
@@ -201,14 +205,16 @@ bool WebSocketServer::startServer()
     if (m_running) {
         return true;
     }
-
+    
     m_pWebSocketServer = new QWebSocketServer(
-        QStringLiteral("Qt5 WebSocket Server"),
-        QWebSocketServer::NonSecureMode,
-        this
+        QStringLiteral("Qt5 WebSocket Server"),   // 实例名字，没太大实际影响。
+        QWebSocketServer::NonSecureMode,          // 表示不使用 WSS（加密），如需支持 TLS 则用 SecureMode
+        this                                      // this 为父对象，内存管理交由 Qt 完成。
     );
-
+    
+    // 固定写法，用 listen() 启动是 Qt 网络服务器共通模式(启动监听，绑定本地 m_port（比如 8081），接受所有网卡的连接)
     if (m_pWebSocketServer->listen(QHostAddress::Any, m_port)) {
+        // 固定写法，Qt 中所有“有新连接”的服务端逻辑都必须监听 newConnection 信号。（注册信号槽：当有新连接到来时，触发 onNewConnection()）
         connect(m_pWebSocketServer, &QWebSocketServer::newConnection,
                 this, &WebSocketServer::onNewConnection);
         m_running = true;
