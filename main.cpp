@@ -17,10 +17,11 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    // 创建SignalAnalyzerManager实例
+    // 先创建SerialPortManager实例，让QML和SignalAnalyzerManager共享
     SerialPortManager* spMgr = new SerialPortManager(&app);
     SignalAnalyzerManager* saMgr = new SignalAnalyzerManager(spMgr, &app);
 
+    // 注册类型但不让QML创建新实例，而是使用现有实例
     qmlRegisterType<SerialPortManager>("SerialPort", 1, 0, "SerialPortManager");
     qmlRegisterType<NetManager>("NetManager", 1, 0, "NetManager");
     qmlRegisterType<TerminalManager>("TerminalManager", 1, 0, "TerminalManager");
@@ -31,8 +32,9 @@ int main(int argc, char *argv[])
     server.startServer(80);
 
     QQmlApplicationEngine engine;
-    // 将SignalAnalyzerManager实例暴露给QML
+    // 将SignalAnalyzerManager和SerialPortManager实例暴露给QML
     engine.rootContext()->setContextProperty("signalAnalyzerManager", saMgr);
+    engine.rootContext()->setContextProperty("serialPortManager", spMgr);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

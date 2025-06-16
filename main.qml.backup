@@ -529,18 +529,13 @@ Window {
        }
    }
 
-    // 使用从main.cpp暴露的serialPortManager实例，不再创建新的
-    // SerialPortManager {
-    //     id: serialPortManager
-    
-    // 连接串口数据接收和状态变化信号
-    Connections {
-        target: serialPortManager
-        function onIsBlackChanged(isBlack) {
+    SerialPortManager {
+        id: serialPortManager
+        onIsBlackChanged: {
             window.isBlack = isBlack;
 //            console.log("************",isBlack);
         }
-        function onDataReceived(data) {
+        onDataReceived: {
             var str = data.toString();
 //            console.log("receive: ",str);
             var getdata = str.split(" ")
@@ -733,15 +728,13 @@ Window {
                         statuspage.timingText = item.first+"@"+item.second;
                     }
                 }
-                // SA项目不需要videoGenerator
-                // console.log("*************",videoGenerator.timingSelectFlag,statuspage.timingText)
+                console.log("*************",videoGenerator.timingSelectFlag,statuspage.timingText)
             }else if(strcode == "3EB8"){
                 var tempArray = [];
                 for(var e =0 ; e<parseInt(getdata[3],16);e++){
                     tempArray.push(getdata[e+4])
                 }
-                // SA项目中EDID数据由SignalAnalyzer组件处理，不需要edid组件
-                // edid.edidArray = tempArray;
+                edid.edidArray = tempArray;
 
             }else if(strcode == "9880"){
                 var value = parseInt(getdata[10]+getdata[9],16);
@@ -769,12 +762,8 @@ Window {
            }
 
         }
-    }
 
-    // 连接到从main.cpp暴露的serialPortManager的信号
-    Connections {
-        target: serialPortManager
-        function onDataReceivedASCALL(data) {
+        onDataReceivedASCALL:{
             if(data.indexOf("EDID")!=-1 && data.indexOf("DATA")!=-1){
 //                data = data.replace("EDID","");
                 var linedata = data.split(" ");
@@ -844,6 +833,7 @@ Window {
                 }
             }
         }
+
     }
 
     function hdrdata(num){
@@ -1062,9 +1052,6 @@ Window {
     //init
     Component.onCompleted: {
         cht8310.initialize();
-        
-        // SA项目不需要videoGenerator，注释掉整个videoGenerator初始化
-        /*
         //videoGenerator
         var hextiming = fileManager.getValue("Timing");
         var num = parseInt(hextiming,16);
@@ -1267,10 +1254,7 @@ Window {
 
         //VideoTest
         //videoTest.videoTestSelect = 0
-        */
 
-        // SA项目不需要audioGenerator，注释掉整个audioGenerator初始化
-        /*
         //AudioGenerator
 //        audioGenerator.pcmFlag = 0
 //        audioGenerator.dtsFlag = 0
@@ -1387,7 +1371,6 @@ Window {
             serialPortManager.writeData(completeString, typecmd);
 
         }
-        */
 
         //Edid_eARC_CDS
 //        edid.sink_device_edid_text.text = ""
@@ -1398,26 +1381,25 @@ Window {
 //        edid.arc_audio_text.text = ""
 //        edid.arc_audio_info_text.text = ""
 
-        // SA项目不需要edid组件，但需要发送相应的命令
-        var arc_hpd_ctl_flag = parseInt(fileManager.getValue("ARC_HPD_CTL"),16);
-        if(arc_hpd_ctl_flag===1) serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B1 00 01", typecmd);
+        edid.arc_hpd_ctl_flag = parseInt(fileManager.getValue("ARC_HPD_CTL"),16);
+        if(edid.arc_hpd_ctl_flag===1) serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B1 00 01", typecmd);
         else serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B1 00 02", typecmd);
 
-        var physical_hpd_ctl_flag = parseInt(fileManager.getValue("eARC_Physical_HPD_CTL"),16);
-        if(physical_hpd_ctl_flag===1) serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B1 00 01", typecmd);
+        edid.physical_hpd_ctl_flag = parseInt(fileManager.getValue("eARC_Physical_HPD_CTL"),16);
+        if(edid.physical_hpd_ctl_flag===1) serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B1 00 01", typecmd);
         else serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B1 00 02", typecmd);
 
-        var earc_hpd_bit_ctl_flag = parseInt(fileManager.getValue("eARC_HPD_bit_CTL"),16);
-        if(earc_hpd_bit_ctl_flag===1) serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B2 00 01", typecmd);
+        edid.earc_hpd_bit_ctl_flag = parseInt(fileManager.getValue("eARC_HPD_bit_CTL"),16);
+        if(edid.earc_hpd_bit_ctl_flag===1) serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B2 00 01", typecmd);
         else serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 B2 00 00", typecmd);
 
-        var hdmi_5v_power_ctl_flag = parseInt(fileManager.getValue("HDMI_5V_POWER_CTL"),16);
-        serialPortManager.writeDataUart5("SET HDMI 5V "+(hdmi_5v_power_ctl_flag===0? "OFF":"ON")+"\r\n",1);
+        edid.hdmi_5v_power_ctl_flag = parseInt(fileManager.getValue("HDMI_5V_POWER_CTL"),16);
+        serialPortManager.writeDataUart5("SET HDMI 5V "+(edid.hdmi_5v_power_ctl_flag===0? "OFF":"ON")+"\r\n",1);
 
-        var earc_tx_latencyk_req = parseInt(fileManager.getValue("eARCTX_Latency_REQ"),16);
-        serialPortManager.writeDataUart5("SET TXLAT "+earc_tx_latencyk_req, 1);
+        edid.earc_tx_latencyk_text.text = parseInt(fileManager.getValue("eARCTX_Latency_REQ"),16);
+        serialPortManager.writeDataUart5("SET TXLAT "+parseInt(fileManager.getValue("eARCTX_Latency_REQ"),16), 1);
 
-        var earc_tx_latencyk_ms = parseInt(fileManager.getValue("eARCTX_Latency"),16);
+        edid.earc_tx_latencyk_ms_text.text = parseInt(fileManager.getValue("eARCTX_Latency"),16);
         serialPortManager.writeDataUart5("AA 00 00 06 00 00 00 7A 00 "+fileManager.getValue("eARCTX_Latency"), typecmd);
 //        edid.earc_rx_latencyk_text.text = 0
 //        edid.earc_rx_latencyk_ms_text.text = 0
@@ -1485,8 +1467,7 @@ Window {
     }
 
     //send commend
-    //VideoGenerator - SA项目不需要，注释掉
-    /*
+    //VideoGenerator
     Connections{
         target: videoGenerator
         function onConfirmsignal(str, num){
@@ -1633,7 +1614,6 @@ Window {
 //            serialPortManager.writeData(completeString, typecmd);
         }
     }
-    */
     //VideoTest
 //    Connections{
 //        target: videoTest
@@ -1645,8 +1625,7 @@ Window {
 //            }
 //        }
 //    }
-    //AudioGenerator - SA项目不需要，注释掉
-    /*
+    //AudioGenerator
     Connections{
         target: audioGenerator
        function onConfirmsignal(str, num){
@@ -1746,9 +1725,7 @@ Window {
             serialPortManager.writeData(completeString, typecmd);
         }
     }
-    */
-    //Edid_eARC_CDS - SA项目不需要，注释掉
-    /*
+    //Edid_eARC_CDS
     Connections{
         target: edid
         function onConfirmsignal(str, num){
@@ -1812,7 +1789,6 @@ Window {
 
         }
     }
-    */
     //SystemSetup
     Connections{
         target: systemSetup

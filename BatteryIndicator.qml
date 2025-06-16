@@ -28,7 +28,7 @@ Item {
 
     Timer {
         id: batteryTimer
-        interval: 10000 // 10s
+        interval: 10000 // 10s  检测电量
         running: true
         repeat: true
         onTriggered: {
@@ -42,7 +42,7 @@ Item {
 
     Timer {
         id: batteryTimer2
-        interval: 30000 // 30s
+        interval: 30000 // 30s    还有监测电源拔插的功能
         running: true
         repeat: true
         onTriggered: {
