@@ -27,10 +27,33 @@ Rectangle {
     function getIpMask() { return ipMaskField.text; }
     function getRouterIp() { return routerIpField.text; }
 
-    // Property definitions
-    property bool isDhcpMode: true
-    property int fanControlMode: 0
-    property int currentSection: 0  // Current display section: 0=IP, 1=Fan, 2=Reset, 3=Vitals
+    // Property definitions - 与SystemSetup.qml保持一致
+    property bool ip_management_dhcp_flag: false  // DHCP模式标志
+    property int fan_control_flag: 0              // 风扇控制模式
+    property int currentSection: 0                // 当前显示区域: 0=IP, 1=Fan, 2=Reset, 3=Vitals
+    
+    // 版本信息属性 - 与SystemSetup.qml保持一致
+    property alias main_mcu: mainMcuText
+    property alias key_mcu: keyMcuText  
+    property alias lan_mcu: lanMcuText
+    property alias main_fpga: mainFpgaText
+    property alias dsp_module: dspModuleText
+    property alias tx_mcu: txMcuText
+    property alias av_mcu: avMcuText
+    property alias aux_fpga: auxFpgaText
+    property alias aux2_fpga: aux2FpgaText
+    
+    // 温度信息属性
+    property alias chip_main_mcu: mainMcuTempText
+    property alias chip_main_fgpa: mainFpgaTempText
+    property alias chip_aux_fpga: auxFpgaTempText
+    
+    // 网络信息属性
+    property alias host_ip: hostIpField
+    property alias router_ip: routerIpField
+    property alias ip_mask: ipMaskField
+    property alias mac_address: macAddressText
+    property alias tcp_port: tcpPortText
 
     // 主布局
     ColumnLayout {
@@ -75,9 +98,9 @@ Rectangle {
                     
                     onClicked: {
                         currentSection = modelData.index
-                        // 如果切换到Vitals页面，请求设备状态
+                        // 如果切换到Vitals页面，请求设备状态 - 与SystemSetup.qml保持一致
                         if (modelData.index === 3) {
-                            requestVitalsData()
+                            confirmsignal("vitals", 0x00);  // 请求所有组件状态
                         }
                     }
                 }
@@ -141,6 +164,7 @@ Rectangle {
                                 
                                 onPressed: {
                                     currentInputField = hostIpField;
+                                    currentText = hostIpField.text;
                                     virtualKeyboard.visible = true
                                 }
                             }
@@ -173,6 +197,7 @@ Rectangle {
                                 
                                 onPressed: {
                                     currentInputField = routerIpField;
+                                    currentText = routerIpField.text;
                                     virtualKeyboard.visible = true
                                 }
                             }
@@ -205,6 +230,7 @@ Rectangle {
                                 
                                 onPressed: {
                                     currentInputField = ipMaskField;
+                                    currentText = ipMaskField.text;
                                     virtualKeyboard.visible = true
                                 }
                             }
@@ -261,7 +287,7 @@ Rectangle {
                         }
                     }
 
-                    // DHCP/Static 切换按钮
+                    // DHCP/Static 切换按钮 - 与SystemSetup.qml保持一致
                     RowLayout {
                         anchors.horizontalCenter: parent.horizontalCenter
                         spacing: 20
@@ -273,7 +299,7 @@ Rectangle {
                             Layout.preferredHeight: 60
                             
                             background: Rectangle {
-                                color: isDhcpMode ? "#ffffff" : "#888888"
+                                color: ip_management_dhcp_flag ? "#ffffff" : "#888888"
                                 border.color: "black"
                                 border.width: 2
                                 radius: 4
@@ -282,17 +308,14 @@ Rectangle {
                             contentItem: Text {
                                 text: parent.text
                                 font: parent.font
-                                color: isDhcpMode ? "black" : "white"
+                                color: ip_management_dhcp_flag ? "black" : "white"
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             
                             onClicked: {
-                                if (!isDhcpMode) {  // 只有在未启用DHCP时才执行
-                                    console.log("Switching to DHCP mode");
-                                    isDhcpMode = true;
-                                    confirmsignal("DHCP", true);  // 发送true启用DHCP
-                                }
+                                ip_management_dhcp_flag = true
+                                confirmsignal("DHCP", true)  // 发送DHCP启用信号
                             }
                         }
                         
@@ -303,7 +326,7 @@ Rectangle {
                             Layout.preferredHeight: 60
                             
                             background: Rectangle {
-                                color: !isDhcpMode ? "#ffffff" : "#888888"
+                                color: ip_management_dhcp_flag ? "#888888" : "#ffffff"
                                 border.color: "black"
                                 border.width: 2
                                 radius: 4
@@ -312,14 +335,14 @@ Rectangle {
                             contentItem: Text {
                                 text: parent.text
                                 font: parent.font
-                                color: !isDhcpMode ? "black" : "white"
+                                color: ip_management_dhcp_flag ? "white" : "black"
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             
                             onClicked: {
-                                isDhcpMode = false
-                                confirmsignal("DHCP", false)
+                                ip_management_dhcp_flag = false
+                                confirmsignal("DHCP", false)  // 发送Static模式信号
                             }
                         }
                     }
@@ -328,7 +351,7 @@ Rectangle {
                     RowLayout {
                         anchors.horizontalCenter: parent.horizontalCenter
                         spacing: 20
-                        visible: !isDhcpMode  // 只在静态IP模式下显示
+                        visible: !ip_management_dhcp_flag  // 只在静态IP模式下显示
                         
                         Button {
                             text: "Apply Static IP"
@@ -415,7 +438,7 @@ Rectangle {
                             Layout.preferredHeight: 80
                             
                             background: Rectangle {
-                                color: fanControlMode === modelData.value ? "#ffffff" : "#888888"
+                                color: fan_control_flag === modelData.value ? "#ffffff" : "#888888"
                                 border.color: "black"
                                 border.width: 2
                                 radius: 4
@@ -424,13 +447,13 @@ Rectangle {
                             contentItem: Text {
                                 text: parent.text
                                 font: parent.font
-                                color: fanControlMode === modelData.value ? "black" : "white"
+                                color: fan_control_flag === modelData.value ? "black" : "white"
                                 horizontalAlignment: Text.AlignHCenter
                                 verticalAlignment: Text.AlignVCenter
                             }
                             
                             onClicked: {
-                                fanControlMode = modelData.value
+                                fan_control_flag = modelData.value
                                 confirmsignal("FanControl", modelData.value)
                             }
                         }
@@ -474,7 +497,7 @@ Rectangle {
                         }
                         
                         onClicked: {
-                            confirmsignal("ResetDefault", true)
+                            confirmsignal("ResetDefault", 0)
                         }
                     }
                     
@@ -500,7 +523,7 @@ Rectangle {
                         }
                         
                         onClicked: {
-                            confirmsignal("Reboot", true)
+                            confirmsignal("Reboot", 0)
                         }
                     }
                 }
@@ -857,74 +880,52 @@ Rectangle {
         }
     }
 
-    // 请求设备状态信息
-    function requestVitalsData() {
-        // 发送请求获取各组件状态
-        confirmsignal("vitals", 0x00); // KEY MCU
-        confirmsignal("vitals", 0x01); // MAIN MCU
-        confirmsignal("vitals", 0x02); // TX MCU
-        confirmsignal("vitals", 0x10); // MAIN FPGA
-        confirmsignal("vitals", 0x11); // AUX FPGA
-        confirmsignal("vitals", 0x12); // AUX2 FPGA
-        confirmsignal("vitals", 0x20); // LAN MCU
-        confirmsignal("vitals", 0x21); // AV MCU
-        confirmsignal("vitals", 0x22); // DSP Module
-        confirmsignal("vitals", 0x30); // Power Management
-        confirmsignal("vitals", 0xff); // all component
-    }
-
-    // 添加用于更新版本信息的函数
-    function updateVersionInfo(componentId, version) {
-        var textComponent = systemSetupPanel[componentId + "Text"]
-        if (textComponent) {
-            textComponent.text = version
-        }
-    }
+    // 虚拟键盘支持
+    property var currentInputField: null
+    property string currentText: ""
     
-    // 添加用于更新温度信息的函数
-    function updateTemperatureInfo(componentId, temperature) {
-        var textComponent = systemSetupPanel[componentId + "Text"]
-        if (textComponent) {
-            textComponent.text = temperature
-        }
-    }
-
-    // 添加网络信息更新函数
-    function updateNetworkDisplay() {
-        console.log("Updating SystemSetup network display");
-        console.log("- IP from netManager:", netManager.ipAddress);
-        console.log("- MAC from netManager:", netManager.macAddress);
+    VirtualKeyboard {
+        id: virtualKeyboard
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+        visible: false
         
-        // 强制更新显示（如果绑定没有自动更新）
-        if (netManager.ipAddress) {
-            hostIpField.text = netManager.ipAddress;
-        }
-        if (netManager.macAddress) {
-            macAddressText.text = netManager.macAddress;
-        }
-        if (netManager.netmask) {
-            ipMaskField.text = netManager.netmask;
-        }
-        if (netManager.routerIpAddress) {
-            routerIpField.text = netManager.routerIpAddress;
+        onKeyPressed: {
+            if (key === "Backspace") {
+                if (currentText.length > 0) {
+                    currentText = currentText.slice(0, -1)
+                }
+            } else if (key === "Close") {
+                visible = false
+                currentInputField = null
+                currentText = ""
+            } else {
+                currentText += key
+            }
+            
+            if (currentInputField) {
+                currentInputField.text = currentText
+            }
         }
     }
 
-
-    // 添加网络测试函数
-    function testNetworkConnectivity() {
-        // 执行ping测试
-        terminalManager.executeCommand("ping -c 3 8.8.8.8");
-        
-        // 显示测试结果
-        console.log("Network connectivity test initiated");
-    }
-
-    // 添加DHCP错误显示函数
-    function showDhcpError(error) {
-        dhcpStatusText.text = "DHCP faile: " + error;
-        dhcpStatusRect.border.color = "red";
-        dhcpStatusRect.visible = true;
+    // 组件初始化 - 与SystemSetup.qml保持一致
+    Component.onCompleted: {
+        console.log("SystemSetupPanel initialized");
+        // 初始化时清空版本信息显示
+        main_mcu.text = ""
+        key_mcu.text = ""
+        lan_mcu.text = ""  // 将在main.qml中设置为当前软件版本
+        main_fpga.text = ""
+        dsp_module.text = ""
+        tx_mcu.text = ""
+        av_mcu.text = ""
+        aux_fpga.text = ""
+        aux2_fpga.text = ""
+        chip_main_mcu.text = ""
+        chip_main_fgpa.text = ""
+        chip_aux_fpga.text = ""
     }
 
 } 

@@ -42,7 +42,7 @@ Item {
 
     Timer {
         id: batteryTimer2
-        interval: 1000 // 1s
+        interval: 30000 // 30s
         running: true
         repeat: true
         onTriggered: {

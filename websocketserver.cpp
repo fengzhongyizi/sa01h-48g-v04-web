@@ -79,11 +79,16 @@ void WebSocketServer::onNewConnection()
 
 void WebSocketServer::processTextMessage(const QString &message)
 {
-
-    QWebSocket *pSender = qobject_cast<QWebSocket *>(sender());
-    QString path = m_uploadClients.contains(pSender) ? "/ws/upload" : "/ws/uart";
+    // 作用：不同连接走不同处理逻辑
+    QWebSocket *pSender = qobject_cast<QWebSocket *>(sender());  // sender()：当前触发槽函数的信号源（即哪个客户端发的消息
+    QString path = m_uploadClients.contains(pSender) ? "/ws/upload" : "/ws/uart"; // 用 m_uploadClients.contains(pSender) 来判断连接是 upload 还是 uart。
     if(path=="/ws/upload"){
-        QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());
+        // 格式要求
+        // {
+        //  "cmd": 30,
+        //  "data": "update.zip"
+        // }
+        QJsonDocument doc = QJsonDocument::fromJson(message.toUtf8());  // 尝试解析客户端发来的 JSON 控制消息。
        if (doc.isNull()) {
            qDebug() << "Invalid JSON message";
            emit messageReceived(message,path);
@@ -91,34 +96,37 @@ void WebSocketServer::processTextMessage(const QString &message)
        }
 
        QJsonObject json = doc.object();
-       int cmd = json["cmd"].toInt();
-       QString filename = json["data"].toString();
+       int cmd = json["cmd"].toInt();  // cmd：30 / 31 ，表示开始上传和结束
+       QString filename = json["data"].toString();  // data：如 "update.zip"，即上传文件名
 
 
+       
+       
+       //行为类似 HTTP PUT：先告知服务端准备写入，再发文件内容
        if (cmd % 10 == 0) {
            m_terminalManager.executeCommand("mkdir /tmp/update");
            m_terminalManager.executeCommand("rm -rf /tmp/update/*");
            QString filePath = "/tmp/update/update.zip";
-           QFile *file = new QFile(filePath);
+           QFile *file = new QFile(filePath);  // 创建新文件用于接收二进制数据
            if (!file->open(QIODevice::WriteOnly)) {
                qDebug() << "Failed to open file for writing:" << filePath;
                delete file;
                return;
            }
-           m_activeFileUploads[pSender] = file;
+           m_activeFileUploads[pSender] = file;  // 存储上传状态在 m_activeFileUploads 中
            qDebug() << "Start receiving file:" << filePath;
 
-       } else if (cmd % 10 == 1) {
+       } else if (cmd % 10 == 1) {  // 停止写入文件
            if (m_activeFileUploads.contains(pSender)) {
 
-               m_terminalManager.executeDetachedCommand("/data/upgrademodule");
+               m_terminalManager.executeDetachedCommand("/data/upgrademodule"); // 异步执行一个升级相关模块（/data/upgrademodule），如果你未提供文件关闭 file->close()，可能是该模块会立即读取这个文件。
                QFile *file = m_activeFileUploads.take(pSender);
 //               file->close();
                QFileInfo fileInfo(*file);
                qint64 fileSize = fileInfo.size();
                qDebug() << "File upload completed:" << filename << "Size:" << fileSize << "bytes";
                delete file;
-               m_terminalManager.executeCommand("unzip -o /tmp/update/update.zip -d /tmp/update");
+               m_terminalManager.executeCommand("unzip -o /tmp/update/update.zip -d /tmp/update");  // 解压上传的 zip 包（用 -o 强制覆盖）
                m_terminalManager.executeCommand("rm -rf /userdata/spi");
                m_terminalManager.executeCommand("mv /tmp/update/spi /userdata/spi");
                m_terminalManager.executeCommand("chmod +x /userdata/spi");

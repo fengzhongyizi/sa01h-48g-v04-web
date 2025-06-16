@@ -33,6 +33,9 @@ Rectangle {
     property int btnHeight: 120
     property int btnfontsize: 35
 
+    //fan control
+    property int out_setup_flag: 0     // ARC/eARC 输出设置标志
+    property int fan_control_flag: 0
 
     CustomButton{
         id:back
@@ -413,7 +416,6 @@ Rectangle {
     }
 
     //fan control
-    property int fan_control_flag: 0
     GridLayout{
         visible: pageflag==2&&pageindex == 1?true:false
         anchors.top: parent.top

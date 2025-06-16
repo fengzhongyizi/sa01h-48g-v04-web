@@ -1,112 +1,305 @@
-09:14:15: Running steps for project SG01H-48G-V04...
-09:14:15: Configuration unchanged, skipping qmake step.
-09:14:15: Starting: "/usr/bin/make" -j12
-/opt/Qt5.12.0/5.12.0/gcc_64/bin/qmake -o Makefile ../sg01h-48g-v04-web/SG01H-48G-V04.pro -spec linux-g++ CONFIG+=debug CONFIG+=qml_debug
-g++ -c -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_QUICK_LIB -DQT_GUI_LIB -DQT_QML_LIB -DQT_WEBSOCKETS_LIB -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB -I../sg01h-48g-v04-web -I. -I/opt/Qt5.12.0/5.12.0/gcc_64/include -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQuick -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtGui -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtWebSockets -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtNetwork -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtSerialPort -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I/opt/Qt5.12.0/5.12.0/gcc_64/mkspecs/linux-g++ -o main.o ../sg01h-48g-v04-web/main.cpp
-g++ -c -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_QUICK_LIB -DQT_GUI_LIB -DQT_QML_LIB -DQT_WEBSOCKETS_LIB -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB -I../sg01h-48g-v04-web -I. -I/opt/Qt5.12.0/5.12.0/gcc_64/include -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQuick -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtGui -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtWebSockets -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtNetwork -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtSerialPort -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I/opt/Qt5.12.0/5.12.0/gcc_64/mkspecs/linux-g++ -o signalanalyzermanager.o ../sg01h-48g-v04-web/signalanalyzermanager.cpp
-/opt/Qt5.12.0/5.12.0/gcc_64/bin/rcc -name qml ../sg01h-48g-v04-web/qml.qrc -o qrc_qml.cpp
-/opt/Qt5.12.0/5.12.0/gcc_64/bin/moc -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_QUICK_LIB -DQT_GUI_LIB -DQT_QML_LIB -DQT_WEBSOCKETS_LIB -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB --include /root/SA/build-SG01H-48G-V04-Desktop_Qt_5_12_0_GCC_64bit-Debug/moc_predefs.h -I/opt/Qt5.12.0/5.12.0/gcc_64/mkspecs/linux-g++ -I/root/SA/sg01h-48g-v04-web -I/opt/Qt5.12.0/5.12.0/gcc_64/include -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQuick -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtGui -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtWebSockets -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtNetwork -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtSerialPort -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore -I. -I/usr/include/c++/11 -I/usr/include/x86_64-linux-gnu/c++/11 -I/usr/include/c++/11/backward -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I/usr/local/include -I/usr/include/x86_64-linux-gnu -I/usr/include ../sg01h-48g-v04-web/signalanalyzermanager.h -o moc_signalanalyzermanager.cpp
-g++ -c -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_QUICK_LIB -DQT_GUI_LIB -DQT_QML_LIB -DQT_WEBSOCKETS_LIB -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB -I../sg01h-48g-v04-web -I. -I/opt/Qt5.12.0/5.12.0/gcc_64/include -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQuick -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtGui -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtWebSockets -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtNetwork -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtSerialPort -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I/opt/Qt5.12.0/5.12.0/gcc_64/mkspecs/linux-g++ -o moc_signalanalyzermanager.o moc_signalanalyzermanager.cpp
-In file included from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qlocale.h:43,
-                 from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtGui/qguiapplication.h:47,
-                 from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtGui/QGuiApplication:1,
-                 from ../sg01h-48g-v04-web/main.cpp:1:
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h: In constructor ‘QVariant::QVariant(QVariant&&)’:
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h:273:25: warning: implicitly-declared ‘QVariant::Private& QVariant::Private::operator=(const QVariant::Private&)’ is deprecated [-Wdeprecated-copy]
-  273 |     { other.d = Private(); }
-      |                         ^
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h:399:16: note: because ‘QVariant::Private’ has user-provided ‘QVariant::Private::Private(const QVariant::Private&)’
-  399 |         inline Private(const Private &other) Q_DECL_NOTHROW
-      |                ^~~~~~~
-In file included from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/QVariantList:1,
-                 from ../sg01h-48g-v04-web/signalanalyzermanager.h:6,
-                 from ../sg01h-48g-v04-web/signalanalyzermanager.cpp:1:
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h: In constructor ‘QVariant::QVariant(QVariant&&)’:
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h:273:25: warning: implicitly-declared ‘QVariant::Private& QVariant::Private::operator=(const QVariant::Private&)’ is deprecated [-Wdeprecated-copy]
-  273 |     { other.d = Private(); }
-      |                         ^
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h:399:16: note: because ‘QVariant::Private’ has user-provided ‘QVariant::Private::Private(const QVariant::Private&)’
-  399 |         inline Private(const Private &other) Q_DECL_NOTHROW
-      |                ^~~~~~~
-g++ -c -pipe -g -std=gnu++11 -Wall -W -D_REENTRANT -fPIC -DQT_DEPRECATED_WARNINGS -DQT_QML_DEBUG -DQT_QUICK_LIB -DQT_GUI_LIB -DQT_QML_LIB -DQT_WEBSOCKETS_LIB -DQT_NETWORK_LIB -DQT_SERIALPORT_LIB -DQT_CORE_LIB -I../sg01h-48g-v04-web -I. -I/opt/Qt5.12.0/5.12.0/gcc_64/include -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQuick -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtGui -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtWebSockets -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtNetwork -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtSerialPort -I/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore -I. -isystem /usr/include/libdrm -I/opt/Qt5.12.0/5.12.0/gcc_64/mkspecs/linux-g++ -o qrc_qml.o qrc_qml.cpp
-In file included from ../sg01h-48g-v04-web/signalanalyzermanager.cpp:1:
-../sg01h-48g-v04-web/signalanalyzermanager.h: In constructor ‘SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager*, QObject*)’:
-../sg01h-48g-v04-web/signalanalyzermanager.h:197:24: warning: ‘SignalAnalyzerManager::m_serialPortManager’ will be initialized after [-Wreorder]
-  197 |     SerialPortManager* m_serialPortManager;
-      |                        ^~~~~~~~~~~~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.h:171:13: warning:   ‘QString SignalAnalyzerManager::m_frameUrl’ [-Wreorder]
-  171 |     QString m_frameUrl;
-      |             ^~~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:8:1: warning:   when initialized here [-Wreorder]
-    8 | SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* parent)
-      | ^~~~~~~~~~~~~~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp: In member function ‘void SignalAnalyzerManager::updateInfo(const QString&, const QString&, const QString&, const QString&, const QString&, const QString&, const QString&, const QString&)’:
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:188:10: warning: variable ‘changed’ set but not used [-Wunused-but-set-variable]
-  188 |     bool changed = false;
-      |          ^~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp: In member function ‘void SignalAnalyzerManager::updateMonitorData(const QStringList&, const QList<QPointF>&)’:
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:251:66: warning: unused parameter ‘slotLabels’ [-Wunused-parameter]
-  251 | void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels, const QList<QPointF> &data)
-      |                                               ~~~~~~~~~~~~~~~~~~~^~~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:251:100: warning: unused parameter ‘data’ [-Wunused-parameter]
-  251 | void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels, const QList<QPointF> &data)
-      |                                                                              ~~~~~~~~~~~~~~~~~~~~~~^~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp: In member function ‘void SignalAnalyzerManager::processMonitorCommand(const QByteArray&)’:
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:271:69: warning: unused parameter ‘data’ [-Wunused-parameter]
-  271 | void SignalAnalyzerManager::processMonitorCommand(const QByteArray &data)
-      |                                                   ~~~~~~~~~~~~~~~~~~^~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp: In member function ‘void SignalAnalyzerManager::updateSlotData(const QString&, const QString&)’:
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:276:59: warning: unused parameter ‘slotId’ [-Wunused-parameter]
-  276 | void SignalAnalyzerManager::updateSlotData(const QString &slotId, const QString &stateStr)
-      |                                            ~~~~~~~~~~~~~~~^~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:276:82: warning: unused parameter ‘stateStr’ [-Wunused-parameter]
-  276 | void SignalAnalyzerManager::updateSlotData(const QString &slotId, const QString &stateStr)
-      |                                                                   ~~~~~~~~~~~~~~~^~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp: In member function ‘void SignalAnalyzerManager::updateSlotError(const QString&, int, int)’:
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:281:60: warning: unused parameter ‘slotId’ [-Wunused-parameter]
-  281 | void SignalAnalyzerManager::updateSlotError(const QString &slotId, int slotIndex, int statusValue)
-      |                                             ~~~~~~~~~~~~~~~^~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:281:72: warning: unused parameter ‘slotIndex’ [-Wunused-parameter]
-  281 | void SignalAnalyzerManager::updateSlotError(const QString &slotId, int slotIndex, int statusValue)
-      |                                                                    ~~~~^~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:281:87: warning: unused parameter ‘statusValue’ [-Wunused-parameter]
-  281 | void SignalAnalyzerManager::updateSlotError(const QString &slotId, int slotIndex, int statusValue)
-      |                                                                                   ~~~~^~~~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp: In member function ‘bool SignalAnalyzerManager::detectTriggerEvent(const QByteArray&, const QByteArray&)’:
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:291:66: warning: unused parameter ‘currentFrame’ [-Wunused-parameter]
-  291 | bool SignalAnalyzerManager::detectTriggerEvent(const QByteArray &currentFrame, const QByteArray &previousFrame)
-      |                                                ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:291:98: warning: unused parameter ‘previousFrame’ [-Wunused-parameter]
-  291 | bool SignalAnalyzerManager::detectTriggerEvent(const QByteArray &currentFrame, const QByteArray &previousFrame)
-      |                                                                                ~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~
-../sg01h-48g-v04-web/signalanalyzermanager.cpp: In member function ‘bool SignalAnalyzerManager::isSignalLost(const QByteArray&)’:
-../sg01h-48g-v04-web/signalanalyzermanager.cpp:297:60: warning: unused parameter ‘frame’ [-Wunused-parameter]
-  297 | bool SignalAnalyzerManager::isSignalLost(const QByteArray &frame)
-      |                                          ~~~~~~~~~~~~~~~~~~^~~~~
-../sg01h-48g-v04-web/main.cpp: In function ‘int main(int, char**)’:
-../sg01h-48g-v04-web/main.cpp:35:25: error: invalid use of incomplete type ‘class QQmlContext’
-   35 |     engine.rootContext()->setContextProperty("signalAnalyzerManager", saMgr);
-      |                         ^~
-In file included from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml/qqmlengine.h:47,
-                 from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml/qqmlapplicationengine.h:43,
-                 from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml/QQmlApplicationEngine:1,
-                 from ../sg01h-48g-v04-web/main.cpp:2:
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtQml/qqml.h:570:7: note: forward declaration of ‘class QQmlContext’
-  570 | class QQmlContext;
-      |       ^~~~~~~~~~~
-In file included from /opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/QVariantList:1,
-                 from ../sg01h-48g-v04-web/signalanalyzermanager.h:6,
-                 from moc_signalanalyzermanager.cpp:9:
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h: In constructor ‘QVariant::QVariant(QVariant&&)’:
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h:273:25: warning: implicitly-declared ‘QVariant::Private& QVariant::Private::operator=(const QVariant::Private&)’ is deprecated [-Wdeprecated-copy]
-  273 |     { other.d = Private(); }
-      |                         ^
-/opt/Qt5.12.0/5.12.0/gcc_64/include/QtCore/qvariant.h:399:16: note: because ‘QVariant::Private’ has user-provided ‘QVariant::Private::Private(const QVariant::Private&)’
-  399 |         inline Private(const Private &other) Q_DECL_NOTHROW
-      |                ^~~~~~~
-make: *** [Makefile:2302: main.o] Error 1
-make: *** Waiting for unfinished jobs....
-09:14:23: The process "/usr/bin/make" exited with code 2.
-Error while building/deploying project SG01H-48G-V04 (kit: Desktop Qt 5.12.0 GCC 64bit)
-When executing step "Make"
-09:14:23: Elapsed time: 00:07.
+sg01h-48g-v04-web的包发到板子上的启动日志如下：
+```log
+root@rk3568-buildroot:/data# QML debugging is enabled. Only use this in a safe environment.
+QStandardPaths: runtime directory '/var/run' is not a directory, but a symbolic link to a directory permissions 0755 owned by UID 0 GID 0
+No such plugin for spec "/dev/input/event1"
+Server started on port 80
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10
+m_ipAddress= "192.168.1.239"
+m_netmask= "255.255.255.0"
+m_routerIpAddress= "192.168.1.1"
+net.....
+open port!
+open port uart5!
+open port uart6!
+write uart3: "AA 00 00 06 00 00 00 61 00 72 7D"
+write uart3: "AA 00 00 06 00 00 00 62 00 72 7C"
+qml: eARCTX_Latency 0
+Data saved to file: "/userdata/gate.conf"
+qml: Server running: true
+WebSocket server listening on port 8081
+New client connected to path: "/ws/uart"
+qml: New client connected
+qml: Received message from path: /ws/uart Data: 
+READDEFAULT
+
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||103,1
+
+write uart3: "AA 00 00 06 00 00 00 67 00 01 E8"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||104,1
+
+write uart3: "AA 00 00 06 00 00 00 68 00 01 E7"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||115,1
+
+write uart3: "AA 00 00 06 00 00 00 73 00 01 DC"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||107,0
+
+write uart3: "AA 00 00 06 00 00 00 6B 00 00 E5"
+New client connected to path: "/ws/upload"
+qml: New client connected
+```
+
+sg上传包升级时的日志
+```log
+root@rk3568-buildroot:/# 
+root@rk3568-buildroot:/# 
+root@rk3568-buildroot:/# Client disconnected: "::ffff:192.168.1.40"
+Close code: 1001
+Close reason: ""
+qml: Client disconnected
+Client disconnected: "::ffff:192.168.1.40"
+Close code: 1001
+Close reason: ""
+qml: Client disconnected
+New client connected to path: "/ws/uart"
+qml: New client connected
+qml: Received message from path: /ws/uart Data: 
+READDEFAULT
+
+New client connected to path: "/ws/upload"
+qml: New client connected
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||103,1
+
+write uart3: "AA 00 00 06 00 00 00 67 00 01 E8"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||104,1
+
+write uart3: "AA 00 00 06 00 00 00 68 00 01 E7"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||115,1
+
+write uart3: "AA 00 00 06 00 00 00 73 00 01 DC"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||107,0
+
+write uart3: "AA 00 00 06 00 00 00 6B 00 00 E5"
+Command executed successfully: "mkdir /tmp/update"
+Command executed successfully: "rm -rf /tmp/update/*"
+Start receiving file: "/tmp/update/update.zip"
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 379034 bytes
+Detached command started successfully: "/data/upgrademodule"
+File upload completed: "update.zip" Size: 17156250 bytes
+Command executed successfully: "unzip -o /tmp/update/update.zip -d /tmp/update"
+Command executed successfully: "rm -rf /userdata/spi"
+Command executed successfully: "mv /tmp/update/spi /userdata/spi"
+Command executed successfully: "chmod +x /userdata/spi"
+[FILE] "c51.zip" Size: 5420 bytes
+[FILE] "fpga.zip" Size: 4998739 bytes
+[FILE] "sg.zip" Size: 7007370 bytes
+[FILE] "update.zip" Size: 17156250 bytes
+[FILE] "www.zip" Size: 5281428 bytes
+start unzip: "update.zip"
+Invalid JSON message
+qml: Received message from path: /ws/upload Data: upgrade:c51,
+
+Command executed successfully: "echo 106 > /sys/class/gpio/export"
+Command executed successfully: "echo out > /sys/class/gpio/gpio106/direction"
+Command executed successfully: "echo 0 > /sys/class/gpio/gpio106/value"
+Command executed successfully: "echo 1 > /sys/class/gpio/gpio106/value"
+Command executed successfully: "rm -rf /data/c51.hex"
+Command executed successfully: "unzip -o /tmp/update/c51.zip -d /data/"
+qml: onDataReceivedASCALL data received: 
+JUMP TO ISP MODE...
+
+qml: onDataReceivedASCALL data received: 
+Ready to receive...
+
+qml: c51 filesize: 12215
+Invalid JSON message
+qml: Received message from path: /ws/upload Data: upgrade:fpga
+
+Command executed successfully: "echo 144 > /sys/class/gpio/export"
+Command executed successfully: "echo out > /sys/class/gpio/gpio144/direction"
+Command executed successfully: "echo 1 > /sys/class/gpio/gpio144/value"
+Command executed successfully: "echo 42 > /sys/class/gpio/export"
+Command executed successfully: "echo out > /sys/class/gpio/gpio42/direction"
+Command executed successfully: "rm -rf /data/top.bin"
+Command executed successfully: "unzip -o /tmp/update/fpga.zip -d /data/"
+Command executed successfully: "/userdata/spi -w -f /data/top.bin -a 0000"
+qml: onDataReceivedASCALL data received: 
+** Firmware Update Complete **
+qml: onDataReceivedASCALL data received: 
+
+** RESETTING **
+
+```
+
+
+
+
+
+------
+
+
+
+
+
+
+sa01h-48g-v04-web的包发到板子上的启动日志
+
+```log
+root@rk3568-buildroot:/# pkill SG01H-48G-V04
+.168.1.4068-buildroot:/# tftp -g -r SG01H-48G-V04 -l /userdata/SG01H-48G-V04 192.
+root@rk3568-buildroot:/# /userdata/SG01H-48G-V04&
+[1] 819
+root@rk3568-buildroot:/# QML debugging is enabled. Only use this in a safe environment.
+QStandardPaths: runtime directory '/var/run' is not a directory, but a symbolic link to a directory permissions 0755 owned by UID 0 GID 0
+No such plugin for spec "/dev/input/event1"
+open port!
+open port uart5!
+open port uart6!
+write uart6: "AA 01 00 05 00 01 00 98 80 37"
+write uart6: "AA 01 00 05 00 01 00 99 80 36"
+SignalAnalyzerManager created
+Server started on port 80
+arm_release_ver: g13p0-01eac0, rk_so_ver: 10
+m_ipAddress= "192.168.1.239"
+m_netmask= "255.255.255.0"
+m_routerIpAddress= "192.168.1.1"
+net.....
+Error opening port: "Permission error while locking the device"
+Error opening port: "Permission error while locking the device"
+Error opening port: "Permission error while locking the device"
+qrc:/SignalAnalyzer.qml:1254:37: QML RadioButton: Binding loop detected for property "checked"
+qrc:/SignalAnalyzer.qml:898:37: QML SpinBox: Binding loop detected for property "value"
+qrc:/SignalAnalyzer.qml:1254:37: QML RadioButton: Binding loop detected for property "checked"
+qrc:/SignalAnalyzer.qml:898:37: QML SpinBox: Binding loop detected for property "value"
+qrc:/SignalAnalyzer.qml:1254:37: QML RadioButton: Binding loop detected for property "checked"
+qrc:/SignalAnalyzer.qml:898:37: QML SpinBox: Binding loop detected for property "value"
+qrc:/SignalAnalyzer.qml:1254:37: QML RadioButton: Binding loop detected for property "checked"
+qrc:/SignalAnalyzer.qml:898:37: QML SpinBox: Binding loop detected for property "value"
+write uart3: "AA 00 00 06 00 00 00 61 00 72 7D"
+write uart3: "AA 00 00 06 00 00 00 62 00 72 7C"
+write uart5: "AA 00 00 06 00 00 00 B1 00 02 9D"
+write uart5: "AA 00 00 06 00 00 00 B1 00 02 9D"
+write uart5: "AA 00 00 06 00 00 00 B2 00 00 9E"
+write uart5: "SET HDMI 5V OFF\r\n"
+qml: eARCTX_Latency 0
+Data saved to file: "/userdata/gate.conf"
+write uart5: "AA 00 00 06 00 00 00 7A 00 00 D6"
+write uart5: "SET TXLAT NaN"
+write uart5: "AA 00 00 06 00 00 00 7A 00 00 D6"
+qrc:/main.qml:1422: Error: Cannot assign to non-existent property "out_setup_flag"
+qml: SystemSetupPanel initialized
+qml: Server running: true
+WebSocket server listening on port 8081
+Data received from uart6: "\xAB\x01\x00\x07\x00\x01\x00\x98\x80\x00\x00""4\xAB\x01\x00\x07\x00\x01\x00\x99\x80\x01\x00""2"
+Data received from uart6: "AB 01 00 07 00 01 00 98 80 00 00 34"
+Data received from uart6: "AB 01 00 07 00 01 00 99 80 01 00 32"
+qml: No error rate monitoring data to display
+qml: No error rate monitoring data to display
+qml: No error rate monitoring data to display
+qml: No error rate monitoring data to display
+New client connected to path: "/ws/upload"
+qml: New client connected
+New client connected to path: "/ws/uart"
+qml: New client connected
+qml: Received message from path: /ws/uart Data: 
+READDEFAULT
+
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||103,1
+
+write uart3: "AA 00 00 06 00 00 00 67 00 01 E8"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||104,1
+
+write uart3: "AA 00 00 06 00 00 00 68 00 01 E7"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||115,1
+
+write uart3: "AA 00 00 06 00 00 00 73 00 01 DC"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||107,0
+
+write uart3: "AA 00 00 06 00 00 00 6B 00 00 E5"
+write uart6: "AA 01 00 05 00 01 00 98 80 37"
+
+```
+
+sa升级日志
+```log
+Client disconnected: "::ffff:192.168.1.40"
+Close code: 1001
+Close reason: ""
+qml: Client disconnected
+Client disconnected: "::ffff:192.168.1.40"
+Close code: 1001
+Close reason: ""
+qml: Client disconnected
+New client connected to path: "/ws/uart"
+qml: New client connected
+New client connected to path: "/ws/upload"
+qml: New client connected
+qml: Received message from path: /ws/uart Data: 
+READDEFAULT
+
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||103,1
+
+write uart3: "AA 00 00 06 00 00 00 67 00 01 E8"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||104,1
+
+write uart3: "AA 00 00 06 00 00 00 68 00 01 E7"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||115,1
+
+write uart3: "AA 00 00 06 00 00 00 73 00 01 DC"
+qml: Received message from path: /ws/uart Data: 
+SENDSINGLE||107,0
+
+write uart3: "AA 00 00 06 00 00 00 6B 00 00 E5"
+write uart6: "AA 01 00 05 00 01 00 98 80 37"
+write uart6: "AA 01 00 05 00 01 00 99 80 36"
+write uart5: "GET NTC 1 VALUE\r\n"
+write uart6: "AA 01 00 05 00 01 00 98 80 37"
+Command executed successfully: "mkdir /tmp/update"
+Command executed successfully: "rm -rf /tmp/update/*"
+Start receiving file: "/tmp/update/update.zip"
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 2097152 bytes
+Writing to file: "/tmp/update/update.zip" Size: 379034 bytes
+Detached command started successfully: "/data/upgrademodule"
+File upload completed: "update.zip" Size: 17156250 bytes
+Command executed successfully: "unzip -o /tmp/update/update.zip -d /tmp/update"
+Command executed successfully: "rm -rf /userdata/spi"
+Command executed successfully: "mv /tmp/update/spi /userdata/spi"
+Command executed successfully: "chmod +x /userdata/spi"
+[FILE] "c51.zip" Size: 5420 bytes
+[FILE] "fpga.zip" Size: 4998739 bytes
+[FILE] "sg.zip" Size: 7007370 bytes
+[FILE] "update.zip" Size: 17156250 bytes
+[FILE] "www.zip" Size: 5281428 bytes
+start unzip: "update.zip"
+Invalid JSON message
+qml: Received message from path: /ws/upload Data: upgrade:c51,
+
+Command executed successfully: "echo 106 > /sys/class/gpio/export"
+Command executed successfully: "echo out > /sys/class/gpio/gpio106/direction"
+Command executed successfully: "echo 0 > /sys/class/gpio/gpio106/value"
+Command executed successfully: "echo 1 > /sys/class/gpio/gpio106/value"
+Command executed successfully: "rm -rf /data/c51.hex"
+Command executed successfully: "unzip -o /tmp/update/c51.zip -d /data/"
+write uart6: "ISP 51 2\r\n"
+
+```

@@ -76,7 +76,12 @@ void SerialPortManager::openPortUart5()
         qDebug() << "Error opening port:" << serialPortUart5->errorString();
     }else{
         qDebug()<<"open port uart5!";
+//        writeDataUart5("GET NTC 1 VALUE\r\n",1);
+//        writeDataUart5("GET NTC 1 VALUE\r\n",1);
 //        writeDataUart5("GET IN1 EDID1 DATA\r\n",1);
+//        writeDataUart5("GET EDID U0 NAME\r\n",1);
+//        writeDataUart5("GET EDID U1 NAME\r\n",1);
+//        qDebug()<<"----- uart5! -----";
 //        writeDataUart5("GET IN1 EDID1 DATA\r\n",1);
 //        writeDataUart5("GET IN1 EDID1 DATA\r\n",1);
     }
@@ -186,7 +191,7 @@ void SerialPortManager::writeDataUart5(const QString &data, int typedata)
     QByteArray Data;
     if(typedata==1){
         Data = data.toLatin1();
-//        qDebug() << "write uart5:" << Data;
+        qDebug() << "write uart5:" << Data;
     }else {
         QString checksum = calculateChecksum(data);
         if (checksum.isEmpty()) {
@@ -195,7 +200,7 @@ void SerialPortManager::writeDataUart5(const QString &data, int typedata)
         }
         QString finalData = data.trimmed() + " " + checksum.trimmed();
         Data = QByteArray::fromHex(finalData.toLatin1());
-//        qDebug() << "write uart5:" << finalData;
+        qDebug() << "write uart5:" << finalData;
     }
 
     if (serialPortUart5->isOpen()) {
@@ -208,7 +213,7 @@ void SerialPortManager::writeDataUart6(const QString &data, int typedata)
      QByteArray Data;
     if(typedata==1){
         Data = data.toLatin1();
-//        qDebug() << "write uart6:" << Data;
+        qDebug() << "write uart6:" << Data;
     }else {
         QString checksum = calculateChecksum(data);
         if (checksum.isEmpty()) {
@@ -217,7 +222,7 @@ void SerialPortManager::writeDataUart6(const QString &data, int typedata)
         }
         QString finalData = data.trimmed() + " " + checksum.trimmed();
         Data = QByteArray::fromHex(finalData.toLatin1());
-//        qDebug() << "write uart6:" << finalData;
+        qDebug() << "write uart6:" << finalData;
     }
     if (serialPortUart6->isOpen()) {
         serialPortUart6->write(Data);
@@ -257,7 +262,7 @@ void SerialPortManager::onReadyRead()
 {
     static QByteArray buffer;
     QByteArray data = serialPort->readAll();
-//    qDebug() << "Data received from uart3:" << data;
+    qDebug() << "Data received from uart3:" << data;
     buffer.append(data);
 
     while (buffer.size() >= 4) {
@@ -283,7 +288,7 @@ void SerialPortManager::onReadyRead()
 void SerialPortManager::onReadyReadUart5()
 {
     QByteArray data = serialPortUart5->readAll();
-//    qDebug() << "Data received from uart5:" << data;
+    qDebug() << "Data received from uart5:" << data;
     static QByteArray buffer;
     buffer.append(data);
 
@@ -295,7 +300,7 @@ void SerialPortManager::onReadyReadUart5()
 
         QByteArray packet = buffer.left(endPos + 2);
         QString packetStr = QString::fromUtf8(packet);
-//        qDebug() << "Data received from uart5:" << packet;
+        qDebug() << "Data received from uart5:" << packet;
         emit dataReceivedASCALL(packetStr);
         buffer.remove(0, endPos + 2);
     }
@@ -309,7 +314,7 @@ void SerialPortManager::onReadyReadUart5()
 void SerialPortManager::onReadyReadUart6()
 {
     QByteArray data = serialPortUart6->readAll();
-//    qDebug() << "Data received from uart6:" << data;
+    qDebug() << "Data received from uart6:" << data;
     if(data.indexOf("\r\n")!=-1){
         emit dataReceivedASCALL(QString::fromUtf8(data));
     }
@@ -323,7 +328,7 @@ void SerialPortManager::onReadyReadUart6()
 
             if (buffer.size() >= 4 + length) {
                 QByteArray packet = buffer.left(5 + length);
-//                qDebug() << "Data received from uart6:" << packet.toHex(' ').toUpper();
+                qDebug() << "Data received from uart6:" << packet.toHex(' ').toUpper();
                 emit dataReceived(packet.toHex(' ').toUpper());
                 buffer = buffer.mid(4 + length);
             } else {

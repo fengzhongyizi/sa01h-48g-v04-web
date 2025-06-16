@@ -120,6 +120,7 @@ Window {
         onDataUpdated: {
 //            console.log("Updated data - Temp:", temperature, "Hum:", humidity);
             systemSetup.chip_aux_fpga.text = temperature.toFixed(1) +"°C";
+        saSystemSetup.chip_aux_fpga.text = temperature.toFixed(1) +"°C";  // 同步更新SystemSetupPanel
             webSocketServer.sendMessageToAllClients("RESPONSE||F859||"+"17," + temperature.toFixed(1) +"\r\n");
         }
 
@@ -513,18 +514,23 @@ Window {
        id: netManager
        onIpAddressChanged:{
            systemSetup.host_ip.text = data
+           saSystemSetup.host_ip.text = data  // 同步更新SystemSetupPanel
        }
        onNetmaskChanged:{
            systemSetup.ip_mask.text = data
+           saSystemSetup.ip_mask.text = data  // 同步更新SystemSetupPanel
        }
        onRouterIpAddressChanged:{
            systemSetup.router_ip.text = data
+           saSystemSetup.router_ip.text = data  // 同步更新SystemSetupPanel
        }
        onMacAddressChanged:{
            systemSetup.mac_address.text = data
+           saSystemSetup.mac_address.text = data  // 同步更新SystemSetupPanel
        }
        onTcpPortsChanged:{
            systemSetup.tcp_port.text = data
+           saSystemSetup.tcp_port.text = data  // 同步更新SystemSetupPanel
        }
    }
 
@@ -751,9 +757,11 @@ Window {
 
             }else if(strcode == "58F8"){
                  systemSetup.key_mcu.text = "V"+parseInt(getdata[10],16)+"."+getdata[11];
+                 saSystemSetup.key_mcu.text = "V"+parseInt(getdata[10],16)+"."+getdata[11];  // 同步更新SystemSetupPanel
                  webSocketServer.sendMessageToAllClients("RESPONSE||F858||"+ "0,V" + parseInt(getdata[10],16)+"."+getdata[11] +"\r\n");
             }else if(strcode == "FFFF" && getdata[9]+getdata[10]=== "58F8"){
                 systemSetup.main_fpga.text = "V"+parseInt(getdata[11],16)+".0";
+                saSystemSetup.main_fpga.text = "V"+parseInt(getdata[11],16)+".0";  // 同步更新SystemSetupPanel
                 webSocketServer.sendMessageToAllClients("RESPONSE||F858||"+ "16,V" + parseInt(getdata[11],16)+"."+"0" +"\r\n");
 
            }
@@ -776,6 +784,7 @@ Window {
             }else if(data.indexOf("FAN SPEED")!=-1){
                 linedata = data.split(" ");
                 systemSetup.fan_control_flag = parseInt(linedata[2]);
+                saSystemSetup.fan_control_flag = parseInt(linedata[2]);  // 同步更新SystemSetupPanel
                 webSocketServer.sendMessageToAllClients("RESPONSE||F803||"+ systemSetup.fan_control_flag +"\r\n");
                 fileManager.updateData("FanControl", parseInt(linedata[2]).toString(16).padStart(2, '0'));
             }else if(data.indexOf("IN1 EDID")!=-1){
@@ -786,6 +795,7 @@ Window {
                 if(linedata[2]=== 0){
                     fileManager.updateData("FanControl", "04");
                     systemSetup.fan_control_flag = 4;
+                    saSystemSetup.fan_control_flag = 4;  // 同步更新SystemSetupPanel
                     webSocketServer.sendMessageToAllClients("RESPONSE||F803||"+ systemSetup.fan_control_flag +"\r\n");
                 }
             }else if(data.indexOf("HDMI 5V")!=-1){
@@ -795,14 +805,17 @@ Window {
             }else if(data.indexOf("NTC1 VALUE")!=-1){
                 linedata = data.split(" ");
                 systemSetup.chip_main_mcu.text = linedata[2].replace("\r\n","")+"°C";
+                saSystemSetup.chip_main_mcu.text = linedata[2].replace("\r\n","")+"°C";  // 同步更新SystemSetupPanel
                 webSocketServer.sendMessageToAllClients("RESPONSE||F859||"+ "1," + linedata[2].replace("\r\n","") +"\r\n");
             }else if(data.indexOf("MAIN MCU")!=-1){
                 linedata = data.split(" ");
                 systemSetup.main_mcu.text = linedata[2].replace("\r\n","");
+                saSystemSetup.main_mcu.text = linedata[2].replace("\r\n","");  // 同步更新SystemSetupPanel
                 webSocketServer.sendMessageToAllClients("RESPONSE||F858||"+"1," + linedata[2].replace("\r\n","") +"\r\n");
             }else if(data.indexOf("VER DSP")!=-1){
                 linedata = data.split(" ");
                 systemSetup.dsp_module.text = linedata[2].replace("\r\n","");
+                saSystemSetup.dsp_module.text = linedata[2].replace("\r\n","");  // 同步更新SystemSetupPanel
                 webSocketServer.sendMessageToAllClients("RESPONSE||F858||"+"34," + linedata[2].replace("\r\n","") +"\r\n");
                 webSocketServer.sendMessageToAllClients("RESPONSE||F858||"+"32," + version +"\r\n");
             }else if(data.indexOf("Ready to receive...")!=-1){
@@ -1430,6 +1443,31 @@ Window {
             serialPortManager.writeDataUart5("SET FAN SPEED "+parseInt(fileManager.getValue("FanControl"),16), 1);
         }
 
+        //SystemSetupPanel - SA System Setup页面初始化
+        saSystemSetup.ip_management_dhcp_flag = ip_mode ==="static" ? false : true
+        saSystemSetup.host_ip.text = netManager.ipAddress
+        saSystemSetup.router_ip.text = netManager.routerIpAddress
+        saSystemSetup.ip_mask.text = netManager.netmask
+        saSystemSetup.mac_address.text = netManager.macAddress
+        saSystemSetup.tcp_port.text = netManager.tcpPorts
+
+        // 初始化版本信息显示
+        saSystemSetup.main_mcu.text = ""
+        saSystemSetup.key_mcu.text = ""
+        saSystemSetup.lan_mcu.text = version  // 当前软件版本
+        saSystemSetup.main_fpga.text = ""
+        saSystemSetup.dsp_module.text = ""
+        saSystemSetup.tx_mcu.text = ""
+        saSystemSetup.av_mcu.text = ""
+        saSystemSetup.aux_fpga.text = ""
+        saSystemSetup.aux2_fpga.text = ""
+        saSystemSetup.chip_main_mcu.text = ""
+        saSystemSetup.chip_main_fgpa.text = ""
+        saSystemSetup.chip_aux_fpga.text = ""
+
+        // 初始化风扇控制状态
+        saSystemSetup.fan_control_flag = parseInt(fileManager.getValue("FanControl"),16);
+
     }
 
     //send commend
@@ -1865,6 +1903,68 @@ Window {
             serialPortManager.writeData(completeString, typecmd);
         }
     }
+    
+    //SystemSetupPanel - SA System Setup页面信号处理
+    Connections{
+        target: saSystemSetup
+
+        function onConfirmsignal(str, num){
+            console.log("SystemSetupPanel signal:", str, num)
+            hexString = num.toString(16);
+            if (hexString.length % 2 !== 0) {
+                hexString = "0" + hexString;
+            }
+            var formattedHexString = "";
+            for (var i = 0; i < hexString.length; i += 2) {
+                formattedHexString += hexString.substr(i, 2) + " ";
+            }
+            hexString = formattedHexString.trim();
+
+            strcode = "61 00 ";
+            command_length = "06 00 "
+            if(str === "DHCP"){
+                if(num===1){
+                    netManager.setIpAddress("192.168.1.223", "255.255.0.0","192.168.1.2","dhcp");
+                    fileManager.updateData("ipmode", "dhcp");
+                }else{
+                    netManager.setIpAddress(saSystemSetup.host_ip.text, saSystemSetup.ip_mask.text,saSystemSetup.router_ip.text,"static");
+                    fileManager.updateData("ipmode", "static");
+                    fileManager.updateData("iphost", saSystemSetup.host_ip.text);
+                    fileManager.updateData("ipmask", saSystemSetup.ip_mask.text);
+                    fileManager.updateData("iprouter", saSystemSetup.router_ip.text);
+                }
+            }else if(str === "FanControl"){
+                // 支持5档风扇控制：OFF(0) + LOW(1) + MIDDLE(2) + HIGH(3) + AUTO(4)
+                if(num === 0){  // OFF模式
+                    serialPortManager.writeDataUart5("SET FAN MODE 1\r\n", 1);
+                    serialPortManager.writeDataUart5("SET FAN SPEED 0\r\n", 1);
+                }else if(num === 4){  // 自动模式
+                    serialPortManager.writeDataUart5("SET FAN MODE 0\r\n", 1);
+                }else{  // 手动模式 1-3档
+                    serialPortManager.writeDataUart5("SET FAN MODE 1\r\n", 1);
+                    serialPortManager.writeDataUart5("SET FAN SPEED "+num+"\r\n", 1);
+                }
+                return
+            }else if(str === "ResetDefault"){
+                reset();
+            }else if(str === "Reboot"){
+                syscmd = "reboot";
+                terminalManager.executeCommand(syscmd)
+            }else if(str === "vitals"){
+                strcode = "58 F8 ";
+                command_length = "06 00 ";
+                hexString = "10"
+                cht8310.readData();
+                serialPortManager.writeDataUart5("GET NTC 1 VALUE\r\n",1);
+                serialPortManager.writeDataUart5("GET NTC 1 VALUE\r\n",1);
+                serialPortManager.writeDataUart5("GET VER INF\r\n",1);
+                serialPortManager.writeDataUart6("AA 01 00 05 00 01 00 58 F8",0);
+            }
+
+            var completeString = command_header +command_length + command_group_address + command_device_address + strcode + hexString;
+            serialPortManager.writeData(completeString, typecmd);
+        }
+    }
 
     Rectangle{
 //        visible: false
@@ -1958,6 +2058,32 @@ Window {
                 id: saSystemSetup_page
                 SystemSetupPanel{
                     id: saSystemSetup
+                    color: "lightgray"
+                }
+            }
+            
+            // 添加缺失的组件声明（隐藏，仅用于提供组件实例）
+            Item {
+                id: videoGenerator_page
+                visible: false
+                VideoGenerator{
+                    id:videoGenerator
+                    color: "lightgray"
+                }
+            }
+            Item {
+                id: audioGenerator_page
+                visible: false
+                AudioGenerator{
+                    id:audioGenerator
+                    color: "lightgray"
+                }
+            }
+            Item {
+                id: edid_page
+                visible: false
+                Edid_eARC_CDS{
+                    id:edid
                     color: "lightgray"
                 }
             }
