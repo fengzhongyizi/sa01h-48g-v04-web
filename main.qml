@@ -18,7 +18,7 @@ Window {
     maximumHeight: 1200
     minimumWidth: 1920
     maximumWidth: 1920
-    title: qsTr("SG01H-48G-V04")
+    title: qsTr("SA01H-48G-V04")
 
     flags: Qt.FramelessWindowHint | Qt.Window
 
@@ -502,10 +502,10 @@ Window {
        }
    }
 
-    // 使用从main.cpp暴露的serialPortManager实例，不再创建新的
-    // SerialPortManager {
-    //     id: serialPortManager
-    
+    SerialPortManager {
+        id: serialPortManager
+    }
+
     // 连接串口数据接收和状态变化信号
     Connections {
         target: serialPortManager
@@ -742,7 +742,7 @@ Window {
            }
 
         }
-    }
+        }
 
     // 连接到从main.cpp暴露的serialPortManager的信号
     Connections {
@@ -1028,6 +1028,7 @@ Window {
 
         StatusPage{
             id:statuspage
+            visible: false  // SA项目不需要Video Output侧边栏，隐藏整个StatusPage
         }
     }
 
@@ -1311,6 +1312,25 @@ Window {
             anchors.top: parent.top
             width: parent.width
             contentHeight:120
+            
+            // 监听页面切换
+            onCurrentIndexChanged: {
+                console.log("Tab switched to index:", currentIndex)
+                if(currentIndex === 2) {  // EDID页面索引为2
+                    
+                    console.log("Switched to EDID page, sending GET NTC1 VALUE command")
+                    serialPortManager.writeDataUart5("GET NTC1 VALUE\r\n", 1)
+                    console.log("Switched to EDID page, sending GET NTC 1 VALUE command")
+                    serialPortManager.writeDataUart5("GET NTC 1 VALUE\r\n", 1)
+                    console.log("Switched to EDID page, sending GET EDID U0 NAME command")
+                    serialPortManager.writeDataUart5("GET EDID U0 NAME\r\n", 1)
+                    console.log("Switched to EDID page, sending GET EDID U1 NAME command")
+                    serialPortManager.writeDataUart5("GET EDID U1 NAME\r\n", 1)
+                    console.log("Switched to EDID page, sending GET IN1 EDID1 DATA command")
+                    serialPortManager.writeDataUart5("GET IN1 EDID1 DATA\r\n", 1)
+                }
+            }
+            
             TabButton {
                 text: "Monitor"
                 font.family: myriadPro.name

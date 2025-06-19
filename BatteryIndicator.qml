@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.5
+import SerialPort 1.0
 
 Item {
     id: root
@@ -15,6 +16,9 @@ Item {
     property alias batteryTimer: batteryTimer
     property alias batteryTimer2: batteryTimer2
 
+    SerialPortManager {
+        id: serialPortManager
+    }
 
     function getBatteryColor(level) {
         if (level >= 70) {
@@ -28,7 +32,7 @@ Item {
 
     Timer {
         id: batteryTimer
-        interval: 10000 // 10s  检测电量
+        interval: 300000 // 300s  检测电量
         running: true
         repeat: true
         onTriggered: {
@@ -42,7 +46,7 @@ Item {
 
     Timer {
         id: batteryTimer2
-        interval: 30000 // 30s    还有监测电源拔插的功能
+        interval: 300000 // 300s    还有监测电源拔插的功能
         running: true
         repeat: true
         onTriggered: {

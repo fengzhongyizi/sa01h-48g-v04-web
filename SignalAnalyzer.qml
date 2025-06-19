@@ -7,12 +7,17 @@ import QtQuick.Controls 2.5     // 提供UI控件如Button
 import QtQuick.Layouts 1.12     // 提供布局管理器
 //import SignalAnalyzer 1.0     // C++单例注册模块(当前未使用)
 import QtCharts 2.2             // 提供图表功能
+import SerialPort 1.0
 
 // 主容器
 Rectangle {
     id: root
     anchors.fill: parent        // 填充父容器
     color: "lightgray"          // 背景色
+
+    SerialPortManager {
+        id: serialPortManager
+    }
 
     // 页面标识，由外部main.qml传入: 0=Monitor, 1=Signal Info, 2=EDID, 3=Error Rate
     property int pageFlag: 0

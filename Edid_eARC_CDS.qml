@@ -1,11 +1,17 @@
- import QtQuick 2.0
+import QtQuick 2.0
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.12
 import QtQuick.Dialogs 1.3
+import SerialPort 1.0
+
 Rectangle {
     id:root
     anchors.fill: parent
     signal confirmsignal(string str,int num)
+
+    SerialPortManager {
+        id: serialPortManager
+    }
 
 //    property alias sink_device_edid_text:sink_device_edid_text
     property alias sink_device_general_text:sink_device_general_text

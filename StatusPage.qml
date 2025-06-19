@@ -25,6 +25,7 @@ Item {
     property alias channelsText: channels_text.text
 
 
+    // SA项目不需要Video Output标题，隐藏
     Label{
         id:status_title
         anchors.horizontalCenter: parent.horizontalCenter
@@ -34,6 +35,7 @@ Item {
         font.family: myriadPro.name
         font.pixelSize: 35
         color: "white"
+        visible: false  // 隐藏Video Output标题
     }
     //line
     Rectangle{
@@ -44,6 +46,7 @@ Item {
         border.color: "white"
         anchors.top: status_title.bottom
         anchors.topMargin: 5
+        visible: false  // 隐藏分割线
     }
 
 //    Label{
