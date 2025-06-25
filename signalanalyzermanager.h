@@ -215,6 +215,11 @@ private:
     void updateMonitorDataFromTimeSlots();
     bool detectTriggerEvent(const QByteArray &currentFrame, const QByteArray &previousFrame);
     bool isSignalLost(const QByteArray &frame);
+    
+    // 新增函数声明
+    void loadAndDisplayBinFile(const QString &filePath);
+    void displayDefaultTestPattern();
+    void displayBlackScreen();
 };
 
 #endif // SIGNALANALYZERMANAGER_H 
