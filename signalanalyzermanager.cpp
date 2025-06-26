@@ -6,6 +6,8 @@
 #include <QDateTime>
 #include <QFile>
 #include <QPainter>
+#include <QProcess>
+#include <QFileInfo>
 #include <cstring>
 
 SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* parent)
@@ -39,8 +41,18 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     , m_triggerMode(0)
     , m_monitorRunning(false)
     , m_videoSignalInfo("")
+    , m_pcieRefreshTimer(nullptr)
+    , m_pcieProcess(nullptr)
+    , m_pcieCapturing(false)
 {
     qDebug() << "SignalAnalyzerManager created";
+    
+    // 初始化PCIe刷新定时器
+    m_pcieRefreshTimer = new QTimer(this);
+    connect(m_pcieRefreshTimer, &QTimer::timeout, this, &SignalAnalyzerManager::onPcieRefreshTimer);
+    
+    // 初始化PCIe进程
+    m_pcieProcess = new QProcess(this);
     
     // 初始化EDID列表
     QStringList edidNames = {"1080p60", "1080p50", "720p60", "720p50", "4K30", "4K60"};
@@ -96,32 +108,10 @@ void SignalAnalyzerManager::selectSingleEdid(int index)
 void SignalAnalyzerManager::startFpgaVideo()
 {
     qDebug() << "=== startFpgaVideo called ===";
-    qDebug() << "Starting FPGA video capture...";
+    qDebug() << "Starting FPGA video capture from PCIe...";
     
-    // 检查是否有上传的bin文件 - 路径更新为/userdata/
-    QString binFilePath = "/userdata/1080p60_8bit.bin";
-    QFile binFile(binFilePath);
-    
-    qDebug() << "Checking bin file at:" << binFilePath;
-    qDebug() << "File exists:" << binFile.exists();
-    
-    if (binFile.exists()) {
-        qDebug() << "Found monitor bin file:" << binFilePath;
-        qDebug() << "File size:" << binFile.size() << "bytes";
-        
-        // 检查文件权限
-        QFileInfo fileInfo(binFilePath);
-        qDebug() << "File readable:" << fileInfo.isReadable();
-        qDebug() << "File permissions:" << QString::number(fileInfo.permissions(), 16);
-        
-        loadAndDisplayBinFile(binFilePath);
-    } else {
-        qDebug() << "No bin file found at:" << binFilePath;
-        qDebug() << "Displaying no signal state";
-        
-        // 设置无信号状态
-        displayNoSignal();
-    }
+    // 启动PCIe图像获取
+    startPcieImageCapture();
     
     qDebug() << "=== startFpgaVideo completed ===";
 }
@@ -333,8 +323,8 @@ bool SignalAnalyzerManager::isSignalLost(const QByteArray &frame)
 
 void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
 {
-    qDebug() << "=== loadAndDisplayBinFile START ===";
-    qDebug() << "Attempting to load bin file:" << filePath;
+    //qDebug() << "=== loadAndDisplayBinFile START ===";
+    //qDebug() << "Attempting to load bin file:" << filePath;
     
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
@@ -348,7 +338,7 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     QByteArray imageData = file.readAll();
     file.close();
     
-    qDebug() << "Successfully read bin file, size:" << imageData.size() << "bytes";
+    //qDebug() << "Successfully read bin file, size:" << imageData.size() << "bytes";
     
     // 1080p60_8bit.bin是1920x1080的RGB格式
     int width = 1920;
@@ -356,7 +346,7 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     int bytesPerPixel = 3; // RGB 8bit
     int expectedSize = width * height * bytesPerPixel;
     
-    qDebug() << "Expected size for 1920x1080 RGB:" << expectedSize << "bytes";
+    //qDebug() << "Expected size for 1920x1080 RGB:" << expectedSize << "bytes";
     
     if (imageData.size() < expectedSize) {
         qDebug() << "WARNING: Bin file size is smaller than expected";
@@ -366,11 +356,11 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     
     // 创建QImage
     QImage image(width, height, QImage::Format_RGB888);
-    qDebug() << "Created QImage with size:" << image.size();
+    //qDebug() << "Created QImage with size:" << image.size();
     
     // 优化的数据复制方式
     int actualPixels = qMin(imageData.size() / bytesPerPixel, width * height);
-    qDebug() << "Will process" << actualPixels << "pixels";
+    //qDebug() << "Will process" << actualPixels << "pixels";
     
     // 直接使用内存复制，更高效
     if (imageData.size() >= expectedSize) {
@@ -379,7 +369,7 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
         qDebug() << "Used direct memory copy for full image";
     } else {
         // 文件大小不足，逐像素处理
-        qDebug() << "Using pixel-by-pixel copy due to insufficient data";
+        //qDebug() << "Using pixel-by-pixel copy due to insufficient data";
         image.fill(Qt::black); // 先填充黑色
         
         int dataIndex = 0;
@@ -394,12 +384,23 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
         qDebug() << "Processed" << dataIndex/3 << "pixels manually";
     }
     
+    // 创建包含底部120像素黑边的最终图像（1920x1200）
+    QImage finalImage(1920, 1200, QImage::Format_RGB888);
+    finalImage.fill(Qt::black);  // 填充黑色
+    
+    // 将1080p图像绘制到最终图像的上部
+    QPainter painter(&finalImage);
+    painter.drawImage(0, 0, image);
+    painter.end();
+    
+    //qDebug() << "Created final image with bottom black bar, size:" << finalImage.size();
+    
     // 更新帧URL以显示图像
-    qDebug() << "Calling updateFrame to display image";
-    updateFrame(image);
+    //qDebug() << "Calling updateFrame to display image with bottom black bar";
+    updateFrame(finalImage);
     
     // 更新信号状态
-    m_signalStatus = "Monitor Display";
+    m_signalStatus = "PCIe Monitor Display";
     m_resolution = "1920x1080@60Hz";
     m_colorSpace = "RGB";
     m_colorDepth = "8bit";
@@ -407,7 +408,7 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     // 更新视频信号信息字符串
     m_videoSignalInfo = "A<MODE:TMDS  DSC OFF  RES:1920*1080@60Hz TYPE:HDMI HDCP:V2.3 CS:RGB(0~255) CD:8Bit BT2020:Disable>";
     
-    qDebug() << "Updated signal status to:" << m_signalStatus;
+    //qDebug() << "Updated signal status to:" << m_signalStatus;
     
     emit signalStatusChanged();
     emit resolutionChanged();
@@ -415,7 +416,7 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     emit colorDepthChanged();
     emit videoSignalInfoChanged();
     
-    qDebug() << "=== loadAndDisplayBinFile END ===";
+    //qDebug() << "=== loadAndDisplayBinFile END ===";
 }
 
 void SignalAnalyzerManager::displayDefaultTestPattern()
@@ -516,4 +517,141 @@ void SignalAnalyzerManager::displayNoSignal()
     emit videoSignalInfoChanged();
     
     qDebug() << "=== displayNoSignal END ===";
-} 
+}
+
+// PCIe图像获取相关函数实现
+
+void SignalAnalyzerManager::startPcieImageCapture()
+{
+    qDebug() << "=== startPcieImageCapture START ===";
+    
+    if (m_pcieCapturing) {
+        qDebug() << "PCIe capture already running, stopping first";
+        stopPcieImageCapture();
+    }
+    
+    m_pcieCapturing = true;
+    
+    // 立即执行一次PCIe读取
+    executePcieCommand();
+    
+    // 启动定时器，每500ms刷新一次图像
+    m_pcieRefreshTimer->start(500);
+    
+    qDebug() << "PCIe image capture started with 500ms interval";
+    qDebug() << "=== startPcieImageCapture END ===";
+}
+
+void SignalAnalyzerManager::stopPcieImageCapture()
+{
+    qDebug() << "=== stopPcieImageCapture START ===";
+    
+    if (!m_pcieCapturing) {
+        qDebug() << "PCIe capture not running";
+        return;
+    }
+    
+    m_pcieCapturing = false;
+    
+    // 停止定时器
+    if (m_pcieRefreshTimer->isActive()) {
+        m_pcieRefreshTimer->stop();
+        qDebug() << "PCIe refresh timer stopped";
+    }
+    
+    // 如果进程还在运行，强制停止
+    if (m_pcieProcess->state() != QProcess::NotRunning) {
+        m_pcieProcess->kill();
+        m_pcieProcess->waitForFinished(1000);
+        qDebug() << "PCIe process terminated";
+    }
+    
+    qDebug() << "=== stopPcieImageCapture END ===";
+}
+
+void SignalAnalyzerManager::refreshPcieImage()
+{
+    qDebug() << "=== refreshPcieImage START ===";
+    
+    if (!m_pcieCapturing) {
+        qDebug() << "PCIe capture not active, starting...";
+        startPcieImageCapture();
+        return;
+    }
+    
+    // 手动触发一次PCIe读取
+    executePcieCommand();
+    
+    qDebug() << "=== refreshPcieImage END ===";
+}
+
+void SignalAnalyzerManager::executePcieCommand()
+{
+    qDebug() << "=== executePcieCommand START ===";
+    
+    // 检查进程是否还在运行
+    if (m_pcieProcess->state() != QProcess::NotRunning) {
+        qDebug() << "Previous PCIe command still running, skipping";
+        return;
+    }
+    
+    // 构建PCIe DMA读取命令
+    QString command = "/usr/local/xdma/tools/dma_from_device";
+    QStringList arguments;
+    arguments << "/dev/xdma0_c2h_0"
+              << "-f" << "/tmp/1080.bin"
+              << "-s" << "6220800"  // 1920*1080*3字节的数据大小
+              << "-a" << "0"
+              << "-c" << "1";
+    
+    //qDebug() << "Executing PCIe command:" << command << arguments.join(" ");
+    
+    // 连接进程完成信号
+    connect(m_pcieProcess, QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
+            this, [this](int exitCode, QProcess::ExitStatus exitStatus) {
+        Q_UNUSED(exitStatus)
+        
+        if (exitCode == 0) {
+            //qDebug() << "PCIe command completed successfully";
+            
+            // 检查生成的文件是否存在
+            QFile tempFile("/tmp/1080.bin");
+            if (tempFile.exists()) {
+                //qDebug() << "PCIe image file created, size:" << tempFile.size() << "bytes";
+                
+                // 加载并显示图像
+                loadAndDisplayBinFile("/tmp/1080.bin");
+            } else {
+                qDebug() << "ERROR: PCIe image file not created";
+                displayNoSignal();
+            }
+        } else {
+            qDebug() << "ERROR: PCIe command failed with exit code:" << exitCode;
+            qDebug() << "Error output:" << m_pcieProcess->readAllStandardError();
+            displayNoSignal();
+        }
+        
+        // 断开信号连接
+        disconnect(m_pcieProcess, nullptr, this, nullptr);
+    });
+    
+    // 启动进程
+    m_pcieProcess->start(command, arguments);
+    
+    if (!m_pcieProcess->waitForStarted(3000)) {
+        qDebug() << "ERROR: Failed to start PCIe command";
+        qDebug() << "Process error:" << m_pcieProcess->errorString();
+        displayNoSignal();
+    }
+    
+    qDebug() << "=== executePcieCommand END ===";
+}
+
+void SignalAnalyzerManager::onPcieRefreshTimer()
+{
+    //qDebug() << "PCIe refresh timer triggered";
+    
+    if (m_pcieCapturing) {
+        executePcieCommand();
+    }
+}

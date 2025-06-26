@@ -268,17 +268,17 @@ Rectangle {
         anchors.fill: parent
         visible: pageFlag === 0  // 仅在Monitor模式显示
 
-        // 页面切换时自动触发视频获取
+        // 页面切换时自动触发PCIe视频获取
         Component.onCompleted: {
             if (visible) {
-                signalAnalyzerManager.startFpgaVideo()
+                signalAnalyzerManager.startPcieImageCapture()
             }
         }
         
         // 当页面变为可见时也触发
         onVisibleChanged: {
             if (visible) {
-                signalAnalyzerManager.startFpgaVideo()
+                signalAnalyzerManager.startPcieImageCapture()
             }
         }
 
@@ -405,16 +405,46 @@ Rectangle {
                 anchors.fill: parent
                 spacing: 10
 
-                // 刷新按钮
+                // 启动PCIe捕获按钮
                 Button {
-                    text: qsTr("Refresh")
+                    text: qsTr("Start PCIe")
                     width: parent.width
                     height: 40
-                    onClicked: signalAnalyzerManager.startFpgaVideo()
+                    onClicked: signalAnalyzerManager.startPcieImageCapture()
 
                     background: Rectangle {
-                        color: parent.pressed ? "#C0C0C0" : "#E0E0E0"
-                        border.color: "#808080"
+                        color: parent.pressed ? "#80C080" : "#A0E0A0"
+                        border.color: "#608060"
+                        border.width: 1
+                        radius: 4
+                    }
+                }
+
+                // 停止PCIe捕获按钮
+                Button {
+                    text: qsTr("Stop PCIe")
+                    width: parent.width
+                    height: 40
+                    onClicked: signalAnalyzerManager.stopPcieImageCapture()
+
+                    background: Rectangle {
+                        color: parent.pressed ? "#C08080" : "#E0A0A0"
+                        border.color: "#806060"
+                        border.width: 1
+                        radius: 4
+                    }
+                }
+
+                // 手动刷新按钮
+                Button {
+                    text: qsTr("Refresh Once")
+                    width: parent.width
+                    height: 40
+                    onClicked: signalAnalyzerManager.refreshPcieImage()
+
+                    background: Rectangle {
+                        color: parent.pressed ? "#C0C080" : "#E0E0A0"
+                        border.color: "#808060"
                         border.width: 1
                         radius: 4
                     }

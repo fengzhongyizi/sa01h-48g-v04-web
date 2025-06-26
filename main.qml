@@ -1321,8 +1321,8 @@ Window {
             onCurrentIndexChanged: {
                 console.log("Tab switched to index:", currentIndex)
                 if(currentIndex === 0) {  // Monitor页面索引为0
-                    console.log("Switched to Monitor page, starting FPGA video capture")
-                    signalAnalyzer.signalAnalyzerManager.startFpgaVideo()
+                    console.log("Switched to Monitor page, starting PCIe image capture")
+                    signalAnalyzer.signalAnalyzerManager.startPcieImageCapture()
                 }
                 else if(currentIndex === 2) {  // EDID页面索引为2
                     
@@ -1387,9 +1387,9 @@ Window {
                     pageFlag: 0  // Monitor
                     
                     Component.onCompleted: {
-                        // 应用启动时自动触发Monitor页面的视频获取
-                        console.log("SignalAnalyzer Monitor page completed, starting FPGA video")
-                        signalAnalyzerManager.startFpgaVideo()
+                        // 应用启动时自动触发Monitor页面的PCIe图像获取
+                        console.log("SignalAnalyzer Monitor page completed, starting PCIe capture")
+                        signalAnalyzerManager.startPcieImageCapture()
                     }
                 }
             }

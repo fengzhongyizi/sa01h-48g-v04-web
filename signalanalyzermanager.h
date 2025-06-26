@@ -5,6 +5,8 @@
 #include <QImage>
 #include <QVariantList>
 #include <QStringList>
+#include <QTimer>
+#include <QProcess>
 #include "serialportmanager.h"
 
 struct EdidItem {
@@ -98,6 +100,11 @@ public:
     Q_INVOKABLE void startFpgaVideo();
     Q_INVOKABLE void startFpgaVideoViaUart();
     Q_INVOKABLE void refreshSignalInfo();
+    
+    // PCIe图像获取相关方法
+    Q_INVOKABLE void startPcieImageCapture();
+    Q_INVOKABLE void stopPcieImageCapture();
+    Q_INVOKABLE void refreshPcieImage();
 
     // Monitor control interface
     Q_INVOKABLE void startMonitor();
@@ -217,6 +224,11 @@ private:
     QByteArray m_previousFrame;
     bool m_monitorRunning;
     
+    // PCIe图像获取相关成员
+    QTimer* m_pcieRefreshTimer;
+    QProcess* m_pcieProcess;
+    bool m_pcieCapturing;
+    
     QString saveTempImageAndGetUrl(const QImage &img);
     void processMonitorCommand(const QByteArray &data);
     void updateSlotData(const QString &slotId, const QString &stateStr);
@@ -230,6 +242,10 @@ private:
     void displayDefaultTestPattern();
     void displayBlackScreen();
     void displayNoSignal();
+    
+    // PCIe相关私有函数
+    void executePcieCommand();
+    void onPcieRefreshTimer();
 };
 
 #endif // SIGNALANALYZERMANAGER_H 
