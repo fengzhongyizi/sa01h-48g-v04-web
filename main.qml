@@ -69,7 +69,7 @@ Window {
 
     VirtualKeyboard {
         id: virtualKeyboard
-        width: window.width-mainline.width
+        width: window.width
         height: 400
         anchors.bottom: parent.bottom
         anchors.right: parent.right
@@ -1036,25 +1036,6 @@ Window {
         id:myriadPro
         source: "qrc:/fonts/MyriadPro-Cond.ttf"
     }
-    Item {
-//        visible: false
-        id: mainline
-        anchors.left: window.left
-        height: window.height
-        width: 250
-
-        Rectangle{
-            id:mainline_rect
-            anchors.fill: parent
-            color: "#585858" //#585858
-        }
-
-        StatusPage{
-            id:statuspage
-            visible: false  // SA项目不需要Video Output侧边栏，隐藏整个StatusPage
-        }
-    }
-
 
     //init
     Component.onCompleted: {
@@ -1323,9 +1304,9 @@ Window {
     Rectangle{
 //        visible: false
         id:mianpage
-        width: window.width-mainline.width
-        height:parent.height
-        anchors.left: mainline.right
+        width: window.width
+        height: parent.height
+        anchors.fill: parent
         color: "lightgray"
 
 
