@@ -143,9 +143,31 @@ Window {
 
     function upgrademcu(){
         webSocketServer.sendMessageToAllClients("UPGRADELOG||start upgrade mcu...\r\n");
+        
+        // 1. 先尝试关闭应用内的串口
+        serialPortManager.closePortUart5();
+        webSocketServer.sendMessageToAllClients("UPGRADELOG||uart5 close attempted\r\n");
+        
+        // 2. 强制删除串口锁文件（这是关键！）
+        terminalManager.executeCommand("rm -f /tmp/LCK..ttyS5");
+        webSocketServer.sendMessageToAllClients("UPGRADELOG||removed ttyS5 lock file\r\n");
+        
+        // 3. 准备固件文件
         terminalManager.executeCommand("rm -rf /data/FW.fwm");
         terminalManager.executeCommand("unzip -o /tmp/update/mcu.zip -d /data/");
-        webSocketServer.connectToTcpServer("127.0.0.1", 35353);
+        webSocketServer.sendMessageToAllClients("UPGRADELOG||firmware files prepared\r\n");
+        
+        // 4. 延迟1秒等待资源完全释放
+        var timer = Qt.createQmlObject("import QtQml 2.0; Timer {}", window, "upgradeTimer");
+        timer.interval = 1000;
+        timer.repeat = false;
+        timer.triggered.connect(function() {
+            webSocketServer.sendMessageToAllClients("UPGRADELOG||connecting to upgrademodule...\r\n");
+            webSocketServer.connectToTcpServer("127.0.0.1", 35353);
+            timer.destroy();
+        });
+        timer.start();
+        webSocketServer.sendMessageToAllClients("UPGRADELOG||timer started, waiting 1 second...\r\n");
     }
 
     function upgradec51(){
@@ -185,7 +207,7 @@ Window {
         onTcpConnected: {
             console.log("TCP Connected via WebSocketServer");
             if(upgradetype==="mcu"){
-                serialPortManager.closePortUart5();
+                // 串口已经在upgrademcu()中关闭了，这里不需要再关闭
                 webSocketServer.sendTcpMessage("\r\nGET FIRMWARELIST\r\n");
                 webSocketServer.sendTcpMessage("\r\nUPGRADEMODE||5\r\n");
                 webSocketServer.sendTcpMessage("\r\nSETCOMPORT||ttyS5\r\n");
@@ -502,9 +524,10 @@ Window {
        }
    }
 
-    SerialPortManager {
-        id: serialPortManager
-    }
+    // SerialPortManager instance is now provided from main.cpp via context property
+    // SerialPortManager {
+    //     id: serialPortManager
+    // }
 
     // 连接串口数据接收和状态变化信号
     Connections {

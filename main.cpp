@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     // 将SignalAnalyzerManager和SerialPortManager实例暴露给QML
     engine.rootContext()->setContextProperty("signalAnalyzerManager", saMgr);
-    // engine.rootContext()->setContextProperty("serialPortManager", spMgr);
+    engine.rootContext()->setContextProperty("serialPortManager", spMgr);
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

@@ -9,9 +9,10 @@ Rectangle {
     anchors.fill: parent
     signal confirmsignal(string str,int num)
 
-    SerialPortManager {
-        id: serialPortManager
-    }
+    // SerialPortManager instance is now provided from main.cpp via context property
+    // SerialPortManager {
+    //     id: serialPortManager
+    // }
 
 //    property alias sink_device_edid_text:sink_device_edid_text
     property alias sink_device_general_text:sink_device_general_text

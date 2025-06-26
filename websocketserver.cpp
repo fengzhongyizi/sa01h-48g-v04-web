@@ -104,7 +104,7 @@ void WebSocketServer::processTextMessage(const QString &message)
        
        //行为类似 HTTP PUT：先告知服务端准备写入，再发文件内容
        if (cmd % 10 == 0) {
-           m_terminalManager.executeCommand("mkdir /tmp/update");
+           m_terminalManager.executeCommand("mkdir -p /tmp/update");
            m_terminalManager.executeCommand("rm -rf /tmp/update/*");
            QString filePath = "/tmp/update/update.zip";
            QFile *file = new QFile(filePath);  // 创建新文件用于接收二进制数据

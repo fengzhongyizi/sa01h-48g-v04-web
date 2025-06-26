@@ -15,9 +15,10 @@ Rectangle {
     anchors.fill: parent        // 填充父容器
     color: "lightgray"          // 背景色
 
-    SerialPortManager {
-        id: serialPortManager
-    }
+    // SerialPortManager instance is now provided from main.cpp via context property
+    // SerialPortManager {
+    //     id: serialPortManager
+    // }
 
     // 页面标识，由外部main.qml传入: 0=Monitor, 1=Signal Info, 2=EDID, 3=Error Rate
     property int pageFlag: 0

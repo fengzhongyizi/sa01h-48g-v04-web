@@ -16,9 +16,10 @@ Item {
     property alias batteryTimer: batteryTimer
     property alias batteryTimer2: batteryTimer2
 
-    SerialPortManager {
-        id: serialPortManager
-    }
+    // SerialPortManager instance is now provided from main.cpp via context property
+    // SerialPortManager {
+    //     id: serialPortManager
+    // }
 
     function getBatteryColor(level) {
         if (level >= 70) {

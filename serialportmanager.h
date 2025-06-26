@@ -32,6 +32,9 @@ public:
     Q_INVOKABLE void writeDataUart6(const QString &data, int typedata);
     Q_INVOKABLE QByteArray readDataUart6();
 
+    Q_INVOKABLE bool isUart5Open() const;
+    Q_INVOKABLE QString getUart5Status() const;
+
 signals:
     void dataReceived(const QByteArray &data);
     void dataReceivedASCALL(const QString  &data);

@@ -1,6 +1,7 @@
 #include "serialportmanager.h"
 #include <QByteArray>
 #include <QDebug>
+#include <QThread>
 
 SerialPortManager::SerialPortManager(QObject *parent) :
     QObject(parent),
@@ -64,6 +65,9 @@ void SerialPortManager::openPort()
 
 void SerialPortManager::openPortUart5()
 {
+    qDebug() << "Attempting to open uart5...";
+    qDebug() << "Setting port name: /dev/ttyS5";
+    
     serialPortUart5->setPortName("/dev/ttyS5");
     serialPortUart5->setBaudRate(QSerialPort::Baud57600);
     serialPortUart5->setDataBits(QSerialPort::Data8);
@@ -71,19 +75,37 @@ void SerialPortManager::openPortUart5()
     serialPortUart5->setStopBits(QSerialPort::OneStop);
     serialPortUart5->setFlowControl(QSerialPort::NoFlowControl);
 
+    qDebug() << "Trying to open uart5...";
+    
     if (!serialPortUart5->open(QIODevice::ReadWrite)) {
-        emit errorOccurred(serialPortUart5->errorString());
-        qDebug() << "Error opening port:" << serialPortUart5->errorString();
-    }else{
-        qDebug()<<"open port uart5!";
-//        writeDataUart5("GET NTC 1 VALUE\r\n",1);
-//        writeDataUart5("GET NTC 1 VALUE\r\n",1);
-//        writeDataUart5("GET IN1 EDID1 DATA\r\n",1);
-//        writeDataUart5("GET EDID U0 NAME\r\n",1);
-//        writeDataUart5("GET EDID U1 NAME\r\n",1);
-//        qDebug()<<"----- uart5! -----";
-//        writeDataUart5("GET IN1 EDID1 DATA\r\n",1);
-//        writeDataUart5("GET IN1 EDID1 DATA\r\n",1);
+        QSerialPort::SerialPortError error = serialPortUart5->error();
+        QString errorString = serialPortUart5->errorString();
+        
+        qDebug() << "Error opening uart5:";
+        qDebug() << "Error code:" << error;
+        qDebug() << "Error string:" << errorString;
+        
+        // 详细的错误分析
+        switch(error) {
+            case QSerialPort::DeviceNotFoundError:
+                qDebug() << "Device not found - /dev/ttyS5 doesn't exist";
+                break;
+            case QSerialPort::PermissionError:
+                qDebug() << "Permission denied - no access to /dev/ttyS5";
+                break;
+            case QSerialPort::OpenError:
+                qDebug() << "Already opened by another process";
+                break;
+            case QSerialPort::ResourceError:
+                qDebug() << "Resource unavailable";
+                break;
+            default:
+                qDebug() << "Unknown error";
+        }
+        
+        emit errorOccurred(errorString);
+    } else {
+        qDebug() << "open port uart5!";
     }
 }
 
@@ -116,9 +138,37 @@ void SerialPortManager::closePort()
 
 void SerialPortManager::closePortUart5()
 {
+    qDebug() << "closePortUart5() called";
+    
+    if (!serialPortUart5) {
+        qDebug() << "serialPortUart5 is null!";
+        return;
+    }
+    
+    qDebug() << "serialPortUart5 exists, checking if open...";
+    qDebug() << "serialPortUart5->isOpen():" << serialPortUart5->isOpen();
+    
     if (serialPortUart5->isOpen()) {
+        qDebug() << "Closing uart5...";
+        
+        // 1. 断开信号连接
+        serialPortUart5->disconnect();
+        
+        // 2. 清空缓冲区
+        serialPortUart5->clear(QSerialPort::AllDirections);
+        
+        // 3. 刷新
+        serialPortUart5->flush();
+        
+        // 4. 关闭串口
         serialPortUart5->close();
+        
+        // 5. 适度延迟
+        QThread::msleep(300);
+        
         qDebug() << "close port uart5!";
+    } else {
+        qDebug() << "uart5 is not open, cannot close";
     }
 }
 
@@ -338,4 +388,22 @@ void SerialPortManager::onReadyReadUart6()
             buffer.remove(0, 1);
         }
     }
+}
+
+bool SerialPortManager::isUart5Open() const
+{
+    return serialPortUart5 && serialPortUart5->isOpen();
+}
+
+QString SerialPortManager::getUart5Status() const
+{
+    if (!serialPortUart5) {
+        return "SerialPort object is null";
+    }
+    
+    QString status = QString("Port: %1, Open: %2, Error: %3")
+                    .arg(serialPortUart5->portName())
+                    .arg(serialPortUart5->isOpen() ? "Yes" : "No")
+                    .arg(serialPortUart5->errorString());
+    return status;
 }
