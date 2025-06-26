@@ -325,7 +325,7 @@ Rectangle {
                     id: videoImage
                     anchors.fill: parent
                     anchors.margins: 2
-                    fillMode: Image.PreserveAspectFit
+                    fillMode: Image.Stretch
                     source: signalAnalyzerManager.frameUrl || ""
                     asynchronous: true
                     cache: false
