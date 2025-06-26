@@ -268,6 +268,20 @@ Rectangle {
         anchors.fill: parent
         visible: pageFlag === 0  // 仅在Monitor模式显示
 
+        // 页面切换时自动触发视频获取
+        Component.onCompleted: {
+            if (visible) {
+                signalAnalyzerManager.startFpgaVideo()
+            }
+        }
+        
+        // 当页面变为可见时也触发
+        onVisibleChanged: {
+            if (visible) {
+                signalAnalyzerManager.startFpgaVideo()
+            }
+        }
+
         // 背景
         Rectangle {
             anchors.fill: parent
@@ -277,19 +291,25 @@ Rectangle {
             radius: 4
         }
 
-        ColumnLayout {
-            anchors.fill: parent
-            anchors.margins: 20
-            spacing: 16
+        // 主要内容区域 - 1920x1200布局
+        Rectangle {
+            id: monitorContainer
+            anchors.centerIn: parent
+            width: Math.min(parent.width - 40, 1920)
+            height: Math.min(parent.height - 40, 1200)
+            color: "black"
+            border.color: "white"
+            border.width: 2
+            radius: 4
 
-            // 视频显示区域
+            // 视频显示区域 - 上部1920x1080
             Rectangle {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
+                id: videoArea
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: parent.height - 120  // 预留120像素给信息区
                 color: "black"
-                border.color: "white"
-                border.width: 2
-                radius: 4
 
                 // "No Signal" 文本 - 无信号时显示
                 Text {
@@ -304,7 +324,7 @@ Rectangle {
                 Image {
                     id: videoImage
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: 2
                     fillMode: Image.PreserveAspectFit
                     source: signalAnalyzerManager.frameUrl || ""
                     asynchronous: true
@@ -325,7 +345,7 @@ Rectangle {
                 Rectangle {
                     visible: !videoImage.visible && signalAnalyzerManager.signalStatus && signalAnalyzerManager.signalStatus !== "No Signal"
                     anchors.fill: parent
-                    anchors.margins: 4
+                    anchors.margins: 2
 
                     // 七色彩条
                     Row {
@@ -341,49 +361,57 @@ Rectangle {
                         }
                     }
                 }
-
-                // 信号信息显示区
-                Rectangle {
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.bottom: parent.bottom
-                    height: infoText.implicitHeight + 10
-                    color: Qt.rgba(0, 0, 0, 0.7)
-                    visible: signalAnalyzerManager.signalStatus && signalAnalyzerManager.signalStatus !== "No Signal"
-
-                    // 信号信息文本
-                    Text {
-                        id: infoText
-                        anchors.fill: parent
-                        anchors.margins: 5
-                        color: "white"
-                        font.pixelSize: 14
-                        text: {
-                            if (!signalAnalyzerManager.signalStatus)
-                                return qsTr("No Signal")
-
-                            return qsTr("<No Signal> ") +
-                                    qsTr("G<MODE: TMDS DSC OFF  RES: %1  TYPE: HDMI  HDCP: V2.3  CS: RGB(0-255)  CD: 8Bit  BT2020: Disable>")
-                            .arg(signalAnalyzerManager.resolution || "3840x2160@60Hz")
-                        }
-                    }
-                }
             }
 
-            // 控制按钮区
-            RowLayout {
-                Layout.fillWidth: true
-                height: 50
-                spacing: 20
+            // 信息显示区域 - 底部120像素
+            Rectangle {
+                id: infoArea
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 120
+                color: "black"
+                border.color: "#404040"
+                border.width: 1
+
+                // 信号信息文本
+                Text {
+                    id: signalInfoText
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    color: "white"
+                    font.pixelSize: 16
+                    font.family: "monospace"
+                    verticalAlignment: Text.AlignVCenter
+                    wrapMode: Text.Wrap
+                    text: signalAnalyzerManager.videoSignalInfo || "A<No Signal>"
+                }
+            }
+        }
+
+        // 右侧控制面板（可选）
+        Rectangle {
+            anchors.right: parent.right
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.rightMargin: 10
+            anchors.topMargin: 10
+            anchors.bottomMargin: 10
+            width: 160
+            color: "transparent"
+            visible: monitorContainer.width < parent.width - 200
+
+            Column {
+                anchors.fill: parent
+                spacing: 10
 
                 // 刷新按钮
                 Button {
                     text: qsTr("Refresh")
+                    width: parent.width
+                    height: 40
                     onClicked: signalAnalyzerManager.startFpgaVideo()
-                    Layout.preferredWidth: 120
-                    Layout.preferredHeight: 40
 
-                    // 按钮样式
                     background: Rectangle {
                         color: parent.pressed ? "#C0C0C0" : "#E0E0E0"
                         border.color: "#808080"
@@ -392,7 +420,63 @@ Rectangle {
                     }
                 }
 
-                Item { Layout.fillWidth: true } // 弹性空白填充
+                // 信号状态显示
+                Rectangle {
+                    width: parent.width
+                    height: 60
+                    color: "transparent"
+                    border.color: "white"
+                    border.width: 1
+                    radius: 4
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("Status:")
+                            color: "white"
+                            font.pixelSize: 12
+                        }
+                        
+                        Text {
+                            text: signalAnalyzerManager.signalStatus || "No Signal"
+                            color: signalAnalyzerManager.signalStatus === "No Signal" ? "red" : "green"
+                            font.pixelSize: 14
+                            font.bold: true
+                        }
+                    }
+                }
+
+                // 分辨率显示
+                Rectangle {
+                    width: parent.width
+                    height: 60
+                    color: "transparent"
+                    border.color: "white"
+                    border.width: 1
+                    radius: 4
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 8
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("Resolution:")
+                            color: "white"
+                            font.pixelSize: 12
+                        }
+                        
+                        Text {
+                            text: signalAnalyzerManager.resolution || "Unknown"
+                            color: "white"
+                            font.pixelSize: 14
+                            wrapMode: Text.Wrap
+                        }
+                    }
+                }
             }
         }
     }

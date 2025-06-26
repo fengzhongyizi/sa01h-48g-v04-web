@@ -57,6 +57,8 @@ class SignalAnalyzerManager : public QObject {
     Q_PROPERTY(QVariantList monitorSlotLabels  READ monitorSlotLabels  NOTIFY monitorDataChanged)
     Q_PROPERTY(QVariantList monitorData        READ monitorData        NOTIFY monitorDataChanged)
 
+    // Video Signal Display Info
+    Q_PROPERTY(QString videoSignalInfo READ videoSignalInfo NOTIFY videoSignalInfoChanged)
 
 public:
     explicit SignalAnalyzerManager(SerialPortManager* spMgr,QObject* parent = nullptr);
@@ -111,6 +113,8 @@ public:
     int         triggerMode()       const { return m_triggerMode; }
     QVariantList monitorSlotLabels() const { return m_monitorSlotLabels; }
     QVariantList monitorData()       const { return m_monitorData; }
+
+    QString videoSignalInfo() const { return m_videoSignalInfo; }
 
     Q_INVOKABLE bool exportMonitorData(const QString &filePath);
     Q_INVOKABLE void stopMonitor();
@@ -167,6 +171,9 @@ signals:
     void monitorSlotLabelsChanged();
     void monitorDataChanged();
 
+    // Video Signal Display Info
+    void videoSignalInfoChanged();
+
 private:
     QString m_frameUrl;
     QString m_signalStatus;
@@ -204,6 +211,8 @@ private:
     QVariantList m_monitorSlotLabels;
     QVariantList m_monitorData;
     
+    QString      m_videoSignalInfo;
+    
     QVector<SignalTimeSlot> m_timeSlots;
     QByteArray m_previousFrame;
     bool m_monitorRunning;
@@ -220,6 +229,7 @@ private:
     void loadAndDisplayBinFile(const QString &filePath);
     void displayDefaultTestPattern();
     void displayBlackScreen();
+    void displayNoSignal();
 };
 
 #endif // SIGNALANALYZERMANAGER_H 

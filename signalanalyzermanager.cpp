@@ -38,6 +38,7 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     , m_timeSlotInSeconds(true)
     , m_triggerMode(0)
     , m_monitorRunning(false)
+    , m_videoSignalInfo("")
 {
     qDebug() << "SignalAnalyzerManager created";
     
@@ -97,8 +98,8 @@ void SignalAnalyzerManager::startFpgaVideo()
     qDebug() << "=== startFpgaVideo called ===";
     qDebug() << "Starting FPGA video capture...";
     
-    // 检查是否有上传的bin文件
-    QString binFilePath = "/tmp/monitor/1080p60_8bit.bin";
+    // 检查是否有上传的bin文件 - 路径更新为/userdata/
+    QString binFilePath = "/userdata/1080p60_8bit.bin";
     QFile binFile(binFilePath);
     
     qDebug() << "Checking bin file at:" << binFilePath;
@@ -116,10 +117,10 @@ void SignalAnalyzerManager::startFpgaVideo()
         loadAndDisplayBinFile(binFilePath);
     } else {
         qDebug() << "No bin file found at:" << binFilePath;
-        qDebug() << "Displaying black screen (no default pattern)";
+        qDebug() << "Displaying no signal state";
         
-        // 显示黑屏而不是默认条纹
-        displayBlackScreen();
+        // 设置无信号状态
+        displayNoSignal();
     }
     
     qDebug() << "=== startFpgaVideo completed ===";
@@ -393,20 +394,9 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
         qDebug() << "Processed" << dataIndex/3 << "pixels manually";
     }
     
-    // 添加底部120像素的黑边（如需求所示）
-    QImage finalImage(width, height + 120, QImage::Format_RGB888);
-    finalImage.fill(Qt::black);
-    qDebug() << "Created final image with size:" << finalImage.size();
-    
-    // 将原图像绘制到最终图像的上部
-    QPainter painter(&finalImage);
-    painter.drawImage(0, 0, image);
-    painter.end();
-    qDebug() << "Added black border at bottom";
-    
     // 更新帧URL以显示图像
     qDebug() << "Calling updateFrame to display image";
-    updateFrame(finalImage);
+    updateFrame(image);
     
     // 更新信号状态
     m_signalStatus = "Monitor Display";
@@ -414,12 +404,16 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     m_colorSpace = "RGB";
     m_colorDepth = "8bit";
     
+    // 更新视频信号信息字符串
+    m_videoSignalInfo = "A<MODE:TMDS  DSC OFF  RES:1920*1080@60Hz TYPE:HDMI HDCP:V2.3 CS:RGB(0~255) CD:8Bit BT2020:Disable>";
+    
     qDebug() << "Updated signal status to:" << m_signalStatus;
     
     emit signalStatusChanged();
     emit resolutionChanged();
     emit colorSpaceChanged();
     emit colorDepthChanged();
+    emit videoSignalInfoChanged();
     
     qDebug() << "=== loadAndDisplayBinFile END ===";
 }
@@ -492,4 +486,34 @@ void SignalAnalyzerManager::displayBlackScreen()
     emit colorDepthChanged();
     
     qDebug() << "=== displayBlackScreen END ===";
+}
+
+void SignalAnalyzerManager::displayNoSignal()
+{
+    qDebug() << "=== displayNoSignal START ===";
+    
+    // 清除帧URL，不需要创建图像
+    m_frameUrl = "";
+    
+    qDebug() << "Cleared frame URL for no signal state";
+    
+    // 清除信号状态信息
+    m_signalStatus = "No Signal";
+    m_resolution = "";
+    m_colorSpace = "";
+    m_colorDepth = "";
+    
+    // 设置无信号时的视频信号信息
+    m_videoSignalInfo = "A<No Signal>";
+    
+    qDebug() << "Updated signal status to: No Signal";
+    
+    emit frameUrlChanged();
+    emit signalStatusChanged();
+    emit resolutionChanged();
+    emit colorSpaceChanged();
+    emit colorDepthChanged();
+    emit videoSignalInfoChanged();
+    
+    qDebug() << "=== displayNoSignal END ===";
 } 
