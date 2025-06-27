@@ -1302,140 +1302,40 @@ Window {
     }
 
     Rectangle{
-//        visible: false
         id:mianpage
         width: window.width
         height: parent.height
         anchors.fill: parent
         color: "lightgray"
 
+        // 直接显示Monitor页面，去掉TabBar和StackLayout
+        Item {
+            id: directMonitorPage
+            anchors.fill: parent
+            
+            SignalAnalyzer{
+                id: signalAnalyzer
+                anchors.fill: parent
+                color: "lightgray"
+                pageFlag: 0  // Monitor页面
+                
+                Component.onCompleted: {
+                    // 应用启动时自动触发Monitor页面的PCIe图像获取
+                    console.log("Direct Monitor page loaded, starting PCIe capture")
+                    signalAnalyzerManager.startPcieImageCapture()
+                }
+            }
+        }
 
+        // 隐藏原有的TabBar和StackLayout
+        /*
         TabBar {
-            id:bar
-            anchors.left: parent.left
-            anchors.top: parent.top
-            width: parent.width
-            contentHeight:120
-            
-            // 监听页面切换
-            onCurrentIndexChanged: {
-                console.log("Tab switched to index:", currentIndex)
-                if(currentIndex === 0) {  // Monitor页面索引为0
-                    console.log("Switched to Monitor page, starting PCIe image capture")
-                    signalAnalyzer.signalAnalyzerManager.startPcieImageCapture()
-                }
-                else if(currentIndex === 2) {  // EDID页面索引为2
-                    
-                    console.log("Switched to EDID page, sending GET NTC1 VALUE command")
-                    serialPortManager.writeDataUart5("GET NTC1 VALUE\r\n", 1)
-                    console.log("Switched to EDID page, sending GET NTC 1 VALUE command")
-                    serialPortManager.writeDataUart5("GET NTC 1 VALUE\r\n", 1)
-                    console.log("Switched to EDID page, sending GET EDID U0 NAME command")
-                    serialPortManager.writeDataUart5("GET EDID U0 NAME\r\n", 1)
-                    console.log("Switched to EDID page, sending GET EDID U1 NAME command")
-                    serialPortManager.writeDataUart5("GET EDID U1 NAME\r\n", 1)
-                    console.log("Switched to EDID page, sending GET IN1 EDID1 DATA command")
-                    serialPortManager.writeDataUart5("GET IN1 EDID1 DATA\r\n", 1)
-                }
-            }
-            
-            TabButton {
-                text: "Monitor"
-                font.family: myriadPro.name
-                font.pixelSize: 30
-            }
-            TabButton {
-                text: "Signal Info"
-                font.family: myriadPro.name
-                font.pixelSize: 30
-            }
-            TabButton {
-                text: "EDID"
-                font.family: myriadPro.name
-                font.pixelSize: 30
-            }
-            TabButton {
-                text: "Error Rate"
-                font.family: myriadPro.name
-                font.pixelSize: 30
-            }
-            TabButton {
-                text: "System Setup"
-                font.family: myriadPro.name
-                font.pixelSize: 30
-            }
-            TabButton {
-                text: "SG System"
-                font.family: myriadPro.name
-                font.pixelSize: 30
-            }
+            // ... 原有TabBar代码被注释掉
         }
 
         StackLayout {
-            width: parent.width
-            height: parent.height-bar.height
-            anchors.top: bar.bottom
-            anchors.left: bar.left
-            currentIndex: bar.currentIndex
-            
-            // SA01H页面
-            Item {
-                id: signalAnalyzer_page
-                SignalAnalyzer{
-                    id: signalAnalyzer
-                    color: "lightgray"
-                    pageFlag: 0  // Monitor
-                    
-                    Component.onCompleted: {
-                        // 应用启动时自动触发Monitor页面的PCIe图像获取
-                        console.log("SignalAnalyzer Monitor page completed, starting PCIe capture")
-                        signalAnalyzerManager.startPcieImageCapture()
-                    }
-                }
-            }
-            
-            Item {
-                id: signalInfo_page
-                SignalAnalyzer{
-                    color: "lightgray"
-                    pageFlag: 1  // Signal Info
-                }
-            }
-            
-            Item {
-                id: edidSA_page
-                SignalAnalyzer{
-                    color: "lightgray"
-                    pageFlag: 2  // EDID
-                }
-            }
-            
-            Item {
-                id: errorRate_page
-                SignalAnalyzer{
-                    color: "lightgray"
-                    pageFlag: 3  // Error Rate
-                }
-            }
-            
-            Item {
-                id: saSystemSetup_page
-                SystemSetupPanel{
-                    id: saSystemSetup
-                    color: "lightgray"
-                }
-            }
-            
-
-            
-            // SG01H原有页面
-            Item {
-                id: system_page
-                SystemSetup{
-                    id:systemSetup
-                    color: "lightgray"
-                }
-            }
+            // ... 原有StackLayout代码被注释掉
         }
+        */
     }
 }

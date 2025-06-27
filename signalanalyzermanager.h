@@ -7,6 +7,10 @@
 #include <QStringList>
 #include <QTimer>
 #include <QProcess>
+#include <QElapsedTimer>
+#include <QQmlEngine>
+#include <QQuickImageProvider>
+#include <QPointF>
 #include "serialportmanager.h"
 
 struct EdidItem {
@@ -22,6 +26,7 @@ struct SignalTimeSlot {
 class SignalAnalyzerManager : public QObject {
     Q_OBJECT
     Q_PROPERTY(QString frameUrl       READ frameUrl       NOTIFY frameUrlChanged)
+    Q_PROPERTY(QImage frameImage     READ frameImage     NOTIFY frameImageChanged)
     Q_PROPERTY(QString signalStatus   READ signalStatus   NOTIFY signalStatusChanged)
     Q_PROPERTY(QString mode           READ mode           NOTIFY modeChanged)
     Q_PROPERTY(QString resolution     READ resolution     NOTIFY resolutionChanged)
@@ -65,6 +70,7 @@ class SignalAnalyzerManager : public QObject {
 public:
     explicit SignalAnalyzerManager(SerialPortManager* spMgr,QObject* parent = nullptr);
     QString frameUrl()    const { return m_frameUrl; }
+    QImage frameImage()   const { return m_frameImage; }
     QString signalStatus()const { return m_signalStatus; }
     QString mode()        const { return m_mode; }
     QString resolution()  const { return m_resolution; }
@@ -105,6 +111,11 @@ public:
     Q_INVOKABLE void startPcieImageCapture();
     Q_INVOKABLE void stopPcieImageCapture();
     Q_INVOKABLE void refreshPcieImage();
+    
+    // 性能优化相关方法
+    Q_INVOKABLE void setRefreshRate(int fps);  // 设置刷新帧率
+    Q_INVOKABLE int getCurrentFps();           // 获取当前FPS
+    Q_INVOKABLE void enablePerformanceMode(bool enable); // 启用性能模式
 
     // Monitor control interface
     Q_INVOKABLE void startMonitor();
@@ -143,6 +154,7 @@ public slots:
 
 signals:
     void frameUrlChanged();
+    void frameImageChanged();
     void signalStatusChanged();
     void modeChanged();
     void resolutionChanged();
@@ -183,6 +195,7 @@ signals:
 
 private:
     QString m_frameUrl;
+    QImage m_frameImage;
     QString m_signalStatus;
     QString m_mode;
     QString m_resolution;
@@ -229,6 +242,12 @@ private:
     QProcess* m_pcieProcess;
     bool m_pcieCapturing;
     QByteArray m_lastImageData;  // 用于比较图像变化
+    
+    // 性能优化相关成员变量
+    QImage m_reusableImage;           // 复用的QImage对象
+    QString m_currentTempFile;        // 当前使用的临时文件
+    int m_frameCounter;               // 帧计数器
+    QElapsedTimer m_performanceTimer; // 性能计时器
     
     QString saveTempImageAndGetUrl(const QImage &img);
     void processMonitorCommand(const QByteArray &data);

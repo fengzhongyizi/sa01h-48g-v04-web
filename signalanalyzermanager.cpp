@@ -8,6 +8,7 @@
 #include <QPainter>
 #include <QProcess>
 #include <QFileInfo>
+#include <QElapsedTimer>
 #include <cstring>
 
 SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* parent)
@@ -45,8 +46,13 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     , m_pcieProcess(nullptr)
     , m_pcieCapturing(false)
     , m_lastImageData()
+    , m_frameCounter(0)
+    , m_frameImage()
 {
     qDebug() << "SignalAnalyzerManager created";
+    
+    // 预分配可复用的QImage对象，避免每次都重新创建
+    m_reusableImage = QImage(1920, 1080, QImage::Format_RGB888);
     
     // 初始化PCIe刷新定时器
     m_pcieRefreshTimer = new QTimer(this);
@@ -54,6 +60,9 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     
     // 初始化PCIe进程
     m_pcieProcess = new QProcess(this);
+    
+    // 启动性能计时器
+    m_performanceTimer.start();
     
     // 初始化EDID列表
     // QStringList edidNames = {"1080p60", "1080p50", "720p60", "720p50", "4K30", "4K60"};
@@ -193,10 +202,39 @@ bool SignalAnalyzerManager::exportMonitorData(const QString &filePath)
 
 void SignalAnalyzerManager::updateFrame(const QImage &img)
 {
-    QString url = saveTempImageAndGetUrl(img);
-    if (url != m_frameUrl) {
-        m_frameUrl = url;
-        emit frameUrlChanged();
+    QElapsedTimer timer;
+    timer.start();
+    
+    // 性能测试：可以通过环境变量控制是否启用文件保存
+    static bool skipFilesSave = qgetenv("SKIP_FILE_SAVE").toInt() == 1;
+    
+    if (!skipFilesSave) {
+        // 正常模式：保存文件并更新URL
+        QString url = saveTempImageAndGetUrl(img);
+        if (url != m_frameUrl) {
+            m_frameUrl = url;
+            emit frameUrlChanged();
+        }
+    } else {
+        // 高性能模式：只更新计数器来触发QML重新加载
+        m_frameCounter++;
+        
+        // 使用固定的测试图像文件，避免重复保存
+        static QString testImageUrl = QString("file:///userdata/1080p60_8bit.bin");
+        if (testImageUrl != m_frameUrl) {
+            m_frameUrl = testImageUrl;
+            emit frameUrlChanged();
+        }
+    }
+    
+    qint64 updateTime = timer.elapsed();
+    
+    // 每50帧输出一次性能统计
+    static int frameCount = 0;
+    frameCount++;
+    if (frameCount % 50 == 0) {
+        qDebug() << QString("Frame %1 - UpdateFrame time: %2ms (SkipSave: %3)")
+                      .arg(frameCount).arg(updateTime).arg(skipFilesSave ? "ON" : "OFF");
     }
 }
 
@@ -280,26 +318,41 @@ void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels, con
 
 QString SignalAnalyzerManager::saveTempImageAndGetUrl(const QImage &img)
 {
-    // 使用时间戳生成唯一文件名，确保URL变化触发QML重新加载
-    static int counter = 0;
-    QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString fileName = QString("pcie_monitor_frame_%1.png").arg(++counter);
+    // 使用高性能的临时文件管理策略
+    static QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
+    
+    // 只使用2个交替的文件名，减少文件创建/删除开销
+    QString fileName = QString("pcie_frame_%1.bmp").arg(m_frameCounter % 2);
     QString tempFilePath = QDir(tempDir).absoluteFilePath(fileName);
     
-    // 使用PNG格式并设置压缩质量，平衡文件大小和保存速度
-    if (img.save(tempFilePath, "PNG", 50)) {  // 50%压缩质量，更快的保存速度
+    // 增加帧计数器
+    m_frameCounter++;
+    
+    // 测量保存时间
+    QElapsedTimer saveTimer;
+    saveTimer.start();
+    
+    // 使用BMP格式，无压缩，最快速度（虽然文件大但保存最快）
+    bool saveSuccess = img.save(tempFilePath, "BMP");
+    qint64 saveTime = saveTimer.elapsed();
+    
+    if (saveSuccess) {
+        QString url = QString("file://") + tempFilePath;
         
-        // 清理旧的临时文件，保留最近的几个
-        static QStringList recentFiles;
-        recentFiles.append(tempFilePath);
-        if (recentFiles.size() > 3) {  // 只保留最近3个文件
-            QString oldFile = recentFiles.takeFirst();
-            QFile::remove(oldFile);
+        // 每10帧输出一次性能统计，更频繁监控保存性能
+        if (m_frameCounter % 10 == 0) {
+            qint64 elapsed = m_performanceTimer.elapsed();
+            double avgFps = 10000.0 / elapsed;  // 10帧的平均FPS
+            qDebug() << QString("Performance: Avg FPS for last 10 frames: %1, Last save time: %2ms")
+                          .arg(QString::number(avgFps, 'f', 2))
+                          .arg(saveTime);
+            m_performanceTimer.restart();
         }
         
-        return QString("file://") + tempFilePath;
+        return url;
     }
     
+    qDebug() << "Failed to save image to:" << tempFilePath << "Save time:" << saveTime << "ms";
     return QString();
 }
 
@@ -337,14 +390,13 @@ bool SignalAnalyzerManager::isSignalLost(const QByteArray &frame)
 
 void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
 {
-    //qDebug() << "=== loadAndDisplayBinFile START ===";
-    //qDebug() << "Attempting to load bin file:" << filePath;
+    // 性能计时
+    QElapsedTimer timer;
+    timer.start();
     
     QFile file(filePath);
     if (!file.open(QIODevice::ReadOnly)) {
         qDebug() << "FAILED to open bin file:" << filePath;
-        qDebug() << "Error:" << file.errorString();
-        // 如果无法打开文件，显示黑屏
         displayBlackScreen();
         return;
     }
@@ -352,82 +404,86 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     QByteArray imageData = file.readAll();
     file.close();
     
-    //qDebug() << "Successfully read bin file, size:" << imageData.size() << "bytes";
+    qint64 fileReadTime = timer.elapsed();
     
     // 检查图像是否有变化，无变化则不更新显示
     if (!hasImageChanged(imageData)) {
-        //qDebug() << "Image data unchanged, skipping update";
         return;
     }
     
     // 1080p60_8bit.bin是1920x1080的RGB格式
-    int width = 1920;
-    int height = 1080;
-    int bytesPerPixel = 3; // RGB 8bit
-    int expectedSize = width * height * bytesPerPixel;
-    
-    //qDebug() << "Expected size for 1920x1080 RGB:" << expectedSize << "bytes";
+    const int width = 1920;
+    const int height = 1080;
+    const int bytesPerPixel = 3; // RGB 8bit
+    const int expectedSize = width * height * bytesPerPixel;
     
     if (imageData.size() < expectedSize) {
-        qDebug() << "WARNING: Bin file size is smaller than expected";
-        qDebug() << "Actual size:" << imageData.size() << "Expected:" << expectedSize;
-        // 即使文件小于预期，也尝试处理
+        qDebug() << "WARNING: Bin file size too small:" << imageData.size() << "expected:" << expectedSize;
+        displayBlackScreen();
+        return;
     }
     
-    // 创建QImage
-    QImage image(width, height, QImage::Format_RGB888);
-    //qDebug() << "Created QImage with size:" << image.size();
-    
-    // 优化的数据复制方式
-    int actualPixels = qMin(imageData.size() / bytesPerPixel, width * height);
-    //qDebug() << "Will process" << actualPixels << "pixels";
-    
-    // 直接使用内存复制，更高效
-    if (imageData.size() >= expectedSize) {
-        // 文件大小足够，直接复制
-        memcpy(image.bits(), imageData.constData(), expectedSize);
-        qDebug() << "Used direct memory copy for full image";
-    } else {
-        // 文件大小不足，逐像素处理
-        //qDebug() << "Using pixel-by-pixel copy due to insufficient data";
-        image.fill(Qt::black); // 先填充黑色
-        
-        int dataIndex = 0;
-        for (int y = 0; y < height && dataIndex + 2 < imageData.size(); y++) {
-            for (int x = 0; x < width && dataIndex + 2 < imageData.size(); x++) {
-                uchar r = static_cast<uchar>(imageData[dataIndex++]);
-                uchar g = static_cast<uchar>(imageData[dataIndex++]);
-                uchar b = static_cast<uchar>(imageData[dataIndex++]);
-                image.setPixel(x, y, qRgb(r, g, b));
-            }
-        }
-        qDebug() << "Processed" << dataIndex/3 << "pixels manually";
+    // 复用预分配的QImage对象，避免重复创建
+    if (m_reusableImage.width() != width || m_reusableImage.height() != height) {
+        m_reusableImage = QImage(width, height, QImage::Format_RGB888);
     }
     
-    // 直接使用1080p图像，QML层会处理底部120px信息区域
-    //qDebug() << "Using 1080p image directly, QML handles bottom info area";
+    // 高效的内存复制
+    memcpy(m_reusableImage.bits(), imageData.constData(), expectedSize);
     
-    // 更新帧URL以显示图像
-    updateFrame(image);
+    qint64 imageProcessTime = timer.elapsed() - fileReadTime;
     
-    // 更新信号状态
-    m_signalStatus = "PCIe Monitor Display";
-    m_resolution = "1920x1080@60Hz";
-    m_colorSpace = "RGB";
-    m_colorDepth = "8bit";
+    // 更新帧显示
+    updateFrame(m_reusableImage);
     
-    // 更新视频信号信息字符串
-    m_videoSignalInfo = "A<MODE:TMDS  DSC OFF  RES:1920*1080@60Hz TYPE:HDMI HDCP:V2.3 CS:RGB(0~255) CD:8Bit BT2020:Disable>";
+    // 批量更新信号状态，减少信号发射次数
+    bool statusChanged = false;
     
-    //qDebug() << "Updated signal status to:" << m_signalStatus;
+    if (m_signalStatus != "PCIe Monitor Display") {
+        m_signalStatus = "PCIe Monitor Display";
+        statusChanged = true;
+    }
     
-    emit signalStatusChanged();
-    emit resolutionChanged();
-    emit colorSpaceChanged();
-    emit colorDepthChanged();
-    emit videoSignalInfoChanged();
+    if (m_resolution != "1920x1080@60Hz") {
+        m_resolution = "1920x1080@60Hz";
+        statusChanged = true;
+    }
     
-    //qDebug() << "=== loadAndDisplayBinFile END ===";
+    if (m_colorSpace != "RGB") {
+        m_colorSpace = "RGB";
+        statusChanged = true;
+    }
+    
+    if (m_colorDepth != "8bit") {
+        m_colorDepth = "8bit";
+        statusChanged = true;
+    }
+    
+    if (m_videoSignalInfo != "A<MODE:TMDS  DSC OFF  RES:1920*1080@60Hz TYPE:HDMI HDCP:V2.3 CS:RGB(0~255) CD:8Bit BT2020:Disable>") {
+        m_videoSignalInfo = "A<MODE:TMDS  DSC OFF  RES:1920*1080@60Hz TYPE:HDMI HDCP:V2.3 CS:RGB(0~255) CD:8Bit BT2020:Disable>";
+        statusChanged = true;
+    }
+    
+    // 一次性发射所有变化的信号
+    if (statusChanged) {
+        emit signalStatusChanged();
+        emit resolutionChanged();
+        emit colorSpaceChanged();
+        emit colorDepthChanged();
+        emit videoSignalInfoChanged();
+    }
+    
+    qint64 totalTime = timer.elapsed();
+    
+    // 每50帧输出一次详细的性能分析
+    if (m_frameCounter % 50 == 0) {
+        qDebug() << QString("Frame %1 - Total: %2ms, FileRead: %3ms, ImageProcess: %4ms, SaveDisplay: %5ms")
+                    .arg(m_frameCounter)
+                    .arg(totalTime)
+                    .arg(fileReadTime)
+                    .arg(imageProcessTime)
+                    .arg(totalTime - imageProcessTime - fileReadTime);
+    }
 }
 
 void SignalAnalyzerManager::displayDefaultTestPattern()
@@ -546,12 +602,16 @@ void SignalAnalyzerManager::startPcieImageCapture()
     // 立即执行一次PCIe读取
     executePcieCommand();
     
-    // 启动定时器，每500ms刷新一次图像
-    // 注意：调整刷新频率请修改这里的数值（单位：毫秒）
-    // 建议值：500ms（默认）、1000ms（较慢）、250ms（较快，可能闪烁）
-    m_pcieRefreshTimer->start(500);
+    // 动态调整定时器间隔：
+    // 100ms = 10FPS, 66.67ms = 15FPS, 50ms = 20FPS, 33.33ms = 30FPS, 16.67ms = 60FPS
+    // 根据性能测试结果，SaveDisplay已优化，现在尝试20FPS
+    int refreshInterval = 50;  // 尝试20FPS
     
-    qDebug() << "PCIe image capture started with 500ms interval";
+    m_pcieRefreshTimer->start(refreshInterval);
+    
+    qDebug() << QString("PCIe image capture started with %1ms interval (%2 FPS)")
+                .arg(refreshInterval)
+                .arg(1000.0/refreshInterval, 0, 'f', 1);
     qDebug() << "=== startPcieImageCapture END ===";
 }
 
@@ -695,4 +755,43 @@ bool SignalAnalyzerManager::hasImageChanged(const QByteArray &newImageData)
     }
     
     return hasChanged;
+}
+
+// 性能优化相关方法实现
+void SignalAnalyzerManager::setRefreshRate(int fps)
+{
+    if (fps < 1) fps = 1;
+    if (fps > 60) fps = 60;
+    
+    int intervalMs = 1000 / fps;
+    
+    if (m_pcieRefreshTimer->isActive()) {
+        m_pcieRefreshTimer->stop();
+        m_pcieRefreshTimer->start(intervalMs);
+    }
+    
+    qDebug() << QString("Refresh rate set to %1 FPS (%2ms interval)").arg(fps).arg(intervalMs);
+}
+
+int SignalAnalyzerManager::getCurrentFps()
+{
+    if (!m_pcieRefreshTimer->isActive()) {
+        return 0;
+    }
+    
+    int interval = m_pcieRefreshTimer->interval();
+    return (interval > 0) ? (1000 / interval) : 0;
+}
+
+void SignalAnalyzerManager::enablePerformanceMode(bool enable)
+{
+    if (enable) {
+        // 性能模式：使用更激进的设置
+        qDebug() << "Enabling performance mode";
+        setRefreshRate(30);  // 尝试30FPS
+    } else {
+        // 普通模式：使用保守的设置
+        qDebug() << "Disabling performance mode";
+        setRefreshRate(15);  // 回到15FPS
+    }
 }
