@@ -268,16 +268,19 @@ Rectangle {
         anchors.fill: parent
         visible: pageFlag === 0  // 仅在Monitor模式显示
 
-        // 页面切换时自动触发PCIe视频获取
+        // 页面切换时自动触发PCIe视频获取并启用30FPS性能模式
         Component.onCompleted: {
             if (visible) {
+                // 启用30FPS性能模式
+                signalAnalyzerManager.enablePerformanceMode(true)
                 signalAnalyzerManager.startPcieImageCapture()
             }
         }
         
-        // 当页面变为可见时也触发
+        // 当页面变为可见时也触发30FPS性能模式
         onVisibleChanged: {
             if (visible) {
+                signalAnalyzerManager.enablePerformanceMode(true)
                 signalAnalyzerManager.startPcieImageCapture()
             }
         }

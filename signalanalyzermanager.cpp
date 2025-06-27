@@ -614,8 +614,8 @@ void SignalAnalyzerManager::startPcieImageCapture()
     
     // 动态调整定时器间隔：
     // 100ms = 10FPS, 66.67ms = 15FPS, 50ms = 20FPS, 33.33ms = 30FPS, 16.67ms = 60FPS
-    // PCIe命令冲突，增加间隔避免"Previous PCIe command still running"
-    int refreshInterval = 100;  // 回到10FPS，确保PCIe命令有足够时间完成
+    // 启用30FPS性能模式，基于测试数据：PCIe 20ms + 文件读取 13ms
+    int refreshInterval = 33;  // 30FPS性能模式，基于测试数据PCIe命令总耗时约33ms
     
     m_pcieRefreshTimer->start(refreshInterval);
     
