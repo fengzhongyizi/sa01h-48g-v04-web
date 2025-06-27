@@ -329,14 +329,35 @@ Rectangle {
                     source: signalAnalyzerManager.frameUrl || ""
                     asynchronous: true
                     cache: false
-                    visible: signalAnalyzerManager.signalStatus && signalAnalyzerManager.signalStatus !== "No Signal" && status === Image.Ready
+                    smooth: true  // 启用平滑渲染
+                    opacity: 1.0
+                    visible: signalAnalyzerManager.signalStatus && signalAnalyzerManager.signalStatus !== "No Signal"
 
-                    // 图像加载状态处理
+                    // 平滑的透明度过渡动画
+                    Behavior on opacity {
+                        NumberAnimation { 
+                            duration: 150  // 150ms的淡入淡出效果
+                            easing.type: Easing.InOutQuad
+                        }
+                    }
+
+                    // 图像加载状态处理 - 使用透明度过渡而不是直接切换visible
                     onStatusChanged: {
                         if (status === Image.Error || status === Image.Null) {
-                            visible = false
+                            opacity = 0
                         } else if (status === Image.Ready) {
-                            visible = true
+                            opacity = 1.0
+                        } else if (status === Image.Loading) {
+                            // 加载中时稍微降低透明度，避免完全消失
+                            opacity = 0.85
+                        }
+                    }
+                    
+                    // 源变化时的平滑处理
+                    onSourceChanged: {
+                        if (source && source !== "") {
+                            // 新图像开始加载时，稍微降低透明度提示正在更新
+                            opacity = 0.9
                         }
                     }
                 }
@@ -389,126 +410,7 @@ Rectangle {
             }
         }
 
-        // 右侧控制面板（可选）
-        Rectangle {
-            anchors.right: parent.right
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            anchors.rightMargin: 10
-            anchors.topMargin: 10
-            anchors.bottomMargin: 10
-            width: 160
-            color: "transparent"
-            visible: monitorContainer.width < parent.width - 200
-
-            Column {
-                anchors.fill: parent
-                spacing: 10
-
-                // 启动PCIe捕获按钮
-                Button {
-                    text: qsTr("Start PCIe")
-                    width: parent.width
-                    height: 40
-                    onClicked: signalAnalyzerManager.startPcieImageCapture()
-
-                    background: Rectangle {
-                        color: parent.pressed ? "#80C080" : "#A0E0A0"
-                        border.color: "#608060"
-                        border.width: 1
-                        radius: 4
-                    }
-                }
-
-                // 停止PCIe捕获按钮
-                Button {
-                    text: qsTr("Stop PCIe")
-                    width: parent.width
-                    height: 40
-                    onClicked: signalAnalyzerManager.stopPcieImageCapture()
-
-                    background: Rectangle {
-                        color: parent.pressed ? "#C08080" : "#E0A0A0"
-                        border.color: "#806060"
-                        border.width: 1
-                        radius: 4
-                    }
-                }
-
-                // 手动刷新按钮
-                Button {
-                    text: qsTr("Refresh Once")
-                    width: parent.width
-                    height: 40
-                    onClicked: signalAnalyzerManager.refreshPcieImage()
-
-                    background: Rectangle {
-                        color: parent.pressed ? "#C0C080" : "#E0E0A0"
-                        border.color: "#808060"
-                        border.width: 1
-                        radius: 4
-                    }
-                }
-
-                // 信号状态显示
-                Rectangle {
-                    width: parent.width
-                    height: 60
-                    color: "transparent"
-                    border.color: "white"
-                    border.width: 1
-                    radius: 4
-
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 4
-
-                        Text {
-                            text: qsTr("Status:")
-                            color: "white"
-                            font.pixelSize: 12
-                        }
-                        
-                        Text {
-                            text: signalAnalyzerManager.signalStatus || "No Signal"
-                            color: signalAnalyzerManager.signalStatus === "No Signal" ? "red" : "green"
-                            font.pixelSize: 14
-                            font.bold: true
-                        }
-                    }
-                }
-
-                // 分辨率显示
-                Rectangle {
-                    width: parent.width
-                    height: 60
-                    color: "transparent"
-                    border.color: "white"
-                    border.width: 1
-                    radius: 4
-
-                    Column {
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        spacing: 4
-
-                        Text {
-                            text: qsTr("Resolution:")
-                            color: "white"
-                            font.pixelSize: 12
-                        }
-                        
-                        Text {
-                            text: signalAnalyzerManager.resolution || "Unknown"
-                            color: "white"
-                            font.pixelSize: 14
-                            wrapMode: Text.Wrap
-                        }
-                    }
-                }
-            }
-        }
+        // Monitor页面保持简洁，专注于图像显示
     }
 
     // ----------------------------------------

@@ -44,6 +44,7 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     , m_pcieRefreshTimer(nullptr)
     , m_pcieProcess(nullptr)
     , m_pcieCapturing(false)
+    , m_lastImageData()
 {
     qDebug() << "SignalAnalyzerManager created";
     
@@ -55,7 +56,9 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     m_pcieProcess = new QProcess(this);
     
     // 初始化EDID列表
-    QStringList edidNames = {"1080p60", "1080p50", "720p60", "720p50", "4K30", "4K60"};
+    // QStringList edidNames = {"1080p60", "1080p50", "720p60", "720p50", "4K30", "4K60"};
+    QStringList edidNames = {"FRL48G_8K_2CH_HDR_DSC","FRL48G_8K_2CH_HDR","FRL40G_8K_2CH_HDR","4K60HZ_2CH",
+    "4K60HZ(Y420)_2CH","4K30HZ_2CH","1080P_2CH","USER1","USER2","USER3","USER4","USER5","USER6","USER7","USER8","USER9","USER10"};
     for (const QString &name : edidNames) {
         EdidItem item;
         item.name = name;
@@ -277,13 +280,24 @@ void SignalAnalyzerManager::updateMonitorData(const QStringList &slotLabels, con
 
 QString SignalAnalyzerManager::saveTempImageAndGetUrl(const QImage &img)
 {
+    // 使用时间戳生成唯一文件名，确保URL变化触发QML重新加载
     static int counter = 0;
     QString tempDir = QStandardPaths::writableLocation(QStandardPaths::TempLocation);
-    QString fileName = QString("signal_frame_%1.png").arg(counter++);
-    QString filePath = QDir(tempDir).absoluteFilePath(fileName);
+    QString fileName = QString("pcie_monitor_frame_%1.png").arg(++counter);
+    QString tempFilePath = QDir(tempDir).absoluteFilePath(fileName);
     
-    if (img.save(filePath)) {
-        return QString("file://") + filePath;
+    // 使用PNG格式并设置压缩质量，平衡文件大小和保存速度
+    if (img.save(tempFilePath, "PNG", 50)) {  // 50%压缩质量，更快的保存速度
+        
+        // 清理旧的临时文件，保留最近的几个
+        static QStringList recentFiles;
+        recentFiles.append(tempFilePath);
+        if (recentFiles.size() > 3) {  // 只保留最近3个文件
+            QString oldFile = recentFiles.takeFirst();
+            QFile::remove(oldFile);
+        }
+        
+        return QString("file://") + tempFilePath;
     }
     
     return QString();
@@ -340,6 +354,12 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     
     //qDebug() << "Successfully read bin file, size:" << imageData.size() << "bytes";
     
+    // 检查图像是否有变化，无变化则不更新显示
+    if (!hasImageChanged(imageData)) {
+        //qDebug() << "Image data unchanged, skipping update";
+        return;
+    }
+    
     // 1080p60_8bit.bin是1920x1080的RGB格式
     int width = 1920;
     int height = 1080;
@@ -384,20 +404,11 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
         qDebug() << "Processed" << dataIndex/3 << "pixels manually";
     }
     
-    // 创建包含底部120像素黑边的最终图像（1920x1200）
-    QImage finalImage(1920, 1200, QImage::Format_RGB888);
-    finalImage.fill(Qt::black);  // 填充黑色
-    
-    // 将1080p图像绘制到最终图像的上部
-    QPainter painter(&finalImage);
-    painter.drawImage(0, 0, image);
-    painter.end();
-    
-    //qDebug() << "Created final image with bottom black bar, size:" << finalImage.size();
+    // 直接使用1080p图像，QML层会处理底部120px信息区域
+    //qDebug() << "Using 1080p image directly, QML handles bottom info area";
     
     // 更新帧URL以显示图像
-    //qDebug() << "Calling updateFrame to display image with bottom black bar";
-    updateFrame(finalImage);
+    updateFrame(image);
     
     // 更新信号状态
     m_signalStatus = "PCIe Monitor Display";
@@ -536,6 +547,8 @@ void SignalAnalyzerManager::startPcieImageCapture()
     executePcieCommand();
     
     // 启动定时器，每500ms刷新一次图像
+    // 注意：调整刷新频率请修改这里的数值（单位：毫秒）
+    // 建议值：500ms（默认）、1000ms（较慢）、250ms（较快，可能闪烁）
     m_pcieRefreshTimer->start(500);
     
     qDebug() << "PCIe image capture started with 500ms interval";
@@ -566,6 +579,9 @@ void SignalAnalyzerManager::stopPcieImageCapture()
         qDebug() << "PCIe process terminated";
     }
     
+    // 清除上次的图像数据，确保下次启动时能正常检测变化
+    m_lastImageData.clear();
+    
     qDebug() << "=== stopPcieImageCapture END ===";
 }
 
@@ -587,7 +603,7 @@ void SignalAnalyzerManager::refreshPcieImage()
 
 void SignalAnalyzerManager::executePcieCommand()
 {
-    qDebug() << "=== executePcieCommand START ===";
+    //qDebug() << "=== executePcieCommand START ===";
     
     // 检查进程是否还在运行
     if (m_pcieProcess->state() != QProcess::NotRunning) {
@@ -644,7 +660,7 @@ void SignalAnalyzerManager::executePcieCommand()
         displayNoSignal();
     }
     
-    qDebug() << "=== executePcieCommand END ===";
+    //qDebug() << "=== executePcieCommand END ===";
 }
 
 void SignalAnalyzerManager::onPcieRefreshTimer()
@@ -654,4 +670,29 @@ void SignalAnalyzerManager::onPcieRefreshTimer()
     if (m_pcieCapturing) {
         executePcieCommand();
     }
+}
+
+bool SignalAnalyzerManager::hasImageChanged(const QByteArray &newImageData)
+{
+    // 如果是第一次加载图像
+    if (m_lastImageData.isEmpty()) {
+        m_lastImageData = newImageData;
+        return true;
+    }
+    
+    // 比较图像数据大小
+    if (m_lastImageData.size() != newImageData.size()) {
+        m_lastImageData = newImageData;
+        return true;
+    }
+    
+    // 使用Qt的直接比较，这是最可靠的字节级比较
+    bool hasChanged = (m_lastImageData != newImageData);
+    
+    if (hasChanged) {
+        m_lastImageData = newImageData;
+        qDebug() << "Image data changed, size:" << newImageData.size();
+    }
+    
+    return hasChanged;
 }

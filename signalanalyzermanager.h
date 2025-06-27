@@ -228,6 +228,7 @@ private:
     QTimer* m_pcieRefreshTimer;
     QProcess* m_pcieProcess;
     bool m_pcieCapturing;
+    QByteArray m_lastImageData;  // 用于比较图像变化
     
     QString saveTempImageAndGetUrl(const QImage &img);
     void processMonitorCommand(const QByteArray &data);
@@ -246,6 +247,7 @@ private:
     // PCIe相关私有函数
     void executePcieCommand();
     void onPcieRefreshTimer();
+    bool hasImageChanged(const QByteArray &newImageData);  // 检测图像是否变化
 };
 
 #endif // SIGNALANALYZERMANAGER_H 
