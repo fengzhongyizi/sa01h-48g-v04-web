@@ -11,6 +11,7 @@
 #include <QQmlEngine>
 #include <QQuickImageProvider>
 #include <QPointF>
+#include <QMutex>
 #include "serialportmanager.h"
 
 struct EdidItem {
@@ -21,6 +22,21 @@ struct EdidItem {
 struct SignalTimeSlot { 
     QString slotId;  // 如"0001","0101等时间槽编号"
     QVector<bool> signalStates; //每个时间点是否都有信号
+};
+
+// 自定义图像提供器 - 直接从内存提供图像，跳过文件保存
+class MemoryImageProvider : public QQuickImageProvider
+{
+public:
+    MemoryImageProvider() : QQuickImageProvider(QQuickImageProvider::Image) {}
+    
+    QImage requestImage(const QString &id, QSize *size, const QSize &requestedSize) override;
+    
+    void setImage(const QImage &image);
+    
+private:
+    QImage m_currentImage;
+    QMutex m_imageMutex;
 };
 
 class SignalAnalyzerManager : public QObject {
@@ -249,6 +265,13 @@ private:
     int m_frameCounter;               // 帧计数器
     QElapsedTimer m_performanceTimer; // 性能计时器
     
+public:
+    // 内存图像提供器 - 静态访问接口
+    static MemoryImageProvider* s_imageProvider;
+    static void setImageProvider(MemoryImageProvider* provider) { s_imageProvider = provider; }
+
+private:
+    
     QString saveTempImageAndGetUrl(const QImage &img);
     void processMonitorCommand(const QByteArray &data);
     void updateSlotData(const QString &slotId, const QString &stateStr);
@@ -257,8 +280,10 @@ private:
     bool detectTriggerEvent(const QByteArray &currentFrame, const QByteArray &previousFrame);
     bool isSignalLost(const QByteArray &frame);
     
-    // 新增函数声明
+    // 图像处理函数声明
     void loadAndDisplayBinFile(const QString &filePath);
+    void loadAndDisplayBinData(const QByteArray &imageData);
+    void processImageData(const QByteArray &imageData, qint64 fileReadTime);
     void displayDefaultTestPattern();
     void displayBlackScreen();
     void displayNoSignal();
@@ -267,6 +292,7 @@ private:
     void executePcieCommand();
     void onPcieRefreshTimer();
     bool hasImageChanged(const QByteArray &newImageData);  // 检测图像是否变化
+    bool directPcieRead();  // 直接PCIe读取方法
 };
 
 #endif // SIGNALANALYZERMANAGER_H 

@@ -32,6 +32,12 @@ int main(int argc, char *argv[])
     server.startServer(80);
 
     QQmlApplicationEngine engine;
+    
+    // 创建并注册内存图像提供器 - 革命性性能优化
+    MemoryImageProvider* imageProvider = new MemoryImageProvider();
+    SignalAnalyzerManager::setImageProvider(imageProvider);
+    engine.addImageProvider("memory", imageProvider);
+    
     // 将SignalAnalyzerManager和SerialPortManager实例暴露给QML
     engine.rootContext()->setContextProperty("signalAnalyzerManager", saMgr);
     engine.rootContext()->setContextProperty("serialPortManager", spMgr);
