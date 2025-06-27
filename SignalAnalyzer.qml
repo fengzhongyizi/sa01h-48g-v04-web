@@ -327,39 +327,11 @@ Rectangle {
                     anchors.margins: 2
                     fillMode: Image.Stretch
                     source: signalAnalyzerManager.frameUrl || ""
-                    asynchronous: true
+                    asynchronous: false  // 改为同步加载，减少闪烁
                     cache: false
-                    smooth: true  // 启用平滑渲染
+                    smooth: false  // 关闭平滑渲染，提升性能
                     opacity: 1.0
                     visible: signalAnalyzerManager.signalStatus && signalAnalyzerManager.signalStatus !== "No Signal"
-
-                    // 平滑的透明度过渡动画
-                    Behavior on opacity {
-                        NumberAnimation { 
-                            duration: 150  // 150ms的淡入淡出效果
-                            easing.type: Easing.InOutQuad
-                        }
-                    }
-
-                    // 图像加载状态处理 - 使用透明度过渡而不是直接切换visible
-                    onStatusChanged: {
-                        if (status === Image.Error || status === Image.Null) {
-                            opacity = 0
-                        } else if (status === Image.Ready) {
-                            opacity = 1.0
-                        } else if (status === Image.Loading) {
-                            // 加载中时稍微降低透明度，避免完全消失
-                            opacity = 0.85
-                        }
-                    }
-                    
-                    // 源变化时的平滑处理
-                    onSourceChanged: {
-                        if (source && source !== "") {
-                            // 新图像开始加载时，稍微降低透明度提示正在更新
-                            opacity = 0.9
-                        }
-                    }
                 }
 
                 // 彩条显示 - 备选显示

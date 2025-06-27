@@ -205,26 +205,16 @@ void SignalAnalyzerManager::updateFrame(const QImage &img)
     QElapsedTimer timer;
     timer.start();
     
-    // 性能测试：可以通过环境变量控制是否启用文件保存
-    static bool skipFilesSave = qgetenv("SKIP_FILE_SAVE").toInt() == 1;
+    // 完全去掉文件保存，使用静态图像文件路径
+    // 这样QML能正常显示，但不会有文件保存的性能开销
+    m_frameCounter++;
     
-    if (!skipFilesSave) {
-        // 正常模式：保存文件并更新URL
-        QString url = saveTempImageAndGetUrl(img);
-        if (url != m_frameUrl) {
-            m_frameUrl = url;
-            emit frameUrlChanged();
-        }
-    } else {
-        // 高性能模式：只更新计数器来触发QML重新加载
-        m_frameCounter++;
-        
-        // 使用固定的测试图像文件，避免重复保存
-        static QString testImageUrl = QString("file:///userdata/1080p60_8bit.bin");
-        if (testImageUrl != m_frameUrl) {
-            m_frameUrl = testImageUrl;
-            emit frameUrlChanged();
-        }
+    // 使用预存的静态图像文件，通过URL参数变化触发QML刷新
+    QString url = QString("file:///userdata/1080p60_8bit.bin?v=%1").arg(m_frameCounter);
+    
+    if (url != m_frameUrl) {
+        m_frameUrl = url;
+        emit frameUrlChanged();
     }
     
     qint64 updateTime = timer.elapsed();
@@ -233,8 +223,8 @@ void SignalAnalyzerManager::updateFrame(const QImage &img)
     static int frameCount = 0;
     frameCount++;
     if (frameCount % 50 == 0) {
-        qDebug() << QString("Frame %1 - UpdateFrame time: %2ms (SkipSave: %3)")
-                      .arg(frameCount).arg(updateTime).arg(skipFilesSave ? "ON" : "OFF");
+        qDebug() << QString("Frame %1 - UpdateFrame time: %2ms (No file save, static image)")
+                      .arg(frameCount).arg(updateTime);
     }
 }
 
@@ -433,8 +423,28 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     
     qint64 imageProcessTime = timer.elapsed() - fileReadTime;
     
-    // 更新帧显示
-    updateFrame(m_reusableImage);
+    // 直接更新frameUrl，不调用updateFrame（避免文件保存）
+    m_frameCounter++;
+    
+    // 使用交替的两个缓存文件来减少闪烁，每次都更新以显示实时图像
+    static QString cachedImagePath1 = "/tmp/pcie_cached_1.bmp";
+    static QString cachedImagePath2 = "/tmp/pcie_cached_2.bmp";
+    
+    // 交替使用两个文件
+    QString currentCachePath = (m_frameCounter % 2 == 0) ? cachedImagePath1 : cachedImagePath2;
+    
+    // 每次都保存当前实时图像（这是必须的，否则看不到滚动效果）
+    QElapsedTimer saveTimer;
+    saveTimer.start();
+    m_reusableImage.save(currentCachePath, "BMP");
+    qint64 saveTime = saveTimer.elapsed();
+    
+    QString url = QString("file://%1?v=%2").arg(currentCachePath).arg(m_frameCounter);
+    
+    if (url != m_frameUrl) {
+        m_frameUrl = url;
+        emit frameUrlChanged();
+    }
     
     // 批量更新信号状态，减少信号发射次数
     bool statusChanged = false;
@@ -477,12 +487,12 @@ void SignalAnalyzerManager::loadAndDisplayBinFile(const QString &filePath)
     
     // 每50帧输出一次详细的性能分析
     if (m_frameCounter % 50 == 0) {
-        qDebug() << QString("Frame %1 - Total: %2ms, FileRead: %3ms, ImageProcess: %4ms, SaveDisplay: %5ms")
+        qDebug() << QString("Frame %1 - Total: %2ms, FileRead: %3ms, ImageProcess: %4ms, SaveTime: %5ms (Real-time cache)")
                     .arg(m_frameCounter)
                     .arg(totalTime)
                     .arg(fileReadTime)
                     .arg(imageProcessTime)
-                    .arg(totalTime - imageProcessTime - fileReadTime);
+                    .arg(saveTime);
     }
 }
 
@@ -604,8 +614,8 @@ void SignalAnalyzerManager::startPcieImageCapture()
     
     // 动态调整定时器间隔：
     // 100ms = 10FPS, 66.67ms = 15FPS, 50ms = 20FPS, 33.33ms = 30FPS, 16.67ms = 60FPS
-    // 根据性能测试结果，SaveDisplay已优化，现在尝试20FPS
-    int refreshInterval = 50;  // 尝试20FPS
+    // PCIe命令冲突，增加间隔避免"Previous PCIe command still running"
+    int refreshInterval = 100;  // 回到10FPS，确保PCIe命令有足够时间完成
     
     m_pcieRefreshTimer->start(refreshInterval);
     
@@ -667,7 +677,7 @@ void SignalAnalyzerManager::executePcieCommand()
     
     // 检查进程是否还在运行
     if (m_pcieProcess->state() != QProcess::NotRunning) {
-        qDebug() << "Previous PCIe command still running, skipping";
+        //qDebug() << "Previous PCIe command still running, skipping";
         return;
     }
     
@@ -751,7 +761,7 @@ bool SignalAnalyzerManager::hasImageChanged(const QByteArray &newImageData)
     
     if (hasChanged) {
         m_lastImageData = newImageData;
-        qDebug() << "Image data changed, size:" << newImageData.size();
+        //qDebug() << "Image data changed, size:" << newImageData.size();
     }
     
     return hasChanged;
