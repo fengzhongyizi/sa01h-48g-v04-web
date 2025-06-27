@@ -8,6 +8,8 @@
 #include <QPainter>
 #include <QProcess>
 #include <QFileInfo>
+#include <QThread>
+#include <QMutex>
 #include <cstring>
 
 SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* parent)
@@ -45,6 +47,13 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     , m_pcieProcess(nullptr)
     , m_pcieCapturing(false)
     , m_lastImageData()
+    , m_highFrameRateTimer(nullptr)
+    , m_captureThread(nullptr)
+    , m_isHighFrameRateMode(false)
+    , m_frameBufferA()
+    , m_frameBufferB()
+    , m_useBufferA(true)
+    , m_smoothCaptureProcess(nullptr)
 {
     qDebug() << "SignalAnalyzerManager created";
     
@@ -54,6 +63,13 @@ SignalAnalyzerManager::SignalAnalyzerManager(SerialPortManager* spMgr, QObject* 
     
     // 初始化PCIe进程
     m_pcieProcess = new QProcess(this);
+    
+    // 初始化高帧率采集定时器
+    m_highFrameRateTimer = new QTimer(this);
+    connect(m_highFrameRateTimer, &QTimer::timeout, this, &SignalAnalyzerManager::onHighFrameRateTimer);
+    
+    // 初始化丝滑模式专用进程
+    m_smoothCaptureProcess = new QProcess(this);
     
     // 初始化EDID列表
     // QStringList edidNames = {"1080p60", "1080p50", "720p60", "720p50", "4K30", "4K60"};
@@ -695,4 +711,229 @@ bool SignalAnalyzerManager::hasImageChanged(const QByteArray &newImageData)
     }
     
     return hasChanged;
+}
+
+// =========================== 高帧率丝滑动图显示实现 ===========================
+
+// 启动丝滑动图模式 - 对外接口
+void SignalAnalyzerManager::startSmoothVideoMode()
+{
+    qDebug() << "=== startSmoothVideoMode START ===";
+    
+    if (m_isHighFrameRateMode) {
+        qDebug() << "Smooth video mode already running";
+        return;
+    }
+    
+    // 停止原有的低帧率采集
+    if (m_pcieCapturing) {
+        stopPcieImageCapture();
+    }
+    
+    m_isHighFrameRateMode = true;
+    startHighFrameRateCapture();
+    
+    // 发送状态变化信号
+    emit smoothVideoModeChanged();
+    
+    qDebug() << "=== startSmoothVideoMode END ===";
+}
+
+// 停止丝滑动图模式 - 对外接口
+void SignalAnalyzerManager::stopSmoothVideoMode()
+{
+    qDebug() << "=== stopSmoothVideoMode START ===";
+    
+    if (!m_isHighFrameRateMode) {
+        qDebug() << "Smooth video mode not running";
+        return;
+    }
+    
+    stopHighFrameRateCapture();
+    m_isHighFrameRateMode = false;
+    
+    // 发送状态变化信号
+    emit smoothVideoModeChanged();
+    
+    // 恢复原有的低帧率采集
+    startPcieImageCapture();
+    
+    qDebug() << "=== stopSmoothVideoMode END ===";
+}
+
+// 查询是否在丝滑动图模式
+bool SignalAnalyzerManager::isSmoothVideoMode() const
+{
+    return m_isHighFrameRateMode;
+}
+
+// 启动高帧率采集 - 内部实现
+void SignalAnalyzerManager::startHighFrameRateCapture()
+{
+    qDebug() << "=== startHighFrameRateCapture START ===";
+    
+    // 预分配双缓冲区
+    m_frameBufferA.reserve(6220800);  // 1920*1080*3
+    m_frameBufferB.reserve(6220800);
+    m_useBufferA = true;
+    
+    // 启动采集定时器 - 10fps是一个更保守的平衡点
+    // 比0.5秒一次的2fps提升5倍，性能开销适中
+    int frameInterval = 100; // 100ms ≈ 10fps (1000/10=100)
+    m_highFrameRateTimer->start(frameInterval);
+    
+    qDebug() << "High frame rate capture started at 10fps (" << frameInterval << "ms interval)";
+    qDebug() << "=== startHighFrameRateCapture END ===";
+}
+
+// 停止高帧率采集 - 内部实现  
+void SignalAnalyzerManager::stopHighFrameRateCapture()
+{
+    qDebug() << "=== stopHighFrameRateCapture START ===";
+    
+    if (m_highFrameRateTimer && m_highFrameRateTimer->isActive()) {
+        m_highFrameRateTimer->stop();
+        qDebug() << "High frame rate timer stopped";
+    }
+    
+    // 强制停止正在运行的采集进程
+    if (m_smoothCaptureProcess && m_smoothCaptureProcess->state() != QProcess::NotRunning) {
+        qDebug() << "Terminating running capture process";
+        m_smoothCaptureProcess->kill();
+        m_smoothCaptureProcess->waitForFinished(1000);
+    }
+    
+    // 清理缓冲区
+    m_frameBufferA.clear();
+    m_frameBufferB.clear();
+    
+    qDebug() << "=== stopHighFrameRateCapture END ===";
+}
+
+// 高帧率定时器回调 - 先确保有初始数据，然后交替采集显示
+void SignalAnalyzerManager::onHighFrameRateTimer()
+{
+    static bool hasInitialData = false;
+    static bool shouldCapture = true;
+    
+    // 如果还没有初始数据，强制采集一次
+    if (!hasInitialData) {
+        captureFrameToBuffer();
+        hasInitialData = true;
+        qDebug() << "Initial frame captured for smooth mode";
+        return;
+    }
+    
+    // 有了初始数据后，采用交替策略
+    if (shouldCapture) {
+        captureFrameToBuffer();
+    } else {
+        displayFrameFromBuffer();
+    }
+    
+    shouldCapture = !shouldCapture; // 下次执行相反操作
+}
+
+// 采集帧到缓冲区 - 后台操作，不阻塞显示
+void SignalAnalyzerManager::captureFrameToBuffer()
+{
+    // 如果上次进程还在运行，直接跳过本次采集，避免进程堆积
+    if (m_smoothCaptureProcess->state() != QProcess::NotRunning) {
+        qDebug() << "Previous capture still running, skipping this capture";
+        return;
+    }
+    
+    qDebug() << "Starting new frame capture...";
+    
+    // 选择当前要写入的缓冲区（非显示缓冲区）
+    QByteArray* writeBuffer = m_useBufferA ? &m_frameBufferB : &m_frameBufferA;
+    
+    // 使用复用的进程执行DMA读取
+    QString command = "/usr/local/xdma/tools/dma_from_device";
+    QStringList arguments;
+    arguments << "/dev/xdma0_c2h_0"
+              << "-f" << "/tmp/smooth_frame.bin"  // 使用固定文件名减少创建开销
+              << "-s" << "6220800"
+              << "-a" << "0" 
+              << "-c" << "1";
+    
+    // 启动进程（非阻塞）
+    m_smoothCaptureProcess->start(command, arguments);
+    
+    // 非阻塞等待，避免卡死
+    if (m_smoothCaptureProcess->waitForFinished(50)) { // 增加到50ms超时
+        if (m_smoothCaptureProcess->exitCode() == 0) {
+            // 读取到缓冲区
+            QFile tempFile("/tmp/smooth_frame.bin");
+            if (tempFile.open(QIODevice::ReadOnly)) {
+                *writeBuffer = tempFile.readAll();
+                tempFile.close();
+                
+                qDebug() << "Frame captured successfully, size:" << writeBuffer->size();
+                
+                // 交换缓冲区指针（原子操作）
+                QMutexLocker locker(&m_bufferMutex);
+                m_useBufferA = !m_useBufferA;
+            } else {
+                qDebug() << "Failed to open captured frame file";
+            }
+        } else {
+            qDebug() << "Capture process failed with exit code:" << m_smoothCaptureProcess->exitCode();
+        }
+    } else {
+        qDebug() << "Capture process timeout or error";
+        // 超时或出错，强制终止进程避免泄漏
+        if (m_smoothCaptureProcess->state() != QProcess::NotRunning) {
+            m_smoothCaptureProcess->kill();
+            m_smoothCaptureProcess->waitForFinished(100);
+        }
+    }
+}
+
+// 从缓冲区显示帧 - 前台操作，快速显示
+void SignalAnalyzerManager::displayFrameFromBuffer()
+{
+    QMutexLocker locker(&m_bufferMutex);
+    
+    // 选择当前要显示的缓冲区
+    const QByteArray* readBuffer = m_useBufferA ? &m_frameBufferA : &m_frameBufferB;
+    
+    if (readBuffer->isEmpty() || readBuffer->size() < 6220800) {
+        qDebug() << "No valid buffer data for display, buffer size:" << readBuffer->size();
+        return; // 无有效数据
+    }
+    
+    // 直接调用普通模式的处理逻辑，确保一致性
+    // 创建临时文件让loadAndDisplayBinFile处理
+    QString tempPath = "/tmp/smooth_display_temp.bin";
+    QFile tempFile(tempPath);
+    if (tempFile.open(QIODevice::WriteOnly)) {
+        tempFile.write(*readBuffer);
+        tempFile.close();
+        
+        qDebug() << "Created temp file for smooth display, calling loadAndDisplayBinFile";
+        
+        // 复用已验证工作的普通模式逻辑
+        loadAndDisplayBinFile(tempPath);
+        
+        // 删除临时文件
+        QFile::remove(tempPath);
+    } else {
+        qDebug() << "Failed to create temp file for smooth display";
+    }
+    
+    // 更新信号状态
+    if (m_signalStatus != "Smooth Video Mode") {
+        m_signalStatus = "Smooth Video Mode";
+        m_resolution = "1920x1080@10fps";
+        m_colorSpace = "RGB"; 
+        m_colorDepth = "8bit";
+        m_videoSignalInfo = "A<Smooth Video Mode - 10fps High Frame Rate Display>";
+        
+        emit signalStatusChanged();
+        emit resolutionChanged();
+        emit colorSpaceChanged();
+        emit colorDepthChanged();
+        emit videoSignalInfoChanged();
+    }
 }

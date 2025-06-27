@@ -7,6 +7,8 @@
 #include <QStringList>
 #include <QTimer>
 #include <QProcess>
+#include <QThread>
+#include <QMutex>
 #include "serialportmanager.h"
 
 struct EdidItem {
@@ -61,6 +63,7 @@ class SignalAnalyzerManager : public QObject {
 
     // Video Signal Display Info
     Q_PROPERTY(QString videoSignalInfo READ videoSignalInfo NOTIFY videoSignalInfoChanged)
+    Q_PROPERTY(bool smoothVideoMode READ isSmoothVideoMode NOTIFY smoothVideoModeChanged)
 
 public:
     explicit SignalAnalyzerManager(SerialPortManager* spMgr,QObject* parent = nullptr);
@@ -105,6 +108,11 @@ public:
     Q_INVOKABLE void startPcieImageCapture();
     Q_INVOKABLE void stopPcieImageCapture();
     Q_INVOKABLE void refreshPcieImage();
+    
+    // 高帧率动图显示相关方法
+    Q_INVOKABLE void startSmoothVideoMode();     // 启动丝滑动图模式
+    Q_INVOKABLE void stopSmoothVideoMode();      // 停止丝滑动图模式
+    Q_INVOKABLE bool isSmoothVideoMode() const;  // 是否在丝滑动图模式
 
     // Monitor control interface
     Q_INVOKABLE void startMonitor();
@@ -180,6 +188,7 @@ signals:
 
     // Video Signal Display Info
     void videoSignalInfoChanged();
+    void smoothVideoModeChanged();  // 丝滑模式状态变化信号
 
 private:
     QString m_frameUrl;
@@ -230,6 +239,16 @@ private:
     bool m_pcieCapturing;
     QByteArray m_lastImageData;  // 用于比较图像变化
     
+    // 连续采集相关成员
+    QTimer* m_highFrameRateTimer;    // 高帧率采集定时器
+    QThread* m_captureThread;        // 采集线程
+    bool m_isHighFrameRateMode;      // 是否启用高帧率模式
+    QByteArray m_frameBufferA;       // 双缓冲A
+    QByteArray m_frameBufferB;       // 双缓冲B
+    bool m_useBufferA;               // 当前使用的缓冲区标志
+    QMutex m_bufferMutex;            // 缓冲区互斥锁
+    QProcess* m_smoothCaptureProcess; // 丝滑模式专用进程
+    
     QString saveTempImageAndGetUrl(const QImage &img);
     void processMonitorCommand(const QByteArray &data);
     void updateSlotData(const QString &slotId, const QString &stateStr);
@@ -248,6 +267,13 @@ private:
     void executePcieCommand();
     void onPcieRefreshTimer();
     bool hasImageChanged(const QByteArray &newImageData);  // 检测图像是否变化
+    
+    // 高帧率采集相关方法
+    void startHighFrameRateCapture();       // 启动高帧率采集
+    void stopHighFrameRateCapture();        // 停止高帧率采集
+    void onHighFrameRateTimer();            // 高帧率定时器回调
+    void captureFrameToBuffer();            // 采集帧到缓冲区
+    void displayFrameFromBuffer();          // 从缓冲区显示帧
 };
 
 #endif // SIGNALANALYZERMANAGER_H 

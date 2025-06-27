@@ -395,10 +395,13 @@ Rectangle {
                 border.color: "#404040"
                 border.width: 1
 
-                // 信号信息文本
+                // 左侧信号信息文本
                 Text {
                     id: signalInfoText
-                    anchors.fill: parent
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    anchors.right: controlButtons.left
                     anchors.margins: 10
                     color: "white"
                     font.pixelSize: 16
@@ -406,6 +409,64 @@ Rectangle {
                     verticalAlignment: Text.AlignVCenter
                     wrapMode: Text.Wrap
                     text: signalAnalyzerManager.videoSignalInfo || "A<No Signal>"
+                }
+                
+                // 右侧控制按钮区域
+                Row {
+                    id: controlButtons
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.margins: 10
+                    spacing: 10
+                    
+                    // 丝滑动图模式切换按钮
+                    Rectangle {
+                        width: 120
+                        height: 35
+                        color: signalAnalyzerManager.smoothVideoMode ? "#4CAF50" : "#FF9800"
+                        border.color: "white"
+                        border.width: 1
+                        radius: 4
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: signalAnalyzerManager.smoothVideoMode ? "Smooth ON" : "Smooth OFF"
+                            color: "white"
+                            font.pixelSize: 12
+                            font.bold: true
+                        }
+                        
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                if (signalAnalyzerManager.smoothVideoMode) {
+                                    signalAnalyzerManager.stopSmoothVideoMode()
+                                    console.log("Smooth video mode stopped")
+                                } else {
+                                    signalAnalyzerManager.startSmoothVideoMode()
+                                    console.log("Smooth video mode started")
+                                }
+                            }
+                        }
+                    }
+                    
+                    // 帧率信息显示
+                    Rectangle {
+                        width: 80
+                        height: 35
+                        color: "#607D8B"
+                        border.color: "white"
+                        border.width: 1
+                        radius: 4
+                        
+                        Text {
+                            anchors.centerIn: parent
+                            text: signalAnalyzerManager.smoothVideoMode ? "10fps" : "2fps"
+                            color: "white"
+                            font.pixelSize: 12
+                            font.bold: true
+                        }
+                    }
                 }
             }
         }
