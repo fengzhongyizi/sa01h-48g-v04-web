@@ -681,7 +681,15 @@ void SignalAnalyzerManager::startPcieImageCapture()
     // 终极优化：基于内存图像提供器，零文件I/O
     // 实际处理时间：2ms图像处理 + 0ms保存 = 2ms总耗时
     // 设置30ms间隔(33FPS)提供1500%安全缓冲，实现极致流畅度
-    int refreshInterval = 30;  // 33FPS终极流畅模式，基于内存图像提供器
+    // int refreshInterval = 30;  // 33FPS终极流畅模式，基于内存图像提供器
+
+    // 可选择的帧率设置：
+    int refreshInterval = 16;  // 60FPS超高帧率模式
+    // int refreshInterval = 20;  // 50FPS高帧率模式  
+    // int refreshInterval = 25;  // 40FPS高性能模式
+    // int refreshInterval = 30;  // 33FPS终极流畅模式（当前）
+    // int refreshInterval = 40;  // 25FPS标准模式
+    // int refreshInterval = 50;  // 20FPS节能模式
     
     m_pcieRefreshTimer->start(refreshInterval);
     
